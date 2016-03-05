@@ -59,7 +59,11 @@ module.exports = function (RED) {
 
         function sendOn(manual) {
             node.send({topic: config.onTopic, payload: config.onPayload});
-            node.status({fill: manual ? 'blue' : 'green', shape: 'dot', text: 'On ' + (manual ? 'manually' : 'automatically')});
+            node.status({
+                fill: manual ? 'blue' : 'green',
+                shape: 'dot',
+                text: 'On ' + (manual ? 'manually' : 'automatically')
+            });
         }
 
         function sendOff(manual) {
@@ -79,7 +83,7 @@ module.exports = function (RED) {
         }
 
         function cronInvokedOff() {
-            sendOn(false);
+            sendOff(false);
             var off = momentFor(config.off).add(1, 'day');
             cronJobOff = new cron.CronJob(off.toDate(), cronInvokedOn, null, true);
             node.log('Next off [' + off.toISOString() + ']');
@@ -115,7 +119,9 @@ module.exports = function (RED) {
                 off.add(1, 'day');
             }
             cronJobOff = new cron.CronJob(off.toDate(), cronInvokedOff, null, true);
-            node.log('Initial schedule: on [' + on.toISOString() + '] off [' + off.toISOString() + ']');
+            var message = 'Initial schedule: on [' + on.toISOString() + '] off [' + off.toISOString() + ']';
+            node.log(message);
+            node.status({fill: 'yellow', shape: 'dot', text: message});
         })();
     });
 };
