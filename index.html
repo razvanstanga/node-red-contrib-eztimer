@@ -33,9 +33,11 @@ THE SOFTWARE.
             on: {value: '07:28'},
             onTopic: {value: ''},
             onPayload: {value: ''},
+            onOffset: {value: 0},
             off: {value: 'goldenHour'},
             offTopic: {value: ''},
-            offPayload: {value: ''}
+            offPayload: {value: ''},
+            offOffset: {value: 0}
         },
         inputs: 1,
         outputs: 1,
@@ -63,19 +65,21 @@ THE SOFTWARE.
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
+    <hr>
     <div class="form-row">
 		<label for="node-input-lat"><i class="fa fa-globe"></i> Latitude</label>
 		<input type="text" id="node-input-lat" placeholder="51.025">
 	</div>
-
 	<div class="form-row">
 		<label for="node-input-lon"><i class="fa fa-globe"></i> Longitude</label>
 		<input type="text" id="node-input-lon" placeholder="-1.4">
 	</div>
+	<hr>
     <div class="form-row">
         <label for="node-input-on"><i class="icon-tag"></i> On time</label>
         <input type="text" id="node-input-on" placeholder="">
     </div>
+
     <div class="form-row">
         <label for="node-input-onTopic"><i class="icon-tag"></i>On Topic</label>
         <input type="text" id="node-input-onTopic" placeholder="">
@@ -84,6 +88,11 @@ THE SOFTWARE.
         <label for="node-input-onPayload"><i class="icon-tag"></i>On Payload</label>
         <input type="text" id="node-input-onPayload" placeholder="">
     </div>
+    <div class="form-row">
+        <label for="node-input-onOffset"><i class="icon-tag"></i>On Offset</label>
+        <input type="number" id="node-input-onOffset" placeholder="0">
+    </div>
+    <hr>
     <div class="form-row">
         <label for="node-input-off"><i class="icon-tag"></i> Off time</label>
         <input type="text" id="node-input-off" placeholder="">
@@ -96,7 +105,10 @@ THE SOFTWARE.
         <label for="node-input-offPayload"><i class="icon-tag"></i>Off Payload</label>
         <input type="text" id="node-input-offPayload" placeholder="">
     </div>
-
+    <div class="form-row">
+        <label for="node-input-offOffset"><i class="icon-tag"></i>Off Offset</label>
+        <input type="number" id="node-input-offOffset" placeholder="0">
+    </div>
 </script>
 
 <script type="text/x-red" data-help-name="schedex">

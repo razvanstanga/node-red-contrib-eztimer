@@ -77,19 +77,19 @@ module.exports = function (RED) {
 
         function cronInvokedOn() {
             sendOn(false);
-            var on = momentFor(config.on).add(1, 'day');
+            var on = momentFor(config.on, config.onOffset).add(1, 'day');
             cronJobOn = new cron.CronJob(on.toDate(), cronInvokedOn, null, true);
             node.log('Next on [' + on.toISOString() + ']');
         }
 
         function cronInvokedOff() {
             sendOff(false);
-            var off = momentFor(config.off).add(1, 'day');
+            var off = momentFor(config.off, config.offOffset).add(1, 'day');
             cronJobOff = new cron.CronJob(off.toDate(), cronInvokedOn, null, true);
             node.log('Next off [' + off.toISOString() + ']');
         }
 
-        function momentFor(time) {
+        function momentFor(time, offset) {
             var runAt;
             var matches = new RegExp(/(\d+):(\d+)/).exec(time);
             if (matches && matches.length) {
@@ -101,7 +101,11 @@ module.exports = function (RED) {
                     runAt = moment(date);
                 }
             }
-            if (!runAt) {
+            if (runAt) {
+                if (offset) {
+                    runAt.add(offset, 'minutes');
+                }
+            } else {
                 node.status({fill: 'red', shape: 'dot', text: 'Invalid time: ' + time});
             }
             return runAt;
@@ -109,12 +113,12 @@ module.exports = function (RED) {
 
         (function setupInitialSchedule() {
             var now = moment();
-            var on = momentFor(config.on);
+            var on = momentFor(config.on, config.onOffset);
             if (now.isAfter(on)) {
                 on.add(1, 'day');
             }
             cronJobOn = new cron.CronJob(on.toDate(), cronInvokedOn, null, true);
-            var off = momentFor(config.off);
+            var off = momentFor(config.off, config.offOffset);
             if (now.isAfter(off)) {
                 off.add(1, 'day');
             }
