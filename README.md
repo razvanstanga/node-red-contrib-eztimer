@@ -5,5 +5,5 @@ Scheduler for node-red which allows you to enter on/off times as 24hr clock (e.g
 Inspired by Pete Scargill's [BigTimer](http://tech.scargill.net/big-timer/)
 
 TODO: 
- - [ ] Fuzzy on and off times (e.g. turn my light on at a random time each day, 60 minutes before or after goldenHour).
+ - [ ] Fuzzy on and off times (e.g. turn my light on at a random time each day within +-60 minutes of goldenHour).
  
