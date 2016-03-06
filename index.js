@@ -28,11 +28,12 @@ module.exports = function (RED) {
     var moment = require('moment');
     var SunCalc = require('suncalc');
     var cron = require("cron");
+    var fmt = 'YYYY-MM-DD HH:mm';
 
     RED.nodes.registerType('schedex', function (config) {
         RED.nodes.createNode(this, config);
         var node = this, cronJobOn, cronJobOff;
-        node.log(JSON.stringify(config, null, 4));
+        // node.log(JSON.stringify(config, null, 4));
 
         node.on('input', function (msg) {
             try {
@@ -77,19 +78,19 @@ module.exports = function (RED) {
 
         function cronInvokedOn() {
             sendOn(false);
-            var on = momentFor(config.on, config.onOffset).add(1, 'day');
+            var on = momentFor(config.on, config.onOffset, config.onRandomOffset).add(1, 'day');
             cronJobOn = new cron.CronJob(on.toDate(), cronInvokedOn, null, true);
-            node.log('Next on [' + on.toISOString() + ']');
+            node.log('Next on [' + on.format(fmt) + ']');
         }
 
         function cronInvokedOff() {
             sendOff(false);
-            var off = momentFor(config.off, config.offOffset).add(1, 'day');
+            var off = momentFor(config.off, config.offOffset, config.offRandomOffset).add(1, 'day');
             cronJobOff = new cron.CronJob(off.toDate(), cronInvokedOn, null, true);
-            node.log('Next off [' + off.toISOString() + ']');
+            node.log('Next off [' + off.format(fmt) + ']');
         }
 
-        function momentFor(time, offset) {
+        function momentFor(time, offset, randomiseOffset) {
             var runAt;
             var matches = new RegExp(/(\d+):(\d+)/).exec(time);
             if (matches && matches.length) {
@@ -103,7 +104,11 @@ module.exports = function (RED) {
             }
             if (runAt) {
                 if (offset) {
-                    runAt.add(offset, 'minutes');
+                    var adjusted = offset;
+                    if (randomiseOffset) {
+                        adjusted = offset * Math.random();
+                    }
+                    runAt.add(adjusted, 'minutes');
                 }
             } else {
                 node.status({fill: 'red', shape: 'dot', text: 'Invalid time: ' + time});
@@ -113,17 +118,17 @@ module.exports = function (RED) {
 
         (function setupInitialSchedule() {
             var now = moment();
-            var on = momentFor(config.on, config.onOffset);
+            var on = momentFor(config.on, config.onOffset, config.onRandomOffset);
             if (now.isAfter(on)) {
                 on.add(1, 'day');
             }
             cronJobOn = new cron.CronJob(on.toDate(), cronInvokedOn, null, true);
-            var off = momentFor(config.off, config.offOffset);
+            var off = momentFor(config.off, config.offOffset, config.offRandomOffset);
             if (now.isAfter(off)) {
                 off.add(1, 'day');
             }
             cronJobOff = new cron.CronJob(off.toDate(), cronInvokedOff, null, true);
-            var message = 'Initial schedule: on [' + on.toISOString() + '] off [' + off.toISOString() + ']';
+            var message = 'On ' + on.format(fmt) + ', Off ' + off.format(fmt);
             node.log(message);
             node.status({fill: 'yellow', shape: 'dot', text: message});
         })();

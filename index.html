@@ -34,10 +34,12 @@ THE SOFTWARE.
             onTopic: {value: ''},
             onPayload: {value: ''},
             onOffset: {value: 0},
+            onRandomOffset: {value: 0},
             off: {value: 'goldenHour'},
             offTopic: {value: ''},
             offPayload: {value: ''},
-            offOffset: {value: 0}
+            offOffset: {value: 0},
+            offRandomOffset: {value: 0}
         },
         inputs: 1,
         outputs: 1,
@@ -65,6 +67,7 @@ THE SOFTWARE.
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
+
     <hr>
     <div class="form-row">
 		<label for="node-input-lat"><i class="fa fa-globe"></i> Latitude</label>
@@ -74,6 +77,7 @@ THE SOFTWARE.
 		<label for="node-input-lon"><i class="fa fa-globe"></i> Longitude</label>
 		<input type="text" id="node-input-lon" placeholder="-1.4">
 	</div>
+
 	<hr>
     <div class="form-row">
         <label for="node-input-on"><i class="icon-tag"></i> On time</label>
@@ -92,6 +96,13 @@ THE SOFTWARE.
         <label for="node-input-onOffset"><i class="icon-tag"></i>On Offset</label>
         <input type="number" id="node-input-onOffset" placeholder="0">
     </div>
+    <div class="form-row">
+        <label style="margin-left: 100px; width: 70%">
+            <input type="checkbox" id="node-input-onRandomOffset" placeholder="" style="width: 20px; margin: 0">
+            Use random on time within offset period
+        </label>
+    </div>
+
     <hr>
     <div class="form-row">
         <label for="node-input-off"><i class="icon-tag"></i> Off time</label>
@@ -108,6 +119,12 @@ THE SOFTWARE.
     <div class="form-row">
         <label for="node-input-offOffset"><i class="icon-tag"></i>Off Offset</label>
         <input type="number" id="node-input-offOffset" placeholder="0">
+    </div>
+    <div class="form-row">
+        <label style="margin-left: 100px; width: 70%">
+            <input type="checkbox" id="node-input-offRandomOffset" placeholder="" style="width: 20px; margin: 0">
+            Use random off time within offset period
+        </label>
     </div>
 </script>
 
