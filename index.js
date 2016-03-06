@@ -32,7 +32,7 @@ module.exports = function (RED) {
 
     RED.nodes.registerType('schedex', function (config) {
         RED.nodes.createNode(this, config);
-        var node = this, cronJobOn, cronJobOff;
+        var node = this, cronJobOn, cronJobOff, on , off;
         // node.log(JSON.stringify(config, null, 4));
 
         node.on('input', function (msg) {
@@ -63,7 +63,7 @@ module.exports = function (RED) {
             node.status({
                 fill: manual ? 'blue' : 'green',
                 shape: 'dot',
-                text: 'On ' + (manual ? 'manually' : 'automatically')
+                text: 'On ' + (manual ? 'manual' : 'auto') + ' until ' + off.format(fmt)
             });
         }
 
@@ -72,22 +72,22 @@ module.exports = function (RED) {
             node.status({
                 fill: manual ? 'blue' : 'green',
                 shape: 'ring',
-                text: 'Off ' + (manual ? 'manually' : 'automatically')
+                text: 'Off ' + (manual ? 'manual' : 'auto') + ' until ' + on.format(fmt)
             });
         }
 
         function cronInvokedOn() {
             sendOn(false);
-            var on = momentFor(config.on, config.onOffset, config.onRandomOffset).add(1, 'day');
+            on = momentFor(config.on, config.onOffset, config.onRandomOffset).add(1, 'day');
             cronJobOn = new cron.CronJob(on.toDate(), cronInvokedOn, null, true);
-            node.log('Next on [' + on.format(fmt) + ']');
+            node.log('On until ' + off.format(fmt));
         }
 
         function cronInvokedOff() {
             sendOff(false);
-            var off = momentFor(config.off, config.offOffset, config.offRandomOffset).add(1, 'day');
-            cronJobOff = new cron.CronJob(off.toDate(), cronInvokedOn, null, true);
-            node.log('Next off [' + off.format(fmt) + ']');
+            off = momentFor(config.off, config.offOffset, config.offRandomOffset).add(1, 'day');
+            cronJobOff = new cron.CronJob(off.toDate(), cronInvokedOff, null, true);
+            node.log('Off until ' + on.format(fmt));
         }
 
         function momentFor(time, offset, randomiseOffset) {
@@ -103,6 +103,7 @@ module.exports = function (RED) {
                 }
             }
             if (runAt) {
+                runAt.seconds(0);
                 if (offset) {
                     var adjusted = offset;
                     if (randomiseOffset) {
@@ -118,16 +119,19 @@ module.exports = function (RED) {
 
         (function setupInitialSchedule() {
             var now = moment();
-            var on = momentFor(config.on, config.onOffset, config.onRandomOffset);
+
+            on = momentFor(config.on, config.onOffset, config.onRandomOffset);
             if (now.isAfter(on)) {
                 on.add(1, 'day');
             }
             cronJobOn = new cron.CronJob(on.toDate(), cronInvokedOn, null, true);
-            var off = momentFor(config.off, config.offOffset, config.offRandomOffset);
+
+            off = momentFor(config.off, config.offOffset, config.offRandomOffset);
             if (now.isAfter(off)) {
                 off.add(1, 'day');
             }
             cronJobOff = new cron.CronJob(off.toDate(), cronInvokedOff, null, true);
+
             var message = 'On ' + on.format(fmt) + ', Off ' + off.format(fmt);
             node.log(message);
             node.status({fill: 'yellow', shape: 'dot', text: message});
