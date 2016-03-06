@@ -63,7 +63,7 @@ module.exports = function (RED) {
             node.status({
                 fill: manual ? 'blue' : 'green',
                 shape: 'dot',
-                text: 'On ' + (manual ? 'manually' : 'automatically')
+                text: 'On ' + (manual ? 'manual' : 'auto') + ' until ' + off.format(fmt)
             });
         }
 
@@ -72,7 +72,7 @@ module.exports = function (RED) {
             node.status({
                 fill: manual ? 'blue' : 'green',
                 shape: 'ring',
-                text: 'Off ' + (manual ? 'manually' : 'automatically')
+                text: 'Off ' + (manual ? 'manual' : 'auto') + ' until ' + on.format(fmt)
             });
         }
 
