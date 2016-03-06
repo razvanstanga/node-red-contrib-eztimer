@@ -63,7 +63,7 @@ module.exports = function (RED) {
             node.status({
                 fill: manual ? 'blue' : 'green',
                 shape: 'dot',
-                text: 'On ' + (manual ? 'manual' : 'auto') + ' until ' + off.format(fmt)
+                text: 'ON ' + (manual ? 'manual' : 'auto') + ' until ' + off.format(fmt)
             });
         }
 
@@ -72,7 +72,7 @@ module.exports = function (RED) {
             node.status({
                 fill: manual ? 'blue' : 'green',
                 shape: 'ring',
-                text: 'Off ' + (manual ? 'manual' : 'auto') + ' until ' + on.format(fmt)
+                text: 'OFF ' + (manual ? 'manual' : 'auto') + ' until ' + on.format(fmt)
             });
         }
 
@@ -132,7 +132,7 @@ module.exports = function (RED) {
             }
             cronJobOff = new cron.CronJob(off.toDate(), cronInvokedOff, null, true);
 
-            var message = 'On ' + on.format(fmt) + ', Off ' + off.format(fmt);
+            var message = 'ON ' + on.format(fmt) + ', OFF ' + off.format(fmt);
             node.log(message);
             node.status({fill: 'yellow', shape: 'dot', text: message});
         })();
