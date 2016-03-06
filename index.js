@@ -32,15 +32,23 @@ module.exports = function (RED) {
 
     RED.nodes.registerType('schedex', function (config) {
         RED.nodes.createNode(this, config);
-        var node = this, cronJobOn, cronJobOff, on , off;
+        var node = this, cronJobOn, cronJobOff, on, off;
         // node.log(JSON.stringify(config, null, 4));
 
         node.on('input', function (msg) {
             try {
-                if (msg.payload === 'on') {
-                    sendOn(true);
-                } else if (msg.payload === 'off') {
-                    sendOff(true);
+                switch (msg.payload) {
+                    case 'on':
+                    case 'ON':
+                    case 1:
+                        send('on', true);
+                        break;
+                    case 'off':
+                    case 'OFF':
+                    case 0:
+                        send('off', true);
+                        break;
+                    default:
                 }
             } catch (error) {
                 node.log(error.stack);
@@ -50,41 +58,29 @@ module.exports = function (RED) {
         });
 
         node.on('close', function () {
-            if (cronJobOn) {
-                cronJobOn.stop();
-            }
-            if (cronJobOff) {
-                cronJobOff.stop();
-            }
+            cronJobOn.stop();
+            cronJobOff.stop();
         });
 
-        function sendOn(manual) {
-            node.send({topic: config.onTopic, payload: config.onPayload});
+        function send(event, manual) {
+            var isOn = event === 'on';
+            node.send({topic: config[event + 'Topic'], payload: config[event + 'Payload']});
             node.status({
                 fill: manual ? 'blue' : 'green',
-                shape: 'dot',
-                text: 'ON ' + (manual ? 'manual' : 'auto') + ' until ' + off.format(fmt)
-            });
-        }
-
-        function sendOff(manual) {
-            node.send({topic: config.offTopic, payload: config.offPayload});
-            node.status({
-                fill: manual ? 'blue' : 'green',
-                shape: 'ring',
-                text: 'OFF ' + (manual ? 'manual' : 'auto') + ' until ' + on.format(fmt)
+                shape: isOn ? 'dot' : 'ring',
+                text: event.toUpperCase() + (manual ? ' manual' : ' auto') + ' until ' + (isOn ? off.format(fmt) : on.format(fmt))
             });
         }
 
         function cronInvokedOn() {
-            sendOn(false);
+            send('on', false);
             on = momentFor(config.on, config.onOffset, config.onRandomOffset).add(1, 'day');
             cronJobOn = new cron.CronJob(on.toDate(), cronInvokedOn, null, true);
             node.log('On until ' + off.format(fmt));
         }
 
         function cronInvokedOff() {
-            sendOff(false);
+            send('off', false);
             off = momentFor(config.off, config.offOffset, config.offRandomOffset).add(1, 'day');
             cronJobOff = new cron.CronJob(off.toDate(), cronInvokedOff, null, true);
             node.log('Off until ' + on.format(fmt));
