@@ -24,28 +24,28 @@ THE SOFTWARE.
 
 <script type="text/javascript">
     RED.nodes.registerType('schedex', {
-        category: 'output',
+        category: 'input',
         color: '#ED461F',
         defaults: {
             name: {value: ''},
             lat: {value: ''},
             lon: {value: ''},
-            on: {value: '07:28'},
-            onTopic: {value: ''},
-            onPayload: {value: ''},
-            onOffset: {value: 0},
-            onRandomOffset: {value: 0},
-            off: {value: 'goldenHour'},
-            offTopic: {value: ''},
-            offPayload: {value: ''},
-            offOffset: {value: 0},
-            offRandomOffset: {value: 0}
+            ontime: {value: '07:28'},
+            ontopic: {value: ''},
+            onpayload: {value: ''},
+            onoffset: {value: 0},
+            onrandomoffset: {value: 0},
+            offtime: {value: 'goldenHour'},
+            offtopic: {value: ''},
+            offpayload: {value: ''},
+            offoffset: {value: 0},
+            offrandomoffset: {value: 0}
         },
         inputs: 1,
         outputs: 1,
         icon: 'datetime.png',
         label: function () {
-            return this.name || this.datetime || 'datetime';
+            return this.name || 'schedex';
         },
         paletteLabel: 'schedex',
         align: 'right',
@@ -67,7 +67,6 @@ THE SOFTWARE.
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
-
     <hr>
     <div class="form-row">
 		<label for="node-input-lat"><i class="fa fa-globe"></i> Latitude</label>
@@ -80,49 +79,48 @@ THE SOFTWARE.
 
 	<hr>
     <div class="form-row">
-        <label for="node-input-on"><i class="icon-tag"></i> On time</label>
-        <input type="text" id="node-input-on" placeholder="">
-    </div>
-
-    <div class="form-row">
-        <label for="node-input-onTopic"><i class="icon-tag"></i>On Topic</label>
-        <input type="text" id="node-input-onTopic" placeholder="">
+        <label for="node-input-ontime"><i class="icon-tag"></i> On time</label>
+        <input type="text" id="node-input-ontime" placeholder="">
     </div>
     <div class="form-row">
-        <label for="node-input-onPayload"><i class="icon-tag"></i>On Payload</label>
-        <input type="text" id="node-input-onPayload" placeholder="">
+        <label for="node-input-ontopic"><i class="icon-tag"></i>On Topic</label>
+        <input type="text" id="node-input-ontopic" placeholder="">
     </div>
     <div class="form-row">
-        <label for="node-input-onOffset"><i class="icon-tag"></i>On Offset</label>
-        <input type="number" id="node-input-onOffset" placeholder="0">
+        <label for="node-input-onpayload"><i class="icon-tag"></i>On Payload</label>
+        <input type="text" id="node-input-onpayload" placeholder="">
+    </div>
+    <div class="form-row">
+        <label for="node-input-onoffset"><i class="icon-tag"></i>On Offset</label>
+        <input type="number" id="node-input-onoffset" placeholder="0">
     </div>
     <div class="form-row">
         <label style="margin-left: 100px; width: 70%">
-            <input type="checkbox" id="node-input-onRandomOffset" placeholder="" style="width: 20px; margin: 0">
+            <input type="checkbox" id="node-input-onrandomoffset" placeholder="" style="width: 20px; margin: 0">
             Use random on time within offset period
         </label>
     </div>
 
     <hr>
     <div class="form-row">
-        <label for="node-input-off"><i class="icon-tag"></i> Off time</label>
-        <input type="text" id="node-input-off" placeholder="">
+        <label for="node-input-offtime"><i class="icon-tag"></i> Off time</label>
+        <input type="text" id="node-input-offtime" placeholder="">
     </div>
     <div class="form-row">
-        <label for="node-input-offTopic"><i class="icon-tag"></i>Off Topic</label>
-        <input type="text" id="node-input-offTopic" placeholder="">
+        <label for="node-input-offtopic"><i class="icon-tag"></i>Off Topic</label>
+        <input type="text" id="node-input-offtopic" placeholder="">
     </div>
     <div class="form-row">
-        <label for="node-input-offPayload"><i class="icon-tag"></i>Off Payload</label>
-        <input type="text" id="node-input-offPayload" placeholder="">
+        <label for="node-input-offpayload"><i class="icon-tag"></i>Off Payload</label>
+        <input type="text" id="node-input-offpayload" placeholder="">
     </div>
     <div class="form-row">
-        <label for="node-input-offOffset"><i class="icon-tag"></i>Off Offset</label>
-        <input type="number" id="node-input-offOffset" placeholder="0">
+        <label for="node-input-offoffset"><i class="icon-tag"></i>Off Offset</label>
+        <input type="number" id="node-input-offoffset" placeholder="0">
     </div>
     <div class="form-row">
         <label style="margin-left: 100px; width: 70%">
-            <input type="checkbox" id="node-input-offRandomOffset" placeholder="" style="width: 20px; margin: 0">
+            <input type="checkbox" id="node-input-offrandomoffset" placeholder="" style="width: 20px; margin: 0">
             Use random off time within offset period
         </label>
     </div>
