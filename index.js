@@ -33,7 +33,7 @@ module.exports = function (RED) {
 
     RED.nodes.registerType('schedex', function (config) {
         RED.nodes.createNode(this, config);
-        var node = this
+        var node = this;
         node.log(JSON.stringify(config, null, 4));
         var events = {
             on: setupEvent('on', 'dot'),
@@ -43,18 +43,11 @@ module.exports = function (RED) {
         events.off.inverse = events.on;
 
         node.on('input', function (msg) {
-            switch (msg.payload) {
-                case 'on':
-                case 'ON':
-                case 1:
-                    send(events.on, true);
-                    break;
-                case 'off':
-                case 'OFF':
-                case 0:
-                    send(events.off, true);
-                    break;
-                default:
+            var event = events[msg.payload];
+            if (event) {
+                send(event, true);
+            } else {
+                node.status({fill: 'red', shape: 'dot', text: 'Manual payload must be \'on\' or \'off\''});
             }
         });
 
