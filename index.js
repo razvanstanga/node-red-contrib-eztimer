@@ -28,106 +28,101 @@ module.exports = function (RED) {
     var moment = require('moment');
     var SunCalc = require('suncalc');
     var cron = require("cron");
+    var _ = require("lodash");
     var fmt = 'YYYY-MM-DD HH:mm';
 
     RED.nodes.registerType('schedex', function (config) {
         RED.nodes.createNode(this, config);
-        var node = this, cronJobOn, cronJobOff, on, off;
+        var node = this
         node.log(JSON.stringify(config, null, 4));
-        // var events = {on: {
-        //     topic : config.onTopic,
-        //     payload: config.onPayload,
-        //
-        // }, off: {}};
+        var events = {
+            on: setupEvent('on', 'dot'),
+            off: setupEvent('off', 'ring')
+        };
+        events.on.inverse = events.off;
+        events.off.inverse = events.on;
 
         node.on('input', function (msg) {
-            try {
-                switch (msg.payload) {
-                    case 'on':
-                    case 'ON':
-                    case 1:
-                        send('on', true);
-                        break;
-                    case 'off':
-                    case 'OFF':
-                    case 0:
-                        send('off', true);
-                        break;
-                    default:
-                }
-            } catch (error) {
-                node.log(error.stack);
-                node.error(error, msg);
-                node.status({fill: 'red', shape: 'dot', text: error.message});
+            switch (msg.payload) {
+                case 'on':
+                case 'ON':
+                case 1:
+                    send(events.on, true);
+                    break;
+                case 'off':
+                case 'OFF':
+                case 0:
+                    send(events.off, true);
+                    break;
+                default:
             }
         });
 
         node.on('close', function () {
-            cronJobOn.stop();
-            cronJobOff.stop();
+            events.on.cronJob.stop();
+            events.off.cronJob.stop();
         });
 
+        function setupEvent(eventName, shape) {
+            var filtered = _.pickBy(config, function (value, key) {
+                return key && key.indexOf(eventName) === 0;
+            });
+            var event = _.mapKeys(filtered, function (value, key) {
+                return key.substring(eventName.length).toLowerCase();
+            });
+            event.name = eventName.toUpperCase();
+            event.shape = shape;
+            event.cronFunc = function () {
+                send(event);
+                schedule(event);
+            };
+            node.log(JSON.stringify(event, null, 4));
+            return event;
+        }
+
         function send(event, manual) {
-            var isOn = event === 'on';
-            node.send({topic: config[event + 'Topic'], payload: config[event + 'Payload']});
+            node.send({topic: event.topic, payload: event.payload});
             node.status({
                 fill: manual ? 'blue' : 'green',
-                shape: isOn ? 'dot' : 'ring',
-                text: event.toUpperCase() + (manual ? ' manual' : ' auto') + ' until ' + (isOn ? off.format(fmt) : on.format(fmt))
+                shape: event.shape,
+                text: event.name + (manual ? ' manual' : ' auto') + ' until ' + event.inverse.moment.format(fmt)
             });
         }
 
-        function schedule(event, eventFunc, isInitial) {
-            var runAt, time = config[event], offset = config[event + 'Offset'], randomiseOffset = config[event + 'RandomOffset'];
-            var matches = new RegExp(/(\d+):(\d+)/).exec(time);
+        function schedule(event, isInitial) {
+            var matches = new RegExp(/(\d+):(\d+)/).exec(event.time);
             if (matches && matches.length) {
-                runAt = moment().hour(matches[1]).minute(matches[2]);
+                event.moment = moment().hour(matches[1]).minute(matches[2]);
             } else {
                 var sunCalcTimes = SunCalc.getTimes(new Date(), config.lat, config.lon);
-                var date = sunCalcTimes[time];
+                var date = sunCalcTimes[event.time];
                 if (date) {
-                    runAt = moment(date);
+                    event.moment = moment(date);
                 }
             }
-            if (runAt) {
-                runAt.seconds(0);
-                if (isInitial && moment().isAfter(runAt)) {
-                    runAt.add(1, 'day');
+            if (event.moment) {
+                event.moment.seconds(0);
+                if (!isInitial || isInitial && moment().isAfter(event.moment)) {
+                    event.moment.add(1, 'day');
                 }
-                if (offset) {
-                    var adjusted = offset;
-                    if (randomiseOffset) {
-                        adjusted = offset * Math.random();
+                if (event.offset) {
+                    var adjustment = event.offset;
+                    if (event.randomoffset) {
+                        adjustment = event.offset * Math.random();
                     }
-                    runAt.add(adjusted, 'minutes');
+                    event.moment.add(adjustment, 'minutes');
                 }
-                if (event === 'on') on = runAt;
-                else off = runAt;
-                return new cron.CronJob(runAt.toDate(), eventFunc, null, true);
+                node.log(event.name + ' scheduled for: ' + event.moment.format(fmt));
+                event.cronJob = new cron.CronJob(event.moment.toDate(), event.cronFunc, null, true);
+            } else {
+                node.status({fill: 'red', shape: 'dot', text: 'Invalid time: ' + event.time});
             }
-            node.status({fill: 'red', shape: 'dot', text: 'Invalid time: ' + time});
-            return null;
         }
 
-        function cronInvokedOn() {
-            send('on', false);
-            cronJobOn = schedule('on', cronInvokedOn);
-            node.log('On until ' + off.format(fmt));
-        }
-
-        function cronInvokedOff() {
-            send('off', false);
-            cronJobOff = schedule('off', cronInvokedOff);
-            node.log('Off until ' + on.format(fmt));
-        }
-
-
-        (function setupInitialSchedule() {
-            cronJobOn = schedule('on', cronInvokedOn, true);
-            cronJobOff = schedule('off', cronInvokedOff, true);
-            var message = 'ON ' + on.format(fmt) + ', OFF ' + off.format(fmt);
-            node.log(message);
-            node.status({fill: 'yellow', shape: 'dot', text: message});
-        })();
+        schedule(events.on, true);
+        schedule(events.off, true);
+        var message = 'ON ' + events.on.moment.format(fmt) + ', OFF ' + events.off.moment.format(fmt);
+        node.log(message);
+        node.status({fill: 'yellow', shape: 'dot', text: message});
     });
 };
