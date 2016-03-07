@@ -114,7 +114,9 @@ module.exports = function (RED) {
 
         schedule(events.on, true);
         schedule(events.off, true);
-        var message = 'ON ' + events.on.moment.format(fmt) + ', OFF ' + events.off.moment.format(fmt);
+        var firstEvent = events.on.moment.isBefore(events.off.moment) ? events.on : events.off;
+        var message = firstEvent.name + ' ' + firstEvent.moment.format(fmt) + ', ' +
+            firstEvent.inverse.name + ' ' + firstEvent.inverse.moment.format(fmt);
         node.log(message);
         node.status({fill: 'yellow', shape: 'dot', text: message});
     });
