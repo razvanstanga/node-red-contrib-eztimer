@@ -75,10 +75,10 @@ var nodeRedModule = require('../index.js');
 describe('schedex', function () {
     it('should schedule initially', function () {
         var node = loadNode({
-            on: '11:45',
+            onTime: '11:45',
             onTopic: 'on',
             onPayload: 'on payload',
-            off: '11:48',
+            offTime: '11:48',
             offTopic: 'off',
             offPayload: 'off payload',
             lat: 51.33411,
@@ -86,6 +86,7 @@ describe('schedex', function () {
             unitTest: true
         }, nodeRedModule);
 
+        // TODO - actually do something here.
 
         // assert.strictEqual(2881, node.messages().length);
     });
