@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-schedex",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -16,14 +16,12 @@
     "url": "https://github.com/biddster/node-red-contrib-schedex/issues"
   },
   "dependencies": {
-    "cron": "^1.1.0",
     "lodash": "^4.6.1",
     "moment": "^2.11.2",
     "suncalc": "^1.7.0"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
-    "lodash": "^4.6.1"
+    "chai": "^3.5.0"
   },
   "node-red": {
     "nodes": {

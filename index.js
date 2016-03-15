@@ -27,7 +27,6 @@ module.exports = function (RED) {
 
     var moment = require('moment');
     var SunCalc = require('suncalc');
-    var cron = require("cron");
     var _ = require("lodash");
     var fmt = 'YYYY-MM-DD HH:mm';
 
@@ -52,8 +51,8 @@ module.exports = function (RED) {
         });
 
         node.on('close', function () {
-            events.on.cronJob.stop();
-            events.off.cronJob.stop();
+            clearTimeout(events.on.timeout);
+            clearTimeout(events.off.timeout);
         });
 
         function setupEvent(eventName, shape) {
@@ -65,7 +64,7 @@ module.exports = function (RED) {
             });
             event.name = eventName.toUpperCase();
             event.shape = shape;
-            event.cronFunc = function () {
+            event.callback = function () {
                 send(event);
                 schedule(event);
             };
@@ -83,8 +82,10 @@ module.exports = function (RED) {
         }
 
         function schedule(event, isInitial) {
+            var now = moment();
             var matches = new RegExp(/(\d+):(\d+)/).exec(event.time);
             if (matches && matches.length) {
+                // Don't use 'now' here as hour and minute mutate the moment.
                 event.moment = moment().hour(matches[1]).minute(matches[2]);
             } else {
                 var sunCalcTimes = SunCalc.getTimes(new Date(), config.lat, config.lon);
@@ -95,7 +96,7 @@ module.exports = function (RED) {
             }
             if (event.moment) {
                 event.moment.seconds(0);
-                if (!isInitial || isInitial && moment().isAfter(event.moment)) {
+                if (!isInitial || isInitial && now.isAfter(event.moment)) {
                     event.moment.add(1, 'day');
                 }
                 if (event.offset) {
@@ -105,8 +106,13 @@ module.exports = function (RED) {
                     }
                     event.moment.add(adjustment, 'minutes');
                 }
-                node.log(event.name + ' scheduled for: ' + event.moment.format(fmt));
-                event.cronJob = new cron.CronJob(event.moment.toDate(), event.cronFunc, null, true);
+
+                var delay = event.moment.diff(now);
+                node.log(event.name + ' scheduled for: ' + event.moment.format(fmt) + ' delay: ' + delay);
+                if (event.timeout) {
+                    clearTimeout(event.timeout);
+                }
+                event.timeout = setTimeout(event.callback, delay);
             } else {
                 node.status({fill: 'red', shape: 'dot', text: 'Invalid time: ' + event.time});
             }
