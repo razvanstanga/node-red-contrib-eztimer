@@ -14,6 +14,14 @@ Change directory to your node red installation:
     $ npm install node-red-contrib-schedex
  
 ### Configuration 
+
+#### Suspending scheduling
+
+The 'Suspend scheduling' checkbox allows you to disable time scheduling. If scheduling is suspended, 
+Schedex will only generate output events upon receipt of input 'on' and 'off' events (see below).
+
+This setting is provided for the situation where you temporarily don't want time based activation 
+and don't want to rewire your Node-RED flow.
     
 #### Times
     

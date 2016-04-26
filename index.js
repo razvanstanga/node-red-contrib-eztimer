@@ -77,7 +77,7 @@ module.exports = function (RED) {
             node.status({
                 fill: manual ? 'blue' : 'green',
                 shape: event.shape,
-                text: event.name + (manual ? ' manual' : ' auto') + ' until ' + event.inverse.moment.format(fmt)
+                text: event.name + (manual ? ' manual' : ' auto') + (config.suspended ? ' - scheduling suspended' : (' until ' + event.inverse.moment.format(fmt)))
             });
         }
 
@@ -118,12 +118,18 @@ module.exports = function (RED) {
             }
         }
 
-        schedule(events.on, true);
-        schedule(events.off, true);
-        var firstEvent = events.on.moment.isBefore(events.off.moment) ? events.on : events.off;
-        var message = firstEvent.name + ' ' + firstEvent.moment.format(fmt) + ', ' +
-            firstEvent.inverse.name + ' ' + firstEvent.inverse.moment.format(fmt);
-        node.log(message);
-        node.status({fill: 'yellow', shape: 'dot', text: message});
+        node.log('Scheduling suspended is: ' + config.suspended);
+
+        if (config.suspended) {
+            node.status({fill: 'grey', shape: 'dot', text: 'Scheduling suspended - manual mode only'});
+        } else {
+            schedule(events.on, true);
+            schedule(events.off, true);
+            var firstEvent = events.on.moment.isBefore(events.off.moment) ? events.on : events.off;
+            var message = firstEvent.name + ' ' + firstEvent.moment.format(fmt) + ', ' +
+                firstEvent.inverse.name + ' ' + firstEvent.inverse.moment.format(fmt);
+            node.log(message);
+            node.status({fill: 'yellow', shape: 'dot', text: message});
+        }
     });
 };
