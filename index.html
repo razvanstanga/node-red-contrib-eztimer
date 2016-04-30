@@ -28,6 +28,7 @@ THE SOFTWARE.
         color: '#f37a33',
         defaults: {
             name: {value: ''},
+            suspended: {value: false},
             lat: {value: ''},
             lon: {value: ''},
             ontime: {value: '07:28'},
@@ -66,6 +67,12 @@ THE SOFTWARE.
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label style="margin-left: 100px; width: 70%">
+            <input type="checkbox" id="node-input-suspended" placeholder="" style="width: 20px; margin: 0">
+            Suspend scheduling
+        </label>
     </div>
     <hr>
     <div class="form-row">
@@ -133,6 +140,13 @@ THE SOFTWARE.
 It also allows you to offset times and randomise the time within the offset.
 
 Inspired by Pete Scargill's <a href="http://tech.scargill.net/big-timer/">BigTimer</a>
+
+    <h2>Suspending scheduling</h2>
+    The 'Suspend scheduling' checkbox allows you to disable time scheduling. If scheduling is suspended, Schedex will only generate output events
+    upon receipt of input 'on' and 'off' events (see below).
+
+     This setting is provided for the situation where you temporarily don't want time based activation and don't want to
+     rewire your Node-RED flow.
 
     <h2>Times</h2>
 
