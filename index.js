@@ -33,7 +33,6 @@ module.exports = function (RED) {
     RED.nodes.registerType('schedex', function (config) {
         RED.nodes.createNode(this, config);
         var node = this;
-        node.log(JSON.stringify(config, null, 4));
         var events = {
             on: setupEvent('on', 'dot'),
             off: setupEvent('off', 'ring')
@@ -68,7 +67,6 @@ module.exports = function (RED) {
                 send(event);
                 schedule(event);
             };
-            node.log(JSON.stringify(event, null, 4));
             return event;
         }
 
@@ -108,7 +106,6 @@ module.exports = function (RED) {
                 }
 
                 var delay = event.moment.diff(now);
-                node.log(event.name + ' scheduled for: ' + event.moment.format(fmt) + ' delay: ' + delay);
                 if (event.timeout) {
                     clearTimeout(event.timeout);
                 }
@@ -118,8 +115,6 @@ module.exports = function (RED) {
             }
         }
 
-        node.log('Scheduling suspended is: ' + config.suspended);
-
         if (config.suspended) {
             node.status({fill: 'grey', shape: 'dot', text: 'Scheduling suspended - manual mode only'});
         } else {
@@ -128,7 +123,6 @@ module.exports = function (RED) {
             var firstEvent = events.on.moment.isBefore(events.off.moment) ? events.on : events.off;
             var message = firstEvent.name + ' ' + firstEvent.moment.format(fmt) + ', ' +
                 firstEvent.inverse.name + ' ' + firstEvent.inverse.moment.format(fmt);
-            node.log(message);
             node.status({fill: 'yellow', shape: 'dot', text: message});
         }
     });
