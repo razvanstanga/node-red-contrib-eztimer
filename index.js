@@ -41,18 +41,34 @@ module.exports = function (RED) {
         events.off.inverse = events.on;
 
         node.on('input', function (msg) {
+            var handled = false;
+            // TODO - with these payload options, we can't support on and ontime etc.
             var event = events[msg.payload];
             if (event) {
+                handled = true;
                 send(event, true);
-            } else {
-                node.status({fill: 'red', shape: 'dot', text: 'Manual payload must be \'on\' or \'off\''});
+            }
+            if (msg.payload.ontime) {
+                handled = true;
+                event.on.time = msg.payload.ontime;
+                schedule(event.on);
+            }
+            if (msg.payload.offtime) {
+                handled = true;
+                event.off.time = msg.payload.offtime;
+                schedule(event.off);
+            }
+            if (msg.payload.suspended) {
+                handled = true;
+                config.suspended = msg.payload.suspended;
+                startup();
+            }
+            if (!handled) {
+                node.status({fill: 'red', shape: 'dot', text: 'Unsupported input'});
             }
         });
 
-        node.on('close', function () {
-            clearTimeout(events.on.timeout);
-            clearTimeout(events.off.timeout);
-        });
+        node.on('close', suspend);
 
         function setupEvent(eventName, shape) {
             var filtered = _.pickBy(config, function (value, key) {
@@ -115,9 +131,13 @@ module.exports = function (RED) {
             }
         }
 
-        if (config.suspended) {
+        function suspend() {
+            clearTimeout(events.on.timeout);
+            clearTimeout(events.off.timeout);
             node.status({fill: 'grey', shape: 'dot', text: 'Scheduling suspended - manual mode only'});
-        } else {
+        }
+
+        function resume() {
             schedule(events.on, true);
             schedule(events.off, true);
             var firstEvent = events.on.moment.isBefore(events.off.moment) ? events.on : events.off;
@@ -125,5 +145,15 @@ module.exports = function (RED) {
                 firstEvent.inverse.name + ' ' + firstEvent.inverse.moment.format(fmt);
             node.status({fill: 'yellow', shape: 'dot', text: message});
         }
+
+        function startup() {
+            if (config.suspended) {
+                suspend();
+            } else {
+                resume();
+            }
+        }
+
+        startup();
     });
 };
