@@ -17,8 +17,8 @@
     "url": "https://github.com/biddster/node-red-contrib-schedex/issues"
   },
   "dependencies": {
-    "lodash": "^4.6.1",
-    "moment": "^2.11.2",
+    "lodash": "^4.15.0",
+    "moment": "^2.14.1",
     "suncalc": "^1.7.0"
   },
   "devDependencies": {
