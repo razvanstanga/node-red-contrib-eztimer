@@ -32,36 +32,37 @@ module.exports = function (RED) {
 
     RED.nodes.registerType('schedex', function (config) {
         RED.nodes.createNode(this, config);
-        var node = this;
-        var events = {
-            on: setupEvent('on', 'dot'),
-            off: setupEvent('off', 'ring')
-        };
-        events.on.inverse = events.off;
-        events.off.inverse = events.on;
+        var node = this,
+            on = setupEvent('on', 'dot'),
+            off = setupEvent('off', 'ring');
+        on.inverse = off;
+        off.inverse = on;
 
         node.on('input', function (msg) {
             var handled = false;
             // TODO - with these payload options, we can't support on and ontime etc.
-            var event = events[msg.payload];
-            if (event) {
+            if (msg.payload === 'on') {
                 handled = true;
-                send(event, true);
+                send(on, true);
             }
-            if (msg.payload.ontime) {
+            if (msg.payload === 'off') {
                 handled = true;
-                event.on.time = msg.payload.ontime;
-                schedule(event.on);
+                send(off, true);
             }
-            if (msg.payload.offtime) {
+            if (!_.isUndefined(msg.payload.ontime)) {
                 handled = true;
-                event.off.time = msg.payload.offtime;
-                schedule(event.off);
+                on.time = msg.payload.ontime;
+                schedule(on);
             }
-            if (msg.payload.suspended) {
+            if (!_.isUndefined(msg.payload.offtime)) {
+                handled = true;
+                off.time = msg.payload.offtime;
+                schedule(off);
+            }
+            if (!_.isUndefined(msg.payload.suspended)) {
                 handled = true;
                 config.suspended = msg.payload.suspended;
-                startup();
+                bootstrap();
             }
             if (!handled) {
                 node.status({fill: 'red', shape: 'dot', text: 'Unsupported input'});
@@ -132,21 +133,21 @@ module.exports = function (RED) {
         }
 
         function suspend() {
-            clearTimeout(events.on.timeout);
-            clearTimeout(events.off.timeout);
+            clearTimeout(on.timeout);
+            clearTimeout(off.timeout);
             node.status({fill: 'grey', shape: 'dot', text: 'Scheduling suspended - manual mode only'});
         }
 
         function resume() {
-            schedule(events.on, true);
-            schedule(events.off, true);
-            var firstEvent = events.on.moment.isBefore(events.off.moment) ? events.on : events.off;
+            schedule(on, true);
+            schedule(off, true);
+            var firstEvent = on.moment.isBefore(off.moment) ? on : off;
             var message = firstEvent.name + ' ' + firstEvent.moment.format(fmt) + ', ' +
                 firstEvent.inverse.name + ' ' + firstEvent.inverse.moment.format(fmt);
             node.status({fill: 'yellow', shape: 'dot', text: message});
         }
 
-        function startup() {
+        function bootstrap() {
             if (config.suspended) {
                 suspend();
             } else {
@@ -154,6 +155,6 @@ module.exports = function (RED) {
             }
         }
 
-        startup();
+        bootstrap();
     });
 };
