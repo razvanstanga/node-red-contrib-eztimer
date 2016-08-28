@@ -49,20 +49,24 @@ module.exports = function (RED) {
                 handled = true;
                 send(off, true);
             }
-            if (!_.isUndefined(msg.payload.ontime)) {
-                handled = true;
-                on.time = msg.payload.ontime;
-                schedule(on);
-            }
-            if (!_.isUndefined(msg.payload.offtime)) {
-                handled = true;
-                off.time = msg.payload.offtime;
-                schedule(off);
-            }
-            if (!_.isUndefined(msg.payload.suspended)) {
+            if (msg.payload.hasOwnProperty('suspended')) {
                 handled = true;
                 config.suspended = msg.payload.suspended;
                 bootstrap();
+            }
+            if (msg.payload.hasOwnProperty('ontime')) {
+                handled = true;
+                on.time = msg.payload.ontime;
+                if (!config.suspended) {
+                    schedule(on);
+                }
+            }
+            if (msg.payload.hasOwnProperty('offtime')) {
+                handled = true;
+                off.time = msg.payload.offtime;
+                if (!config.suspended) {
+                    schedule(off);
+                }
             }
             if (!handled) {
                 node.status({fill: 'red', shape: 'dot', text: 'Unsupported input'});
