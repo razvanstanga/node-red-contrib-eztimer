@@ -63,3 +63,13 @@ and offset of -60 minutes, every day a message will be generated at a random tim
   
 You can wire inject nodes to the input of this node. To turn on manually, simply send a payload of 'on'. To turn off manually,
 send a payload of 'off'. Injecting on or off causes this node emit the configured topic and payload. The manual mode is reset when the next on or off time is reached.
+
+#### Programmatic Control
+  
+This node supports programmatic time control as we as configuration via the NodeRED UI. You can set the following:
+ 
+| Property        | Description                                                              |
+| --------------- | ------------------------------------------------------------------------ |
+| msg.payload.ontime | Value is a specified in the table for for time configuration |
+| msg.payload.offtime | Value is a specified in the table for for time configuration |
+| msg.payload.suspended    | Boolean: true will suspend scheduling, false will resume schduling | 
