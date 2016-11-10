@@ -66,10 +66,10 @@ send a payload of 'off'. Injecting on or off causes this node emit the configure
 
 #### Programmatic Control
   
-This node supports programmatic time control as we as configuration via the NodeRED UI. You can set the following:
+This node supports programmatic time control as well as configuration via the NodeRED UI. You can set the following:
  
-| Property        | Description                                                              |
+| Property        | Type                                                              |
 | --------------- | ------------------------------------------------------------------------ |
-| msg.payload.ontime | Value is a specified in the table for for time configuration |
-| msg.payload.offtime | Value is a specified in the table for for time configuration |
-| msg.payload.suspended    | Boolean: true will suspend scheduling, false will resume schduling | 
+| `msg.payload.ontime` | String value as specified in the table above for time configuration |
+| `msg.payload.offtime` | String value as specified in the table above for time configuration |
+| `msg.payload.suspended` | Boolean: true will suspend scheduling, false will resume schduling | 
