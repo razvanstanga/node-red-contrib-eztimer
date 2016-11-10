@@ -46,7 +46,7 @@ THE SOFTWARE.
         outputs: 1,
         icon: 'datetime.png',
         label: function () {
-            return this.name || 'schedex';
+            return this.name || this.ontime + ' - ' + this.offtime;
         },
         paletteLabel: 'schedex',
         align: 'left',
@@ -131,6 +131,7 @@ THE SOFTWARE.
             Use random off time within offset period
         </label>
     </div>
+
 </script>
 
 <script type="text/x-red" data-help-name="schedex">
@@ -240,5 +241,6 @@ and offset of -60 minutes, every day a message will be generated at a random tim
 
     You can wire inject nodes to the input of this node. To turn on manually, simply send a payload of 'on'. To turn off manually,
     send a payload of 'off'. Injecting on or off causes this node emit the configured topic and payload. The manual mode is reset when the next on or off time is reached.
+
 
 </script>
