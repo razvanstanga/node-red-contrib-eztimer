@@ -51,21 +51,21 @@ module.exports = function (RED) {
             }
             if (msg.payload.hasOwnProperty('suspended')) {
                 handled = true;
-                config.suspended = msg.payload.suspended;
+                config.suspended = !!msg.payload.suspended;
                 bootstrap();
             }
             if (msg.payload.hasOwnProperty('ontime')) {
                 handled = true;
                 on.time = msg.payload.ontime;
                 if (!config.suspended) {
-                    schedule(on);
+                    resume();
                 }
             }
             if (msg.payload.hasOwnProperty('offtime')) {
                 handled = true;
                 off.time = msg.payload.offtime;
                 if (!config.suspended) {
-                    schedule(off);
+                    resume();
                 }
             }
             if (!handled) {
