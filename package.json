@@ -3,7 +3,13 @@
   "version": "0.8.0",
   "description": "",
   "main": "index.js",
-  "keywords": ["node-red", "schedule", "scheduler", "timer", "sun events"],
+  "keywords": [
+    "node-red",
+    "schedule",
+    "scheduler",
+    "timer",
+    "sun events"
+  ],
   "scripts": {
     "test": "mocha -R spec ./tests/test.js"
   },
@@ -22,7 +28,8 @@
     "suncalc": "^1.7.0"
   },
   "devDependencies": {
-    "chai": "^3.5.0"
+    "chai": "^3.5.0",
+    "node-red-contrib-mock-node": "^0.2.0"
   },
   "node-red": {
     "nodes": {
