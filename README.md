@@ -57,7 +57,7 @@ The on and off time can have an offset. This is specified in minutes:
 #### Ramdomisation of times
 
 Both on and off times can be randomised by ticking "Use random time within offset period". For example, if you specify dusk with
-and offset of -60 minutes, every day a message will be generated at a random time in a 60 minute window before dusk.
+an offset of -60 minutes, every day a message will be generated at a random time in a 60 minute window before dusk.
   
 #### Inputs
   
@@ -66,7 +66,12 @@ send a payload of 'off'. Injecting on or off causes this node emit the configure
 
 #### Programmatic Control
   
-This node supports programmatic time control as well as configuration via the NodeRED UI. You can set the following:
+This node supports programmatic time control as well as configuration via the NodeRED UI. 
+
+**It is very important to note that properties set programmatically in this manner are transient. They will not persist over a NodeRED restart 
+or redeploy!**
+
+You can set the following:
  
 | Property        | Type                                                              |
 | --------------- | ------------------------------------------------------------------------ |
@@ -82,3 +87,4 @@ Alternatively, you can send msg.payload as a string with the following values
 | `ontime 12:00` | Time as specified in the table above for time configuration |
 | `offtime dusk` | Time as specified in the table above for time configuration |
 | `suspended true` | true will suspend scheduling, false will resume schduling |
+
