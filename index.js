@@ -40,32 +40,48 @@ module.exports = function (RED) {
 
         node.on('input', function (msg) {
             var handled = false;
-            // TODO - with these payload options, we can't support on and ontime etc.
-            if (msg.payload === 'on') {
-                handled = true;
-                send(on, true);
-            }
-            if (msg.payload === 'off') {
-                handled = true;
-                send(off, true);
-            }
-            if (msg.payload.hasOwnProperty('suspended')) {
-                handled = true;
-                config.suspended = !!msg.payload.suspended;
-                bootstrap();
-            }
-            if (msg.payload.hasOwnProperty('ontime')) {
-                handled = true;
-                on.time = msg.payload.ontime;
-                if (!config.suspended) {
-                    resume();
+            if (_.isString(msg.payload)) {
+                // TODO - with these payload options, we can't support on and ontime etc.
+                if (msg.payload === 'on') {
+                    handled = true;
+                    send(on, true);
+                } else if (msg.payload === 'off') {
+                    handled = true;
+                    send(off, true);
                 }
-            }
-            if (msg.payload.hasOwnProperty('offtime')) {
-                handled = true;
-                off.time = msg.payload.offtime;
-                if (!config.suspended) {
-                    resume();
+                if (msg.payload.indexOf('suspended') !== -1) {
+                    handled = true;
+                    var match = /.*suspended\s+(\S+)/.exec(msg.payload);
+                    config.suspended = (match[1] === 'true');
+                    bootstrap();
+                }
+                if (msg.payload.indexOf('ontime') !== -1) {
+                    handled = true;
+                    var match = /.*ontime\s+(\S+)/.exec(msg.payload);
+                    on.time = match[1];
+                    bootstrap();
+                }
+                if (msg.payload.indexOf('offtime') !== -1) {
+                    handled = true;
+                    var match = /.*offtime\s+(\S+)/.exec(msg.payload);
+                    off.time = match[1];
+                    bootstrap();
+                }
+            } else {
+                if (msg.payload.hasOwnProperty('suspended')) {
+                    handled = true;
+                    config.suspended = !!msg.payload.suspended;
+                    bootstrap();
+                }
+                if (msg.payload.hasOwnProperty('ontime')) {
+                    handled = true;
+                    on.time = msg.payload.ontime;
+                    bootstrap();
+                }
+                if (msg.payload.hasOwnProperty('offtime')) {
+                    handled = true;
+                    off.time = msg.payload.offtime;
+                    bootstrap();
                 }
             }
             if (!handled) {

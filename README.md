@@ -72,4 +72,13 @@ This node supports programmatic time control as well as configuration via the No
 | --------------- | ------------------------------------------------------------------------ |
 | `msg.payload.ontime` | String value as specified in the table above for time configuration |
 | `msg.payload.offtime` | String value as specified in the table above for time configuration |
-| `msg.payload.suspended` | Boolean: true will suspend scheduling, false will resume schduling | 
+| `msg.payload.suspended` | Boolean: true will suspend scheduling, false will resume schduling |
+ 
+ 
+Alternatively, you can send msg.payload as a string with the following values 
+
+| Example msg.payload        | Description|
+| --------------- | ------------------------------------------------------------------------ |
+| `ontime 12:00` | Time as specified in the table above for time configuration |
+| `offtime dusk` | Time as specified in the table above for time configuration |
+| `suspended true` | true will suspend scheduling, false will resume schduling |
