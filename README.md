@@ -1,4 +1,4 @@
-# node-red-contrib-schedex
+# Schedex
 
 Scheduler for node-red which allows you to enter on/off times as 24hr clock (e.g. 01:10) or suncalc events (e.g. goldenHour).
 It also allows you to offset times and randomise the time within the offset.
@@ -6,16 +6,15 @@ It also allows you to offset times and randomise the time within the offset.
 Inspired by Pete Scargill's [BigTimer](http://tech.scargill.net/big-timer/)
 
 
-
-### Installation
+# Installation
  
 Change directory to your node red installation:
 
     $ npm install node-red-contrib-schedex
  
-### Configuration 
+# Configuration 
 
-#### Suspending scheduling
+## Suspending scheduling
 
 The 'Suspend scheduling' checkbox allows you to disable time scheduling. If scheduling is suspended, 
 Schedex will only generate output events upon receipt of input 'on' and 'off' events (see below).
@@ -23,7 +22,7 @@ Schedex will only generate output events upon receipt of input 'on' and 'off' ev
 This setting is provided for the situation where you temporarily don't want time based activation 
 and don't want to rewire your Node-RED flow.
     
-#### Times
+## Times
     
 The times can be a 24 hour time or a [suncalc](https://github.com/mourner/suncalc) event:
 
@@ -47,24 +46,24 @@ The times can be a 24 hour time or a [suncalc](https://github.com/mourner/suncal
 | `dawn`          | dawn (morning nautical twilight ends, morning civil twilight starts)     |
 
 
-#### Offsets
+## Offsets
 
 The on and off time can have an offset. This is specified in minutes:
 
  - -ve number brings the time forward. E.g. if the time is dusk and offset is -60, a message will be generated 60 minutes before dusk.
  - +ve number delays the time by the specified number of minutes
 
-#### Ramdomisation of times
+## Randomisation of times
 
 Both on and off times can be randomised by ticking "Use random time within offset period". For example, if you specify dusk with
 an offset of -60 minutes, every day a message will be generated at a random time in a 60 minute window before dusk.
   
-#### Inputs
+## Inputs
   
 You can wire inject nodes to the input of this node. To turn on manually, simply send a payload of 'on'. To turn off manually,
 send a payload of 'off'. Injecting on or off causes this node emit the configured topic and payload. The manual mode is reset when the next on or off time is reached.
 
-#### Programmatic Control
+## Programmatic Control
   
 This node supports programmatic time control as well as configuration via the NodeRED UI. 
 
