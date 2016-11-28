@@ -39,7 +39,7 @@ module.exports = function (RED) {
         off.inverse = on;
 
         node.on('input', function (msg) {
-            var handled = false;
+            var handled = false, bootstrap = false;
             if (_.isString(msg.payload)) {
                 // TODO - with these payload options, we can't support on and ontime etc.
                 if (msg.payload === 'on') {
@@ -50,42 +50,38 @@ module.exports = function (RED) {
                     send(off, true);
                 }
                 if (msg.payload.indexOf('suspended') !== -1) {
-                    handled = true;
+                    handled = bootstrap = true;
                     var match = /.*suspended\s+(\S+)/.exec(msg.payload);
                     config.suspended = (match[1] === 'true');
-                    bootstrap();
                 }
                 if (msg.payload.indexOf('ontime') !== -1) {
-                    handled = true;
+                    handled = bootstrap = true;
                     var match = /.*ontime\s+(\S+)/.exec(msg.payload);
                     on.time = match[1];
-                    bootstrap();
                 }
                 if (msg.payload.indexOf('offtime') !== -1) {
-                    handled = true;
+                    handled = bootstrap = true;
                     var match = /.*offtime\s+(\S+)/.exec(msg.payload);
                     off.time = match[1];
-                    bootstrap();
                 }
             } else {
                 if (msg.payload.hasOwnProperty('suspended')) {
-                    handled = true;
+                    handled = bootstrap = true;
                     config.suspended = !!msg.payload.suspended;
-                    bootstrap();
                 }
                 if (msg.payload.hasOwnProperty('ontime')) {
-                    handled = true;
+                    handled = bootstrap = true;
                     on.time = msg.payload.ontime;
-                    bootstrap();
                 }
                 if (msg.payload.hasOwnProperty('offtime')) {
-                    handled = true;
+                    handled = bootstrap = true;
                     off.time = msg.payload.offtime;
-                    bootstrap();
                 }
             }
             if (!handled) {
                 node.status({fill: 'red', shape: 'dot', text: 'Unsupported input'});
+            } else if (bootstrap) {
+                bootstrap();
             }
         });
 
