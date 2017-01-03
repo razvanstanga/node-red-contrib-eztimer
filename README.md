@@ -74,16 +74,33 @@ You can set the following:
  
 | Property        | Type                                                              |
 | --------------- | ------------------------------------------------------------------------ |
+| `msg.payload.suspended` | Boolean: true will suspend scheduling, false will resume scheduling |
 | `msg.payload.ontime` | String value as specified in the table above for time configuration |
+| `msg.payload.ontopic` | String value emitted as the topic for the on event |
+| `msg.payload.onpayload` | String value emitted as the payload for the on event |
+| `msg.payload.onoffset` | Number value as specified above for Offset configuration |
+| `msg.payload.onrandomoffset` | Boolean value as specified above in Randomisation of Times |
 | `msg.payload.offtime` | String value as specified in the table above for time configuration |
-| `msg.payload.suspended` | Boolean: true will suspend scheduling, false will resume schduling |
+| `msg.payload.offtopic` | String value emitted as the topic for the off event |
+| `msg.payload.offpayload` | String value emitted as the payload for the off event |
+| `msg.payload.offoffset` | Number value as specified above for Offset configuration |
+| `msg.payload.offrandomoffset` | Boolean value as specified above in Randomisation of Times |
+
  
  
-Alternatively, you can send msg.payload as a string with the following values 
+Alternatively, you can send msg.payload as a string with the following values:
 
 | Example msg.payload        | Description|
 | --------------- | ------------------------------------------------------------------------ |
+| `suspended true` | true will suspend scheduling, false will resume scheduling |
 | `ontime 12:00` | Time as specified in the table above for time configuration |
+| `ontopic my_topic` | Override the topic for the on event (no spaces) |
+| `onpayload my_payload` | Override the payload for the on event (no spaces) |
+| `onoffset 30` | Override the offset for the on event |
+| `onrandomoffset true` | Override the random offset for the on event |
 | `offtime dusk` | Time as specified in the table above for time configuration |
-| `suspended true` | true will suspend scheduling, false will resume schduling |
-
+| `offtopic my_topic` | Override the topic for the off event (no spaces) |
+| `offpayload my_payload` | Override the payload for the off event (no spaces) |
+| `offoffset -30` | Override the offset for the off event |
+| `offrandomoffset false` | Override the random offset for the off event |
+| `ontime 16:30 onoffset 60 onrandomoffset true` | Override the time, offset and random offset for the on event |
