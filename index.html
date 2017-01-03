@@ -140,7 +140,10 @@ THE SOFTWARE.
 <h1 id="schedex">Schedex</h1>
 <p>Scheduler for node-red which allows you to enter on/off times as 24hr clock (e.g. 01:10) or suncalc events (e.g. goldenHour).<br>It also allows you to offset times and randomise the time within the offset.</p>
 <p>Inspired by Pete Scargill&#39;s <a href="http://tech.scargill.net/big-timer/">BigTimer</a></p>
-<h1 id="configuration">Configuration</h1>
+<h1 id="installation">Installation</h1>
+<p>Change directory to your node red installation:</p>
+<pre><code>$ npm install node-red-contrib-schedex
+</code></pre><h1 id="configuration">Configuration</h1>
 <h2 id="suspending-scheduling">Suspending scheduling</h2>
 <p>The &#39;Suspend scheduling&#39; checkbox allows you to disable time scheduling. If scheduling is suspended,<br>Schedex will only generate output events upon receipt of input &#39;on&#39; and &#39;off&#39; events (see below).</p>
 <p>This setting is provided for the situation where you temporarily don&#39;t want time based activation<br>and don&#39;t want to rewire your Node-RED flow.</p>
@@ -239,20 +242,52 @@ THE SOFTWARE.
 </thead>
 <tbody>
 <tr>
+<td><code>msg.payload.suspended</code></td>
+<td>Boolean: true will suspend scheduling, false will resume scheduling</td>
+</tr>
+<tr>
 <td><code>msg.payload.ontime</code></td>
 <td>String value as specified in the table above for time configuration</td>
+</tr>
+<tr>
+<td><code>msg.payload.ontopic</code></td>
+<td>String value emitted as the topic for the on event</td>
+</tr>
+<tr>
+<td><code>msg.payload.onpayload</code></td>
+<td>String value emitted as the payload for the on event</td>
+</tr>
+<tr>
+<td><code>msg.payload.onoffset</code></td>
+<td>Number value as specified above for Offset configuration</td>
+</tr>
+<tr>
+<td><code>msg.payload.onrandomoffset</code></td>
+<td>Boolean value as specified above in Randomisation of Times</td>
 </tr>
 <tr>
 <td><code>msg.payload.offtime</code></td>
 <td>String value as specified in the table above for time configuration</td>
 </tr>
 <tr>
-<td><code>msg.payload.suspended</code></td>
-<td>Boolean: true will suspend scheduling, false will resume schduling</td>
+<td><code>msg.payload.offtopic</code></td>
+<td>String value emitted as the topic for the off event</td>
+</tr>
+<tr>
+<td><code>msg.payload.offpayload</code></td>
+<td>String value emitted as the payload for the off event</td>
+</tr>
+<tr>
+<td><code>msg.payload.offoffset</code></td>
+<td>Number value as specified above for Offset configuration</td>
+</tr>
+<tr>
+<td><code>msg.payload.offrandomoffset</code></td>
+<td>Boolean value as specified above in Randomisation of Times</td>
 </tr>
 </tbody>
 </table>
-<p>Alternatively, you can send msg.payload as a string with the following values </p>
+<p>Alternatively, you can send msg.payload as a string with the following values:</p>
 <table>
 <thead>
 <tr>
@@ -262,16 +297,52 @@ THE SOFTWARE.
 </thead>
 <tbody>
 <tr>
+<td><code>suspended true</code></td>
+<td>true will suspend scheduling, false will resume scheduling</td>
+</tr>
+<tr>
 <td><code>ontime 12:00</code></td>
 <td>Time as specified in the table above for time configuration</td>
+</tr>
+<tr>
+<td><code>ontopic my_topic</code></td>
+<td>Override the topic for the on event (no spaces)</td>
+</tr>
+<tr>
+<td><code>onpayload my_payload</code></td>
+<td>Override the payload for the on event (no spaces)</td>
+</tr>
+<tr>
+<td><code>onoffset 30</code></td>
+<td>Override the offset for the on event</td>
+</tr>
+<tr>
+<td><code>onrandomoffset true</code></td>
+<td>Override the random offset for the on event</td>
 </tr>
 <tr>
 <td><code>offtime dusk</code></td>
 <td>Time as specified in the table above for time configuration</td>
 </tr>
 <tr>
-<td><code>suspended true</code></td>
-<td>true will suspend scheduling, false will resume schduling</td>
+<td><code>offtopic my_topic</code></td>
+<td>Override the topic for the off event (no spaces)</td>
+</tr>
+<tr>
+<td><code>offpayload my_payload</code></td>
+<td>Override the payload for the off event (no spaces)</td>
+</tr>
+<tr>
+<td><code>offoffset -30</code></td>
+<td>Override the offset for the off event</td>
+</tr>
+<tr>
+<td><code>offrandomoffset false</code></td>
+<td>Override the random offset for the off event</td>
+</tr>
+<tr>
+<td><code>ontime 16:30 onoffset 60 onrandomoffset true</code></td>
+<td>Override the time, offset and random offset for the on event</td>
 </tr>
 </tbody>
 </table>
