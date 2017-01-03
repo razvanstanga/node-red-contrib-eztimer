@@ -1,4 +1,4 @@
-# node-red-contrib-schedex
+# Schedex
 
 Scheduler for node-red which allows you to enter on/off times as 24hr clock (e.g. 01:10) or suncalc events (e.g. goldenHour).
 It also allows you to offset times and randomise the time within the offset.
@@ -6,16 +6,15 @@ It also allows you to offset times and randomise the time within the offset.
 Inspired by Pete Scargill's [BigTimer](http://tech.scargill.net/big-timer/)
 
 
-
-### Installation
+# Installation
  
 Change directory to your node red installation:
 
     $ npm install node-red-contrib-schedex
  
-### Configuration 
+# Configuration 
 
-#### Suspending scheduling
+## Suspending scheduling
 
 The 'Suspend scheduling' checkbox allows you to disable time scheduling. If scheduling is suspended, 
 Schedex will only generate output events upon receipt of input 'on' and 'off' events (see below).
@@ -23,7 +22,7 @@ Schedex will only generate output events upon receipt of input 'on' and 'off' ev
 This setting is provided for the situation where you temporarily don't want time based activation 
 and don't want to rewire your Node-RED flow.
     
-#### Times
+## Times
     
 The times can be a 24 hour time or a [suncalc](https://github.com/mourner/suncalc) event:
 
@@ -47,19 +46,61 @@ The times can be a 24 hour time or a [suncalc](https://github.com/mourner/suncal
 | `dawn`          | dawn (morning nautical twilight ends, morning civil twilight starts)     |
 
 
-#### Offsets
+## Offsets
 
 The on and off time can have an offset. This is specified in minutes:
 
  - -ve number brings the time forward. E.g. if the time is dusk and offset is -60, a message will be generated 60 minutes before dusk.
  - +ve number delays the time by the specified number of minutes
 
-#### Ramdomisation of times
+## Randomisation of times
 
 Both on and off times can be randomised by ticking "Use random time within offset period". For example, if you specify dusk with
-and offset of -60 minutes, every day a message will be generated at a random time in a 60 minute window before dusk.
+an offset of -60 minutes, every day a message will be generated at a random time in a 60 minute window before dusk.
   
-#### Inputs
+## Inputs
   
 You can wire inject nodes to the input of this node. To turn on manually, simply send a payload of 'on'. To turn off manually,
 send a payload of 'off'. Injecting on or off causes this node emit the configured topic and payload. The manual mode is reset when the next on or off time is reached.
+
+## Programmatic Control
+  
+This node supports programmatic time control as well as configuration via the NodeRED UI. 
+
+**It is very important to note that properties set programmatically in this manner are transient. They will not persist over a NodeRED restart 
+or redeploy!**
+
+You can set the following:
+ 
+| Property        | Type                                                              |
+| --------------- | ------------------------------------------------------------------------ |
+| `msg.payload.suspended` | Boolean: true will suspend scheduling, false will resume scheduling |
+| `msg.payload.ontime` | String value as specified in the table above for time configuration |
+| `msg.payload.ontopic` | String value emitted as the topic for the on event |
+| `msg.payload.onpayload` | String value emitted as the payload for the on event |
+| `msg.payload.onoffset` | Number value as specified above for Offset configuration |
+| `msg.payload.onrandomoffset` | Boolean value as specified above in Randomisation of Times |
+| `msg.payload.offtime` | String value as specified in the table above for time configuration |
+| `msg.payload.offtopic` | String value emitted as the topic for the off event |
+| `msg.payload.offpayload` | String value emitted as the payload for the off event |
+| `msg.payload.offoffset` | Number value as specified above for Offset configuration |
+| `msg.payload.offrandomoffset` | Boolean value as specified above in Randomisation of Times |
+
+ 
+ 
+Alternatively, you can send msg.payload as a string with the following values:
+
+| Example msg.payload        | Description|
+| --------------- | ------------------------------------------------------------------------ |
+| `suspended true` | true will suspend scheduling, false will resume scheduling |
+| `ontime 12:00` | Time as specified in the table above for time configuration |
+| `ontopic my_topic` | Override the topic for the on event (no spaces) |
+| `onpayload my_payload` | Override the payload for the on event (no spaces) |
+| `onoffset 30` | Override the offset for the on event |
+| `onrandomoffset true` | Override the random offset for the on event |
+| `offtime dusk` | Time as specified in the table above for time configuration |
+| `offtopic my_topic` | Override the topic for the off event (no spaces) |
+| `offpayload my_payload` | Override the payload for the off event (no spaces) |
+| `offoffset -30` | Override the offset for the off event |
+| `offrandomoffset false` | Override the random offset for the off event |
+| `ontime 16:30 onoffset 60 onrandomoffset true` | Override the time, offset and random offset for the on event |
