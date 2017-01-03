@@ -33,54 +33,51 @@ module.exports = function (RED) {
     RED.nodes.registerType('schedex', function (config) {
         RED.nodes.createNode(this, config);
         var node = this,
-            on = setupEvent('on', 'dot'),
-            off = setupEvent('off', 'ring');
-        on.inverse = off;
-        off.inverse = on;
+            events = {on: setupEvent('on', 'dot'), off: setupEvent('off', 'ring')};
+        events.on.inverse = events.off;
+        events.off.inverse = events.on;
 
         node.on('input', function (msg) {
-            var handled = false, bootstrap = false;
+            var handled = false, requiresBootstrap = false;
             if (_.isString(msg.payload)) {
                 // TODO - with these payload options, we can't support on and ontime etc.
                 if (msg.payload === 'on') {
                     handled = true;
-                    send(on, true);
+                    send(events.on, true);
                 } else if (msg.payload === 'off') {
                     handled = true;
-                    send(off, true);
-                }
-                if (msg.payload.indexOf('suspended') !== -1) {
-                    handled = bootstrap = true;
-                    var match = /.*suspended\s+(\S+)/.exec(msg.payload);
-                    config.suspended = (match[1] === 'true');
-                }
-                if (msg.payload.indexOf('ontime') !== -1) {
-                    handled = bootstrap = true;
-                    var match = /.*ontime\s+(\S+)/.exec(msg.payload);
-                    on.time = match[1];
-                }
-                if (msg.payload.indexOf('offtime') !== -1) {
-                    handled = bootstrap = true;
-                    var match = /.*offtime\s+(\S+)/.exec(msg.payload);
-                    off.time = match[1];
+                    send(events.off, true);
+                } else {
+                    if (msg.payload.indexOf('suspended') !== -1) {
+                        handled = requiresBootstrap = true;
+                        var match = /.*suspended\s+(\S+)/.exec(msg.payload);
+                        config.suspended = toBoolean(match[1]);
+                    }
+                    eachProp(function (eventName, msgProperty, typeConstructor) {
+                        var prop = eventName + msgProperty;
+                        var match = new RegExp('.*' + prop + '\\s+(\\S+)').exec(msg.payload);
+                        if (match) {
+                            handled = requiresBootstrap = true;
+                            events[eventName][msgProperty] = typeConstructor(match[1]);
+                        }
+                    });
                 }
             } else {
                 if (msg.payload.hasOwnProperty('suspended')) {
-                    handled = bootstrap = true;
+                    handled = requiresBootstrap = true;
                     config.suspended = !!msg.payload.suspended;
                 }
-                if (msg.payload.hasOwnProperty('ontime')) {
-                    handled = bootstrap = true;
-                    on.time = msg.payload.ontime;
-                }
-                if (msg.payload.hasOwnProperty('offtime')) {
-                    handled = bootstrap = true;
-                    off.time = msg.payload.offtime;
-                }
+                eachProp(function (eventName, msgProperty, typeConstructor) {
+                    var prop = eventName + msgProperty;
+                    if (msg.payload.hasOwnProperty(prop)) {
+                        handled = requiresBootstrap = true;
+                        events[eventName][msgProperty] = typeConstructor(msg.payload[prop]);
+                    }
+                });
             }
             if (!handled) {
                 node.status({fill: 'red', shape: 'dot', text: 'Unsupported input'});
-            } else if (bootstrap) {
+            } else if (requiresBootstrap) {
                 bootstrap();
             }
         });
@@ -149,15 +146,15 @@ module.exports = function (RED) {
         }
 
         function suspend() {
-            clearTimeout(on.timeout);
-            clearTimeout(off.timeout);
+            clearTimeout(events.on.timeout);
+            clearTimeout(events.off.timeout);
             node.status({fill: 'grey', shape: 'dot', text: 'Scheduling suspended - manual mode only'});
         }
 
         function resume() {
-            schedule(on, true);
-            schedule(off, true);
-            var firstEvent = on.moment.isBefore(off.moment) ? on : off;
+            schedule(events.on, true);
+            schedule(events.off, true);
+            var firstEvent = events.on.moment.isBefore(events.off.moment) ? events.on : events.off;
             var message = firstEvent.name + ' ' + firstEvent.moment.format(fmt) + ', ' +
                 firstEvent.inverse.name + ' ' + firstEvent.inverse.moment.format(fmt);
             node.status({fill: 'yellow', shape: 'dot', text: message});
@@ -169,6 +166,20 @@ module.exports = function (RED) {
             } else {
                 resume();
             }
+        }
+
+        function eachProp(callback) {
+            Object.keys(events).forEach(function (eventName) {
+                callback(eventName, 'time', String);
+                callback(eventName, 'topic', String);
+                callback(eventName, 'payload', String);
+                callback(eventName, 'offset', Number);
+                callback(eventName, 'randomoffset', toBoolean);
+            });
+        }
+
+        function toBoolean(val) {
+            return (val + '').toLowerCase() === 'true';
         }
 
         bootstrap();
