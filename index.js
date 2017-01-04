@@ -32,27 +32,57 @@ module.exports = function (RED) {
 
     RED.nodes.registerType('schedex', function (config) {
         RED.nodes.createNode(this, config);
-        var node = this;
-        var events = {
-            on: setupEvent('on', 'dot'),
-            off: setupEvent('off', 'ring')
-        };
+        var node = this,
+            events = {on: setupEvent('on', 'dot'), off: setupEvent('off', 'ring')};
         events.on.inverse = events.off;
         events.off.inverse = events.on;
 
         node.on('input', function (msg) {
-            var event = events[msg.payload];
-            if (event) {
-                send(event, true);
+            var handled = false, requiresBootstrap = false;
+            if (_.isString(msg.payload)) {
+                // TODO - with these payload options, we can't support on and ontime etc.
+                if (msg.payload === 'on') {
+                    handled = true;
+                    send(events.on, true);
+                } else if (msg.payload === 'off') {
+                    handled = true;
+                    send(events.off, true);
+                } else {
+                    if (msg.payload.indexOf('suspended') !== -1) {
+                        handled = requiresBootstrap = true;
+                        var match = /.*suspended\s+(\S+)/.exec(msg.payload);
+                        config.suspended = toBoolean(match[1]);
+                    }
+                    eachProp(function (eventName, msgProperty, typeConstructor) {
+                        var prop = eventName + msgProperty;
+                        var match = new RegExp('.*' + prop + '\\s+(\\S+)').exec(msg.payload);
+                        if (match) {
+                            handled = requiresBootstrap = true;
+                            events[eventName][msgProperty] = typeConstructor(match[1]);
+                        }
+                    });
+                }
             } else {
-                node.status({fill: 'red', shape: 'dot', text: 'Manual payload must be \'on\' or \'off\''});
+                if (msg.payload.hasOwnProperty('suspended')) {
+                    handled = requiresBootstrap = true;
+                    config.suspended = !!msg.payload.suspended;
+                }
+                eachProp(function (eventName, msgProperty, typeConstructor) {
+                    var prop = eventName + msgProperty;
+                    if (msg.payload.hasOwnProperty(prop)) {
+                        handled = requiresBootstrap = true;
+                        events[eventName][msgProperty] = typeConstructor(msg.payload[prop]);
+                    }
+                });
+            }
+            if (!handled) {
+                node.status({fill: 'red', shape: 'dot', text: 'Unsupported input'});
+            } else if (requiresBootstrap) {
+                bootstrap();
             }
         });
 
-        node.on('close', function () {
-            clearTimeout(events.on.timeout);
-            clearTimeout(events.off.timeout);
-        });
+        node.on('close', suspend);
 
         function setupEvent(eventName, shape) {
             var filtered = _.pickBy(config, function (value, key) {
@@ -115,9 +145,13 @@ module.exports = function (RED) {
             }
         }
 
-        if (config.suspended) {
+        function suspend() {
+            clearTimeout(events.on.timeout);
+            clearTimeout(events.off.timeout);
             node.status({fill: 'grey', shape: 'dot', text: 'Scheduling suspended - manual mode only'});
-        } else {
+        }
+
+        function resume() {
             schedule(events.on, true);
             schedule(events.off, true);
             var firstEvent = events.on.moment.isBefore(events.off.moment) ? events.on : events.off;
@@ -125,5 +159,29 @@ module.exports = function (RED) {
                 firstEvent.inverse.name + ' ' + firstEvent.inverse.moment.format(fmt);
             node.status({fill: 'yellow', shape: 'dot', text: message});
         }
+
+        function bootstrap() {
+            if (config.suspended) {
+                suspend();
+            } else {
+                resume();
+            }
+        }
+
+        function eachProp(callback) {
+            Object.keys(events).forEach(function (eventName) {
+                callback(eventName, 'time', String);
+                callback(eventName, 'topic', String);
+                callback(eventName, 'payload', String);
+                callback(eventName, 'offset', Number);
+                callback(eventName, 'randomoffset', toBoolean);
+            });
+        }
+
+        function toBoolean(val) {
+            return (val + '').toLowerCase() === 'true';
+        }
+
+        bootstrap();
     });
 };
