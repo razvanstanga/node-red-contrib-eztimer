@@ -36,6 +36,7 @@ module.exports = function (RED) {
             events = {on: setupEvent('on', 'dot'), off: setupEvent('off', 'ring')};
         events.on.inverse = events.off;
         events.off.inverse = events.on;
+        var weekdays = [config.sun, config.mon, config.tue, config.wed, config.thu, config.fri, config.sat];
 
         node.on('input', function (msg) {
             var handled = false, requiresBootstrap = false;
@@ -134,7 +135,12 @@ module.exports = function (RED) {
                     }
                     event.moment.add(adjustment, 'minutes');
                 }
-
+                // adjust weekday if not selected, protect from the obvious
+                if (weekdays.indexOf(true) > -1) {
+                    while (!weekdays[event.moment.weekday()]) {
+                        event.moment.add(1, 'day');
+                    }
+                }
                 var delay = event.moment.diff(now);
                 if (event.timeout) {
                     clearTimeout(event.timeout);
