@@ -124,15 +124,16 @@ module.exports = function (RED) {
             }
             if (event.moment) {
                 event.moment.seconds(0);
-                if (!isInitial || isInitial && now.isAfter(event.moment)) {
-                    event.moment.add(1, 'day');
-                }
                 if (event.offset) {
                     var adjustment = event.offset;
                     if (event.randomoffset) {
                         adjustment = event.offset * Math.random();
                     }
                     event.moment.add(adjustment, 'minutes');
+                }
+
+                if (!isInitial || isInitial && now.isAfter(event.moment)) {
+                    event.moment.add(1, 'day');
                 }
 
                 var delay = event.moment.diff(now);
