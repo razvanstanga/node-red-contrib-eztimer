@@ -49,29 +49,37 @@ module.exports = function (RED) {
                     send(events.off, true);
                 } else {
                     if (msg.payload.indexOf('suspended') !== -1) {
-                        handled = requiresBootstrap = true;
+                        handled = true;
                         var match = /.*suspended\s+(\S+)/.exec(msg.payload);
+                        var previous = config.suspended;
                         config.suspended = toBoolean(match[1]);
+                        requiresBootstrap = requiresBootstrap || previous !== config.suspended;
                     }
                     eachProp(function (eventName, msgProperty, typeConstructor) {
                         var prop = eventName + msgProperty;
                         var match = new RegExp('.*' + prop + '\\s+(\\S+)').exec(msg.payload);
                         if (match) {
-                            handled = requiresBootstrap = true;
+                            handled = true;
+                            var previous = events[eventName][msgProperty];
                             events[eventName][msgProperty] = typeConstructor(match[1]);
+                            requiresBootstrap = requiresBootstrap || previous !== events[eventName][msgProperty];
                         }
                     });
                 }
             } else {
                 if (msg.payload.hasOwnProperty('suspended')) {
-                    handled = requiresBootstrap = true;
+                    handled = true;
+                    var previous = config.suspended;
                     config.suspended = !!msg.payload.suspended;
+                    requiresBootstrap = requiresBootstrap || previous !== config.suspended;
                 }
                 eachProp(function (eventName, msgProperty, typeConstructor) {
                     var prop = eventName + msgProperty;
                     if (msg.payload.hasOwnProperty(prop)) {
-                        handled = requiresBootstrap = true;
+                        handled = true;
+                        var previous = events[eventName][msgProperty];
                         events[eventName][msgProperty] = typeConstructor(msg.payload[prop]);
+                        requiresBootstrap = requiresBootstrap || previous !== events[eventName][msgProperty];
                     }
                 });
             }
