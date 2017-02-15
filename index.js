@@ -36,6 +36,15 @@ module.exports = function (RED) {
             events = {on: setupEvent('on', 'dot'), off: setupEvent('off', 'ring')};
         events.on.inverse = events.off;
         events.off.inverse = events.on;
+
+        // migration code : if new values are undefined, set all to true
+        if (config.sun == undefined && config.mon == undefined && config.tue == undefined &&
+            config.wed == undefined && config.thu == undefined && config.fri == undefined &&
+            config.sat == undefined) {
+          node.warn('New weekday configuration attributes are not defined, defaulting to true.');
+          config.sun = config.mon = config.tue = config.wed = config.thu = config.fri = config.sat = true;
+        }
+
         var weekdays = [config.sun, config.mon, config.tue, config.wed, config.thu, config.fri, config.sat];
 
         node.on('input', function (msg) {
@@ -135,11 +144,9 @@ module.exports = function (RED) {
                     }
                     event.moment.add(adjustment, 'minutes');
                 }
-                // adjust weekday if not selected, protect from the obvious
-                if (weekdays.indexOf(true) > -1) {
-                    while (!weekdays[event.moment.weekday()]) {
-                        event.moment.add(1, 'day');
-                    }
+                // adjust weekday if not selected
+                while (!weekdays[event.moment.weekday()]) {
+                    event.moment.add(1, 'day');
                 }
                 var delay = event.moment.diff(now);
                 if (event.timeout) {
@@ -154,7 +161,7 @@ module.exports = function (RED) {
         function suspend() {
             clearTimeout(events.on.timeout);
             clearTimeout(events.off.timeout);
-            node.status({fill: 'grey', shape: 'dot', text: 'Scheduling suspended - manual mode only'});
+            node.status({fill: 'grey', shape: 'dot', text: 'Scheduling suspended ' + (weekdays.indexOf(true)==-1?'(no weekdays selected) ':'') + '- manual mode only'});
         }
 
         function resume() {
@@ -167,7 +174,7 @@ module.exports = function (RED) {
         }
 
         function bootstrap() {
-            if (config.suspended) {
+            if (config.suspended || weekdays.indexOf(true) == -1) {
                 suspend();
             } else {
                 resume();
