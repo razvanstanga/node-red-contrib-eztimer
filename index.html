@@ -40,7 +40,15 @@ THE SOFTWARE.
             offtopic: {value: ''},
             offpayload: {value: ''},
             offoffset: {value: 0},
-            offrandomoffset: {value: 0}
+            offrandomoffset: {value: 0},
+            mon: {value: true},
+            tue: {value: true},
+            wed: {value: true},
+            wed: {value: true},
+            thu: {value: true},
+            fri: {value: true},
+            sat: {value: true},
+            sun: {value: true}
         },
         inputs: 1,
         outputs: 1,
@@ -73,6 +81,22 @@ THE SOFTWARE.
             <input type="checkbox" id="node-input-suspended" placeholder="" style="width: 20px; margin: 0">
             Suspend scheduling
         </label>
+    </div>
+    <hr>
+    <div class="form-row">
+      <label style="margin-left: 100px; width: 70%">
+        <table style="display: inline-block;">
+          <tr>
+            <td><input type="checkbox" id="node-input-mon" placeholder="" style="width: 20px; margin: 0">Mon</td>
+            <td><input type="checkbox" id="node-input-tue" placeholder="" style="width: 20px; margin: 0">Tue</td>
+            <td><input type="checkbox" id="node-input-wed" placeholder="" style="width: 20px; margin: 0">Wed</td>
+            <td><input type="checkbox" id="node-input-thu" placeholder="" style="width: 20px; margin: 0">Thu</td>
+            <td><input type="checkbox" id="node-input-fri" placeholder="" style="width: 20px; margin: 0">Fri</td>
+            <td><input type="checkbox" id="node-input-sat" placeholder="" style="width: 20px; margin: 0">Sat</td>
+            <td><input type="checkbox" id="node-input-sun" placeholder="" style="width: 20px; margin: 0">Sun</td>
+          </tr>
+        </table>
+      </label>
     </div>
     <hr>
     <div class="form-row">
@@ -131,6 +155,7 @@ THE SOFTWARE.
             Use random off time within offset period
         </label>
     </div>
+
 
 
 </script>
