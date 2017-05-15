@@ -44,7 +44,6 @@ THE SOFTWARE.
             mon: {value: true},
             tue: {value: true},
             wed: {value: true},
-            wed: {value: true},
             thu: {value: true},
             fri: {value: true},
             sat: {value: true},
@@ -76,16 +75,10 @@ THE SOFTWARE.
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
-    <div class="form-row">
-        <label style="margin-left: 100px; width: 70%">
-            <input type="checkbox" id="node-input-suspended" placeholder="" style="width: 20px; margin: 0">
-            Suspend scheduling
-        </label>
-    </div>
     <hr>
     <div class="form-row">
-      <label style="margin-left: 100px; width: 70%">
-        <table style="display: inline-block;">
+        <label for="node-input-lat"><i class="fa fa-calendar"></i> Schedule</label>
+        <table style="display: inline-block; position: relative; top: 5px; left: -5px;">
           <tr>
             <td><input type="checkbox" id="node-input-mon" placeholder="" style="width: 20px; margin: 0">Mon</td>
             <td><input type="checkbox" id="node-input-tue" placeholder="" style="width: 20px; margin: 0">Tue</td>
@@ -96,7 +89,12 @@ THE SOFTWARE.
             <td><input type="checkbox" id="node-input-sun" placeholder="" style="width: 20px; margin: 0">Sun</td>
           </tr>
         </table>
-      </label>
+    </div>
+    <div class="form-row">
+        <label style="margin-left: 100px; width: 70%">
+            <input type="checkbox" id="node-input-suspended" placeholder="" style="width: 20px; margin: 0">
+            Suspend scheduling
+        </label>
     </div>
     <hr>
     <div class="form-row">
@@ -110,7 +108,7 @@ THE SOFTWARE.
 
 	<hr>
     <div class="form-row">
-        <label for="node-input-ontime"><i class="icon-tag"></i> On time</label>
+        <label for="node-input-ontime"><i class="fa fa-clock-o"></i> On time</label>
         <input type="text" id="node-input-ontime" placeholder="">
     </div>
     <div class="form-row">
@@ -134,7 +132,7 @@ THE SOFTWARE.
 
     <hr>
     <div class="form-row">
-        <label for="node-input-offtime"><i class="icon-tag"></i> Off time</label>
+        <label for="node-input-offtime"><i class="fa fa-clock-o"></i> Off time</label>
         <input type="text" id="node-input-offtime" placeholder="">
     </div>
     <div class="form-row">
@@ -155,6 +153,7 @@ THE SOFTWARE.
             Use random off time within offset period
         </label>
     </div>
+
 
 
 
@@ -372,5 +371,6 @@ THE SOFTWARE.
 </tbody>
 </table>
 <!-- END -->
+
 
 </script>
