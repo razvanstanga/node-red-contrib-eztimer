@@ -8,8 +8,7 @@ Inspired by Pete Scargill's [BigTimer](http://tech.scargill.net/big-timer/)
 
 # Installation
  
-Change directory to your node red installation:
-
+    $ cd ~/.node-red
     $ npm install node-red-contrib-schedex
  
 # Configuration 
