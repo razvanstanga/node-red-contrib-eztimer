@@ -33,7 +33,7 @@ module.exports = function (RED) {
     RED.nodes.registerType('schedex', function (config) {
         RED.nodes.createNode(this, config);
         var node = this,
-            events = {on: setupEvent('on', 'dot'), off: setupEvent('off', 'ring')};
+            events = { on: setupEvent('on', 'dot'), off: setupEvent('off', 'ring') };
         events.on.inverse = events.off;
         events.off.inverse = events.on;
 
@@ -41,7 +41,8 @@ module.exports = function (RED) {
         if (config.sun === undefined && config.mon === undefined && config.tue === undefined &&
             config.wed === undefined && config.thu === undefined && config.fri === undefined &&
             config.sat === undefined) {
-            node.warn('Schedex: New weekday configuration attributes are not defined, defaulting to true.');
+            const name = config.name || config.ontime + ' - ' + config.offtime;
+            node.warn('Schedex [' + name + ']: New weekday configuration attributes are not defined, please edit the node. Defaulting to true.');
             config.sun = config.mon = config.tue = config.wed = config.thu = config.fri = config.sat = true;
         }
 
@@ -65,7 +66,7 @@ module.exports = function (RED) {
                         config.suspended = toBoolean(match[1]);
                         requiresBootstrap = requiresBootstrap || previous !== config.suspended;
                     }
-                    eachProp(function (eventName, msgProperty, typeConstructor) {
+                    enumerateOnOffEvents(function (eventName, msgProperty, typeConstructor) {
                         var prop = eventName + msgProperty;
                         var match = new RegExp('.*' + prop + '\\s+(\\S+)').exec(msg.payload);
                         if (match) {
@@ -83,7 +84,7 @@ module.exports = function (RED) {
                     config.suspended = !!msg.payload.suspended;
                     requiresBootstrap = requiresBootstrap || previous !== config.suspended;
                 }
-                eachProp(function (eventName, msgProperty, typeConstructor) {
+                enumerateOnOffEvents(function (eventName, msgProperty, typeConstructor) {
                     var prop = eventName + msgProperty;
                     if (msg.payload.hasOwnProperty(prop)) {
                         handled = true;
@@ -94,7 +95,7 @@ module.exports = function (RED) {
                 });
             }
             if (!handled) {
-                node.status({fill: 'red', shape: 'dot', text: 'Unsupported input'});
+                node.status({ fill: 'red', shape: 'dot', text: 'Unsupported input' });
             } else if (requiresBootstrap) {
                 bootstrap();
             }
@@ -119,7 +120,7 @@ module.exports = function (RED) {
         }
 
         function send(event, manual) {
-            node.send({topic: event.topic, payload: event.payload});
+            node.send({ topic: event.topic, payload: event.payload });
             node.status({
                 fill: manual ? 'blue' : 'green',
                 shape: event.shape,
@@ -132,7 +133,7 @@ module.exports = function (RED) {
             var matches = new RegExp(/(\d+):(\d+)/).exec(event.time);
             if (matches && matches.length) {
                 // Don't use 'now' here as hour and minute mutate the moment.
-                event.moment = moment().hour(matches[1]).minute(matches[2]);
+                event.moment = moment().hour(Number(matches[1])).minute(Number(matches[2]));
             } else {
                 var sunCalcTimes = SunCalc.getTimes(new Date(), config.lat, config.lon);
                 var date = sunCalcTimes[event.time];
@@ -165,7 +166,7 @@ module.exports = function (RED) {
                 }
                 event.timeout = setTimeout(event.callback, delay);
             } else {
-                node.status({fill: 'red', shape: 'dot', text: 'Invalid time: ' + event.time});
+                node.status({ fill: 'red', shape: 'dot', text: 'Invalid time: ' + event.time });
             }
         }
 
@@ -185,7 +186,7 @@ module.exports = function (RED) {
             var firstEvent = events.on.moment.isBefore(events.off.moment) ? events.on : events.off;
             var message = firstEvent.name + ' ' + firstEvent.moment.format(fmt) + ', ' +
                 firstEvent.inverse.name + ' ' + firstEvent.inverse.moment.format(fmt);
-            node.status({fill: 'yellow', shape: 'dot', text: message});
+            node.status({ fill: 'yellow', shape: 'dot', text: message });
         }
 
         function bootstrap() {
@@ -196,7 +197,8 @@ module.exports = function (RED) {
             }
         }
 
-        function eachProp(callback) {
+        function enumerateOnOffEvents(callback) {
+            // The keys here will be ['on', 'off']
             Object.keys(events).forEach(function (eventName) {
                 callback(eventName, 'time', String);
                 callback(eventName, 'topic', String);
