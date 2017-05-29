@@ -66,14 +66,14 @@ module.exports = function (RED) {
                         config.suspended = toBoolean(match[1]);
                         requiresBootstrap = requiresBootstrap || previous !== config.suspended;
                     }
-                    enumerateOnOffEvents(function (eventName, msgProperty, typeConstructor) {
-                        var prop = eventName + msgProperty;
+                    enumerateOnOffEvents(function (eventType, eventName, eventNameContstructor) {
+                        var prop = eventType + eventName;
                         var match = new RegExp('.*' + prop + '\\s+(\\S+)').exec(msg.payload);
                         if (match) {
                             handled = true;
-                            var previous = events[eventName][msgProperty];
-                            events[eventName][msgProperty] = typeConstructor(match[1]);
-                            requiresBootstrap = requiresBootstrap || previous !== events[eventName][msgProperty];
+                            var previous = events[eventType][eventName];
+                            events[eventType][eventName] = eventNameContstructor(match[1]);
+                            requiresBootstrap = requiresBootstrap || previous !== events[eventType][eventName];
                         }
                     });
                 }
@@ -84,13 +84,13 @@ module.exports = function (RED) {
                     config.suspended = !!msg.payload.suspended;
                     requiresBootstrap = requiresBootstrap || previous !== config.suspended;
                 }
-                enumerateOnOffEvents(function (eventName, msgProperty, typeConstructor) {
-                    var prop = eventName + msgProperty;
+                enumerateOnOffEvents(function (eventType, eventName, eventNameContructor) {
+                    var prop = eventType + eventName;
                     if (msg.payload.hasOwnProperty(prop)) {
                         handled = true;
-                        var previous = events[eventName][msgProperty];
-                        events[eventName][msgProperty] = typeConstructor(msg.payload[prop]);
-                        requiresBootstrap = requiresBootstrap || previous !== events[eventName][msgProperty];
+                        var previous = events[eventType][eventName];
+                        events[eventType][eventName] = eventNameContructor(msg.payload[prop]);
+                        requiresBootstrap = requiresBootstrap || previous !== events[eventType][eventName];
                     }
                 });
             }
@@ -199,12 +199,12 @@ module.exports = function (RED) {
 
         function enumerateOnOffEvents(callback) {
             // The keys here will be ['on', 'off']
-            Object.keys(events).forEach(function (eventName) {
-                callback(eventName, 'time', String);
-                callback(eventName, 'topic', String);
-                callback(eventName, 'payload', String);
-                callback(eventName, 'offset', Number);
-                callback(eventName, 'randomoffset', toBoolean);
+            Object.keys(events).forEach(function (eventType) {
+                callback(eventType, 'time', String);
+                callback(eventType, 'topic', String);
+                callback(eventType, 'payload', String);
+                callback(eventType, 'offset', Number);
+                callback(eventType, 'randomoffset', toBoolean);
             });
         }
 
