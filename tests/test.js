@@ -32,20 +32,80 @@ var nodeRedModule = require('../index.js');
 
 describe('schedex', function () {
     it('should schedule initially', function () {
+        var node = newNode();
+        assert.strictEqual(node.schedexEvents().on.time, '11:45');
+        assert.strictEqual(node.schedexEvents().off.time, 'dawn');
+
+        node.emit('input', { payload: 'on' });
+        assert.strictEqual(node.sent(0).payload, 'on payload');
+        assert.strictEqual(node.sent(0).topic, 'on topic');
+
+        node.emit('input', { payload: 'off' });
+        assert.strictEqual(node.sent(1).payload, 'off payload');
+        assert.strictEqual(node.sent(1).topic, 'off topic');
+    });
+    it('should handle programmatic scheduling', function () {
+        var node = newNode();
+        node.emit('input', { payload: 'ontime 11:12' });
+        assert.strictEqual(node.schedexEvents().on.time, '11:12');
+        node.emit('input', { payload: { ontime: '23:12' } });
+        assert.strictEqual(node.schedexEvents().on.time, '23:12');
+
+        node.emit('input', { payload: 'offtime 10:12' });
+        assert.strictEqual(node.schedexEvents().off.time, '10:12');
+        node.emit('input', { payload: { offtime: '22:12' } });
+        assert.strictEqual(node.schedexEvents().off.time, '22:12');
+    });
+    it('should indicate bad programmatic input', function () {
+        var node = newNode();
+        node.emit('input', { payload: 'wibble' });
+        assert.strictEqual(node.status().text, 'Unsupported input');
+
+        node.status().text = '';
+        node.emit('input', { payload: '4412' });
+        assert.strictEqual(node.status().text, 'Unsupported input');
+    });
+    it('should indicate bad configuration', function () {
+        var node = newNode();
+        // TODO 
+    });
+    it('should suspend initially', function () {
         var node = mock(nodeRedModule, {
-            onTime: '11:45',
-            onTopic: 'on',
-            onPayload: 'on payload',
-            offTime: '11:48',
-            offTopic: 'off',
-            offPayload: 'off payload',
+            suspended: true,
+            ontime: '11:45',
+            ontopic: 'on topic',
+            onpayload: 'on payload',
+            onoffset: '',
+            onrandomoffset: 0,
+            offtime: 'dawn',
+            offtopic: 'off topic',
+            offpayload: 'off payload',
+            offoffset: '5',
+            offrandomoffset: 1,
             lat: 51.33411,
             lon: -0.83716,
-            unitTest: true
+            unittest: true
         });
-
-        // TODO - actually do something here.
-
-        // assert.strictEqual(2881, node.messages().length);
+        assert(node.status().text.indexOf('Scheduling suspended') === 0);
     });
 });
+
+
+function newNode() {
+    return mock(nodeRedModule, {
+        suspended: false,
+        ontime: '11:45',
+        ontopic: 'on topic',
+        onpayload: 'on payload',
+        onoffset: '',
+        onrandomoffset: 0,
+        offtime: 'dawn',
+        offtopic: 'off topic',
+        offpayload: 'off payload',
+        offoffset: '5',
+        offrandomoffset: 1,
+        lat: 51.33411,
+        lon: -0.83716,
+        unittest: true
+    });
+}

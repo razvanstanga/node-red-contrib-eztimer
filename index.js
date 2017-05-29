@@ -66,13 +66,13 @@ module.exports = function (RED) {
                         config.suspended = toBoolean(match[1]);
                         requiresBootstrap = requiresBootstrap || previous !== config.suspended;
                     }
-                    enumerateOnOffEvents(function (eventType, eventName, eventNameContstructor) {
+                    enumerateOnOffEvents(function (eventType, eventName, eventNameTypeConverter) {
                         var prop = eventType + eventName;
                         var match = new RegExp('.*' + prop + '\\s+(\\S+)').exec(msg.payload);
                         if (match) {
                             handled = true;
                             var previous = events[eventType][eventName];
-                            events[eventType][eventName] = eventNameContstructor(match[1]);
+                            events[eventType][eventName] = eventNameTypeConverter(match[1]);
                             requiresBootstrap = requiresBootstrap || previous !== events[eventType][eventName];
                         }
                     });
@@ -84,12 +84,12 @@ module.exports = function (RED) {
                     config.suspended = !!msg.payload.suspended;
                     requiresBootstrap = requiresBootstrap || previous !== config.suspended;
                 }
-                enumerateOnOffEvents(function (eventType, eventName, eventNameContructor) {
+                enumerateOnOffEvents(function (eventType, eventName, eventNameTypeConverter) {
                     var prop = eventType + eventName;
                     if (msg.payload.hasOwnProperty(prop)) {
                         handled = true;
                         var previous = events[eventType][eventName];
-                        events[eventType][eventName] = eventNameContructor(msg.payload[prop]);
+                        events[eventType][eventName] = eventNameTypeConverter(msg.payload[prop]);
                         requiresBootstrap = requiresBootstrap || previous !== events[eventType][eventName];
                     }
                 });
@@ -133,7 +133,7 @@ module.exports = function (RED) {
             var matches = new RegExp(/(\d+):(\d+)/).exec(event.time);
             if (matches && matches.length) {
                 // Don't use 'now' here as hour and minute mutate the moment.
-                event.moment = moment().hour(Number(matches[1])).minute(Number(matches[2]));
+                event.moment = moment().hour(+matches[1]).minute(+matches[2]);
             } else {
                 var sunCalcTimes = SunCalc.getTimes(new Date(), config.lat, config.lon);
                 var date = sunCalcTimes[event.time];
@@ -211,6 +211,10 @@ module.exports = function (RED) {
         function toBoolean(val) {
             return (val + '').toLowerCase() === 'true';
         }
+
+        node.schedexEvents = function () {
+            return events;
+        };
 
         bootstrap();
     });
