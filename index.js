@@ -141,33 +141,34 @@ module.exports = function (RED) {
                     event.moment = moment(date);
                 }
             }
-            if (event.moment) {
-                event.moment.seconds(0);
-                if (!isInitial || isInitial && now.isAfter(event.moment)) {
-                    event.moment.add(1, 'day');
-                }
-
-                if (event.offset) {
-                    var adjustment = event.offset;
-                    if (event.randomoffset) {
-                        adjustment = event.offset * Math.random();
-                    }
-                    event.moment.add(adjustment, 'minutes');
-                }
-
-                // adjust weekday if not selected
-                while (!weekdays[event.moment.weekday()]) {
-                    event.moment.add(1, 'day');
-                }
-
-                var delay = event.moment.diff(now);
-                if (event.timeout) {
-                    clearTimeout(event.timeout);
-                }
-                event.timeout = setTimeout(event.callback, delay);
-            } else {
+            if (!event.moment) {
                 node.status({ fill: 'red', shape: 'dot', text: 'Invalid time: ' + event.time });
+                return false;
             }
+            event.moment.seconds(0);
+            if (!isInitial || isInitial && now.isAfter(event.moment)) {
+                event.moment.add(1, 'day');
+            }
+
+            if (event.offset) {
+                var adjustment = event.offset;
+                if (event.randomoffset) {
+                    adjustment = event.offset * Math.random();
+                }
+                event.moment.add(adjustment, 'minutes');
+            }
+
+            // adjust weekday if not selected
+            while (!weekdays[event.moment.weekday()]) {
+                event.moment.add(1, 'day');
+            }
+
+            var delay = event.moment.diff(now);
+            if (event.timeout) {
+                clearTimeout(event.timeout);
+            }
+            event.timeout = setTimeout(event.callback, delay);
+            return true;
         }
 
         function suspend() {
@@ -181,12 +182,12 @@ module.exports = function (RED) {
         }
 
         function resume() {
-            schedule(events.on, true);
-            schedule(events.off, true);
-            var firstEvent = events.on.moment.isBefore(events.off.moment) ? events.on : events.off;
-            var message = firstEvent.name + ' ' + firstEvent.moment.format(fmt) + ', ' +
-                firstEvent.inverse.name + ' ' + firstEvent.inverse.moment.format(fmt);
-            node.status({ fill: 'yellow', shape: 'dot', text: message });
+            if (schedule(events.on, true) && schedule(events.off, true)) {
+                var firstEvent = events.on.moment.isBefore(events.off.moment) ? events.on : events.off;
+                var message = firstEvent.name + ' ' + firstEvent.moment.format(fmt) + ', ' +
+                    firstEvent.inverse.name + ' ' + firstEvent.inverse.moment.format(fmt);
+                node.status({ fill: 'yellow', shape: 'dot', text: message });
+            }
         }
 
         function bootstrap() {

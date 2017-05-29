@@ -66,33 +66,18 @@ describe('schedex', function () {
         assert.strictEqual(node.status().text, 'Unsupported input');
     });
     it('should indicate bad configuration', function () {
-        var node = newNode();
-        // TODO 
+        var node = newNode({ ontime: '5555' });
+        assert.strictEqual(node.status().text, 'Invalid time: 5555');
     });
     it('should suspend initially', function () {
-        var node = mock(nodeRedModule, {
-            suspended: true,
-            ontime: '11:45',
-            ontopic: 'on topic',
-            onpayload: 'on payload',
-            onoffset: '',
-            onrandomoffset: 0,
-            offtime: 'dawn',
-            offtopic: 'off topic',
-            offpayload: 'off payload',
-            offoffset: '5',
-            offrandomoffset: 1,
-            lat: 51.33411,
-            lon: -0.83716,
-            unittest: true
-        });
+        var node = newNode({ suspended: true });
         assert(node.status().text.indexOf('Scheduling suspended') === 0);
     });
 });
 
 
-function newNode() {
-    return mock(nodeRedModule, {
+function newNode(configOverrides) {
+    var config = {
         suspended: false,
         ontime: '11:45',
         ontopic: 'on topic',
@@ -107,5 +92,9 @@ function newNode() {
         lat: 51.33411,
         lon: -0.83716,
         unittest: true
-    });
+    };
+    if (configOverrides) {
+        _.assign(config, configOverrides);
+    }
+    return mock(nodeRedModule, config);
 }
