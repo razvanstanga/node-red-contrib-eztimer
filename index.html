@@ -165,9 +165,11 @@ THE SOFTWARE.
 <p>Scheduler for node-red which allows you to enter on/off times as 24hr clock (e.g. 01:10) or suncalc events (e.g. goldenHour).<br>It also allows you to offset times and randomise the time within the offset.</p>
 <p>Inspired by Pete Scargill&#39;s <a href="http://tech.scargill.net/big-timer/">BigTimer</a></p>
 <h1 id="installation">Installation</h1>
-<p>Change directory to your node red installation:</p>
-<pre><code>$ npm install node-red-contrib-schedex
+<pre><code>$ cd ~/.node-red
+$ npm install node-red-contrib-schedex
 </code></pre><h1 id="configuration">Configuration</h1>
+<h2 id="schedule">Schedule</h2>
+<p>The scheduling days allow you to choose which days of the week to schedule events. Unticking all days<br>will suspend scheduling.</p>
 <h2 id="suspending-scheduling">Suspending scheduling</h2>
 <p>The &#39;Suspend scheduling&#39; checkbox allows you to disable time scheduling. If scheduling is suspended,<br>Schedex will only generate output events upon receipt of input &#39;on&#39; and &#39;off&#39; events (see below).</p>
 <p>This setting is provided for the situation where you temporarily don&#39;t want time based activation<br>and don&#39;t want to rewire your Node-RED flow.</p>

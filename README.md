@@ -13,6 +13,11 @@ Inspired by Pete Scargill's [BigTimer](http://tech.scargill.net/big-timer/)
  
 # Configuration 
 
+## Schedule
+
+The scheduling days allow you to choose which days of the week to schedule events. Unticking all days
+will suspend scheduling.
+
 ## Suspending scheduling
 
 The 'Suspend scheduling' checkbox allows you to disable time scheduling. If scheduling is suspended, 
