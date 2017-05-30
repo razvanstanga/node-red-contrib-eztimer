@@ -23,6 +23,7 @@
  */
 
 "use strict";
+
 var assert = require('chai').assert;
 var _ = require('lodash');
 var moment = require('moment');
@@ -72,6 +73,29 @@ describe('schedex', function () {
     it('should suspend initially', function () {
         var node = newNode({ suspended: true });
         assert(node.status().text.indexOf('Scheduling suspended') === 0);
+    });
+    it('should suspend programtically', function () {
+        var node = newNode();
+        node.emit('input', { payload: { suspended: true } });
+        assert(node.status().text.indexOf('Scheduling suspended') === 0);
+
+        node = newNode();
+        node.emit('input', { payload: 'suspended true' });
+        assert(node.status().text.indexOf('Scheduling suspended') === 0);
+    });
+    it('should send something when tiggered', function (done) {
+        this.timeout(60000 * 5);
+        console.log('This test will take 3 minutes, please wait...');
+        var ontime = moment().add(1, 'minute').format('HH:mm');
+        var offtime = moment().add(2, 'minute').format('HH:mm');
+        var node = newNode({ ontime: ontime, offtime: offtime, offoffset: 0, offrandomoffset: '0' });
+        setTimeout(function () {
+            assert.strictEqual(node.sent(0).payload, 'on payload');
+            assert.strictEqual(node.sent(0).topic, 'on topic');
+            assert.strictEqual(node.sent(1).payload, 'off payload');
+            assert.strictEqual(node.sent(1).topic, 'off topic');
+            done();
+        }, 60000 * 3);
     });
 });
 
