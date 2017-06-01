@@ -46,7 +46,7 @@ module.exports = function (RED) {
             config.sun = config.mon = config.tue = config.wed = config.thu = config.fri = config.sat = true;
         }
 
-        var weekdays = [config.sun, config.mon, config.tue, config.wed, config.thu, config.fri, config.sat];
+        var weekdays = [config.mon, config.tue, config.wed, config.thu, config.fri, config.sat, config.sun];
 
         node.on('input', function (msg) {
             var handled = false, requiresBootstrap = false;
@@ -132,7 +132,7 @@ module.exports = function (RED) {
             var now = moment();
             var matches = new RegExp(/(\d+):(\d+)/).exec(event.time);
             if (matches && matches.length) {
-                // Don't use 'now' here as hour and minute mutate the moment.
+                // Don't use existing 'now' moment here as hour and minute mutate the moment.
                 event.moment = moment().hour(+matches[1]).minute(+matches[2]);
             } else {
                 var sunCalcTimes = SunCalc.getTimes(new Date(), config.lat, config.lon);
@@ -158,8 +158,8 @@ module.exports = function (RED) {
                 event.moment.add(adjustment, 'minutes');
             }
 
-            // adjust weekday if not selected
-            while (!weekdays[event.moment.weekday()]) {
+            // Adjust weekday if not selected
+            while (!weekdays[event.moment.isoWeekday() - 1]) {
                 event.moment.add(1, 'day');
             }
 
