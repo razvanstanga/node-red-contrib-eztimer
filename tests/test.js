@@ -97,6 +97,22 @@ describe('schedex', function () {
             done();
         }, 60000 * 3);
     });
+    it('should send something after programmatic configuration when tiggered', function (done) {
+        this.timeout(60000 * 5);
+        console.log('This test will take 3 minutes, please wait...');
+        var ontime = moment().add(1, 'minute').format('HH:mm');
+        var offtime = moment().add(2, 'minute').format('HH:mm');
+        var node = newNode({ offoffset: 0, offrandomoffset: '0' });
+        node.emit('input', { payload: 'ontime ' + ontime });
+        node.emit('input', { payload: 'offtime ' + offtime });
+        setTimeout(function () {
+            assert.strictEqual(node.sent(0).payload, 'on payload');
+            assert.strictEqual(node.sent(0).topic, 'on topic');
+            assert.strictEqual(node.sent(1).payload, 'off payload');
+            assert.strictEqual(node.sent(1).topic, 'off topic');
+            done();
+        }, 60000 * 3);
+    });
 });
 
 
