@@ -29,12 +29,12 @@
     "suncalc": "^1.7.0"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
+    "chai": "^4.0.1",
     "eslint": "^3.19.0",
     "markdown-to-html": "0.0.13",
-    "mocha": "^3.1.2",
-    "node-red-contrib-mock-node": "^0.2.0",
-    "nyc": "^10.3.2"
+    "mocha": "^3.4.2",
+    "node-red-contrib-mock-node": "^0.3.0",
+    "nyc": "^11.0.2"
   },
   "node-red": {
     "nodes": {

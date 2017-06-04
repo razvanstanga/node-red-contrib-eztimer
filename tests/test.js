@@ -75,7 +75,7 @@ describe('schedex', function () {
         assert(node.status().text.indexOf('Scheduling suspended') === 0);
     });
     it('should suspend if all weekdays are unticked and disabled', function () {
-        const config = _.zipObject(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], _.times(7, () => false));
+        var config = _.zipObject(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], _.times(7, () => false));
         var node = newNode(config);
         assert(node.status().text.indexOf('Scheduling suspended') === 0);
     });
@@ -89,9 +89,9 @@ describe('schedex', function () {
         assert(node.status().text.indexOf('Scheduling suspended') === 0);
     });
     it('should handle day configuration', function () {
-        const now = moment();
+        var now = moment();
         // Start by disabling today in the configuration.
-        const config = _.zipObject(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], _.times(7, index => now.isoWeekday() !== (index + 1)));
+        var config = _.zipObject(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], _.times(7, index => now.isoWeekday() !== (index + 1)));
         // Make sure we schedule 'on' for today by making the time after now. That way, disabling
         // today in the config will force the 'on' to be tomorrow and we can assert it.
         config.ontime = moment().add(1, 'minute').format('HH:mm');
