@@ -31,6 +31,7 @@
   "devDependencies": {
     "chai": "^4.0.1",
     "eslint": "^3.19.0",
+    "eslint-config-biddster": "^0.3.0",
     "markdown-to-html": "0.0.13",
     "mocha": "^3.4.2",
     "node-red-contrib-mock-node": "^0.3.0",
@@ -40,5 +41,13 @@
     "nodes": {
       "schedex": "index.js"
     }
+  },
+  "eslintConfig": {
+    "env": {
+      "es6": true,
+      "node": true,
+      "mocha": true
+    },
+    "extends": "eslint-config-biddster/es6-node"
   }
 }
