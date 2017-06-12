@@ -5,14 +5,20 @@ It also allows you to offset times and randomise the time within the offset.
 
 Inspired by Pete Scargill's [BigTimer](http://tech.scargill.net/big-timer/)
 
+__NOTE: When upgrading from versions prior to 1.0.0, you will see a message for each Schedex node in the Node-RED debug window. This message is to advise that the Schedex configuration changed slightly in version 1.0.0
+in order to accomodate days of the week when scheduling. To remedy, simply edit each Schedex node, tick the days of the week you want Schedex enabled and re-deploy.__
 
 # Installation
  
-Change directory to your node red installation:
-
+    $ cd ~/.node-red
     $ npm install node-red-contrib-schedex
  
 # Configuration 
+
+## Schedule
+
+The scheduling days allow you to choose which days of the week to schedule events. Unticking all days
+will suspend scheduling.
 
 ## Suspending scheduling
 

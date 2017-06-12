@@ -4,3 +4,7 @@ node_modules
 
 /*.tgz
 
+.history
+.vscode
+coverage
+.nyc_output

@@ -23,6 +23,7 @@
  */
 
 "use strict";
+
 var assert = require('chai').assert;
 var _ = require('lodash');
 var moment = require('moment');
@@ -32,20 +33,123 @@ var nodeRedModule = require('../index.js');
 
 describe('schedex', function () {
     it('should schedule initially', function () {
-        var node = mock(nodeRedModule, {
-            onTime: '11:45',
-            onTopic: 'on',
-            onPayload: 'on payload',
-            offTime: '11:48',
-            offTopic: 'off',
-            offPayload: 'off payload',
-            lat: 51.33411,
-            lon: -0.83716,
-            unitTest: true
-        });
+        var node = newNode();
+        assert.strictEqual(node.schedexEvents().on.time, '11:45');
+        assert.strictEqual(node.schedexEvents().off.time, 'dawn');
 
-        // TODO - actually do something here.
+        node.emit('input', { payload: 'on' });
+        assert.strictEqual(node.sent(0).payload, 'on payload');
+        assert.strictEqual(node.sent(0).topic, 'on topic');
 
-        // assert.strictEqual(2881, node.messages().length);
+        node.emit('input', { payload: 'off' });
+        assert.strictEqual(node.sent(1).payload, 'off payload');
+        assert.strictEqual(node.sent(1).topic, 'off topic');
+    });
+    it('should handle programmatic scheduling', function () {
+        var node = newNode();
+        node.emit('input', { payload: 'ontime 11:12' });
+        assert.strictEqual(node.schedexEvents().on.time, '11:12');
+        node.emit('input', { payload: { ontime: '23:12' } });
+        assert.strictEqual(node.schedexEvents().on.time, '23:12');
+
+        node.emit('input', { payload: 'offtime 10:12' });
+        assert.strictEqual(node.schedexEvents().off.time, '10:12');
+        node.emit('input', { payload: { offtime: '22:12' } });
+        assert.strictEqual(node.schedexEvents().off.time, '22:12');
+    });
+    it('should indicate bad programmatic input', function () {
+        var node = newNode();
+        node.emit('input', { payload: 'wibble' });
+        assert.strictEqual(node.status().text, 'Unsupported input');
+
+        node.status().text = '';
+        node.emit('input', { payload: '4412' });
+        assert.strictEqual(node.status().text, 'Unsupported input');
+    });
+    it('should indicate bad configuration', function () {
+        var node = newNode({ ontime: '5555' });
+        assert.strictEqual(node.status().text, 'Invalid time: 5555');
+    });
+    it('should suspend initially', function () {
+        var node = newNode({ suspended: true });
+        assert(node.status().text.indexOf('Scheduling suspended') === 0);
+    });
+    it('should suspend if all weekdays are unticked and disabled', function () {
+        var config = _.zipObject(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], _.times(7, () => false));
+        var node = newNode(config);
+        assert(node.status().text.indexOf('Scheduling suspended') === 0);
+    });
+    it('should suspend programtically', function () {
+        var node = newNode();
+        node.emit('input', { payload: { suspended: true } });
+        assert(node.status().text.indexOf('Scheduling suspended') === 0);
+
+        node = newNode();
+        node.emit('input', { payload: 'suspended true' });
+        assert(node.status().text.indexOf('Scheduling suspended') === 0);
+    });
+    it('should handle day configuration', function () {
+        var now = moment();
+        // Start by disabling today in the configuration.
+        var config = _.zipObject(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], _.times(7, index => now.isoWeekday() !== (index + 1)));
+        // Make sure we schedule 'on' for today by making the time after now. That way, disabling
+        // today in the config will force the 'on' to be tomorrow and we can assert it.
+        config.ontime = moment().add(1, 'minute').format('HH:mm');
+        var node = newNode(config);
+        assert.strictEqual(node.schedexEvents().on.moment.isoWeekday(), now.add(1, 'day').isoWeekday());
+    });
+    it('should send something when tiggered', function (done) {
+        this.timeout(60000 * 5);
+        console.log('This test will take 3 minutes, please wait...');
+        var ontime = moment().add(1, 'minute').format('HH:mm');
+        var offtime = moment().add(2, 'minute').format('HH:mm');
+        var node = newNode({ ontime: ontime, offtime: offtime, offoffset: 0, offrandomoffset: '0' });
+        setTimeout(function () {
+            assert.strictEqual(node.sent(0).payload, 'on payload');
+            assert.strictEqual(node.sent(0).topic, 'on topic');
+            assert.strictEqual(node.sent(1).payload, 'off payload');
+            assert.strictEqual(node.sent(1).topic, 'off topic');
+            done();
+        }, 60000 * 3);
+    });
+    it('should send something after programmatic configuration when tiggered', function (done) {
+        this.timeout(60000 * 5);
+        console.log('This test will take 3 minutes, please wait...');
+        var ontime = moment().add(1, 'minute').format('HH:mm');
+        var offtime = moment().add(2, 'minute').format('HH:mm');
+        var node = newNode({ offoffset: 0, offrandomoffset: '0' });
+        node.emit('input', { payload: 'ontime ' + ontime });
+        node.emit('input', { payload: 'offtime ' + offtime });
+        setTimeout(function () {
+            assert.strictEqual(node.sent(0).payload, 'on payload');
+            assert.strictEqual(node.sent(0).topic, 'on topic');
+            assert.strictEqual(node.sent(1).payload, 'off payload');
+            assert.strictEqual(node.sent(1).topic, 'off topic');
+            done();
+        }, 60000 * 3);
     });
 });
+
+
+function newNode(configOverrides) {
+    var config = {
+        suspended: false,
+        ontime: '11:45',
+        ontopic: 'on topic',
+        onpayload: 'on payload',
+        onoffset: '',
+        onrandomoffset: 0,
+        offtime: 'dawn',
+        offtopic: 'off topic',
+        offpayload: 'off payload',
+        offoffset: '5',
+        offrandomoffset: 1,
+        lat: 51.33411,
+        lon: -0.83716,
+        unittest: true
+    };
+    if (configOverrides) {
+        _.assign(config, configOverrides);
+    }
+    return mock(nodeRedModule, config);
+}

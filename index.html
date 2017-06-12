@@ -40,7 +40,14 @@ THE SOFTWARE.
             offtopic: {value: ''},
             offpayload: {value: ''},
             offoffset: {value: 0},
-            offrandomoffset: {value: 0}
+            offrandomoffset: {value: 0},
+            mon: {value: true},
+            tue: {value: true},
+            wed: {value: true},
+            thu: {value: true},
+            fri: {value: true},
+            sat: {value: true},
+            sun: {value: true}
         },
         inputs: 1,
         outputs: 1,
@@ -68,6 +75,21 @@ THE SOFTWARE.
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
+    <hr>
+    <div class="form-row">
+        <label for="node-input-lat"><i class="fa fa-calendar"></i> Schedule</label>
+        <table style="display: inline-block; position: relative; top: 5px; left: -5px;">
+          <tr>
+            <td><input type="checkbox" id="node-input-mon" placeholder="" style="width: 20px; margin: 0">Mon</td>
+            <td><input type="checkbox" id="node-input-tue" placeholder="" style="width: 20px; margin: 0">Tue</td>
+            <td><input type="checkbox" id="node-input-wed" placeholder="" style="width: 20px; margin: 0">Wed</td>
+            <td><input type="checkbox" id="node-input-thu" placeholder="" style="width: 20px; margin: 0">Thu</td>
+            <td><input type="checkbox" id="node-input-fri" placeholder="" style="width: 20px; margin: 0">Fri</td>
+            <td><input type="checkbox" id="node-input-sat" placeholder="" style="width: 20px; margin: 0">Sat</td>
+            <td><input type="checkbox" id="node-input-sun" placeholder="" style="width: 20px; margin: 0">Sun</td>
+          </tr>
+        </table>
+    </div>
     <div class="form-row">
         <label style="margin-left: 100px; width: 70%">
             <input type="checkbox" id="node-input-suspended" placeholder="" style="width: 20px; margin: 0">
@@ -86,7 +108,7 @@ THE SOFTWARE.
 
 	<hr>
     <div class="form-row">
-        <label for="node-input-ontime"><i class="icon-tag"></i> On time</label>
+        <label for="node-input-ontime"><i class="fa fa-clock-o"></i> On time</label>
         <input type="text" id="node-input-ontime" placeholder="">
     </div>
     <div class="form-row">
@@ -110,7 +132,7 @@ THE SOFTWARE.
 
     <hr>
     <div class="form-row">
-        <label for="node-input-offtime"><i class="icon-tag"></i> Off time</label>
+        <label for="node-input-offtime"><i class="fa fa-clock-o"></i> Off time</label>
         <input type="text" id="node-input-offtime" placeholder="">
     </div>
     <div class="form-row">
@@ -133,6 +155,8 @@ THE SOFTWARE.
     </div>
 
 
+
+
 </script>
 
 <script type="text/x-red" data-help-name="schedex">
@@ -140,10 +164,13 @@ THE SOFTWARE.
 <h1 id="schedex">Schedex</h1>
 <p>Scheduler for node-red which allows you to enter on/off times as 24hr clock (e.g. 01:10) or suncalc events (e.g. goldenHour).<br>It also allows you to offset times and randomise the time within the offset.</p>
 <p>Inspired by Pete Scargill&#39;s <a href="http://tech.scargill.net/big-timer/">BigTimer</a></p>
+<p><strong>NOTE: When upgrading from versions prior to 1.0.0, you will see a message for each Schedex node in the Node-RED debug window. This message is to advise that the Schedex configuration changed slightly in version 1.0.0<br>in order to accomodate days of the week when scheduling. To remedy, simply edit each Schedex node, tick the days of the week you want Schedex enabled and re-deploy.</strong></p>
 <h1 id="installation">Installation</h1>
-<p>Change directory to your node red installation:</p>
-<pre><code>$ npm install node-red-contrib-schedex
+<pre><code>$ cd ~/.node-red
+$ npm install node-red-contrib-schedex
 </code></pre><h1 id="configuration">Configuration</h1>
+<h2 id="schedule">Schedule</h2>
+<p>The scheduling days allow you to choose which days of the week to schedule events. Unticking all days<br>will suspend scheduling.</p>
 <h2 id="suspending-scheduling">Suspending scheduling</h2>
 <p>The &#39;Suspend scheduling&#39; checkbox allows you to disable time scheduling. If scheduling is suspended,<br>Schedex will only generate output events upon receipt of input &#39;on&#39; and &#39;off&#39; events (see below).</p>
 <p>This setting is provided for the situation where you temporarily don&#39;t want time based activation<br>and don&#39;t want to rewire your Node-RED flow.</p>
@@ -347,5 +374,6 @@ THE SOFTWARE.
 </tbody>
 </table>
 <!-- END -->
+
 
 </script>

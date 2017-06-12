@@ -33,9 +33,20 @@ module.exports = function (RED) {
     RED.nodes.registerType('schedex', function (config) {
         RED.nodes.createNode(this, config);
         var node = this,
-            events = {on: setupEvent('on', 'dot'), off: setupEvent('off', 'ring')};
+            events = { on: setupEvent('on', 'dot'), off: setupEvent('off', 'ring') };
         events.on.inverse = events.off;
         events.off.inverse = events.on;
+
+        // migration code : if new values are undefined, set all to true
+        if (config.sun === undefined && config.mon === undefined && config.tue === undefined &&
+            config.wed === undefined && config.thu === undefined && config.fri === undefined &&
+            config.sat === undefined) {
+            const name = config.name || config.ontime + ' - ' + config.offtime;
+            node.warn('Schedex [' + name + ']: New weekday configuration attributes are not defined, please edit the node. Defaulting to true.');
+            config.sun = config.mon = config.tue = config.wed = config.thu = config.fri = config.sat = true;
+        }
+
+        var weekdays = [config.mon, config.tue, config.wed, config.thu, config.fri, config.sat, config.sun];
 
         node.on('input', function (msg) {
             var handled = false, requiresBootstrap = false;
@@ -55,14 +66,14 @@ module.exports = function (RED) {
                         config.suspended = toBoolean(match[1]);
                         requiresBootstrap = requiresBootstrap || previous !== config.suspended;
                     }
-                    eachProp(function (eventName, msgProperty, typeConstructor) {
-                        var prop = eventName + msgProperty;
+                    enumerateOnOffEvents(function (eventType, eventName, eventNameTypeConverter) {
+                        var prop = eventType + eventName;
                         var match = new RegExp('.*' + prop + '\\s+(\\S+)').exec(msg.payload);
                         if (match) {
                             handled = true;
-                            var previous = events[eventName][msgProperty];
-                            events[eventName][msgProperty] = typeConstructor(match[1]);
-                            requiresBootstrap = requiresBootstrap || previous !== events[eventName][msgProperty];
+                            var previous = events[eventType][eventName];
+                            events[eventType][eventName] = eventNameTypeConverter(match[1]);
+                            requiresBootstrap = requiresBootstrap || previous !== events[eventType][eventName];
                         }
                     });
                 }
@@ -73,18 +84,18 @@ module.exports = function (RED) {
                     config.suspended = !!msg.payload.suspended;
                     requiresBootstrap = requiresBootstrap || previous !== config.suspended;
                 }
-                eachProp(function (eventName, msgProperty, typeConstructor) {
-                    var prop = eventName + msgProperty;
+                enumerateOnOffEvents(function (eventType, eventName, eventNameTypeConverter) {
+                    var prop = eventType + eventName;
                     if (msg.payload.hasOwnProperty(prop)) {
                         handled = true;
-                        var previous = events[eventName][msgProperty];
-                        events[eventName][msgProperty] = typeConstructor(msg.payload[prop]);
-                        requiresBootstrap = requiresBootstrap || previous !== events[eventName][msgProperty];
+                        var previous = events[eventType][eventName];
+                        events[eventType][eventName] = eventNameTypeConverter(msg.payload[prop]);
+                        requiresBootstrap = requiresBootstrap || previous !== events[eventType][eventName];
                     }
                 });
             }
             if (!handled) {
-                node.status({fill: 'red', shape: 'dot', text: 'Unsupported input'});
+                node.status({ fill: 'red', shape: 'dot', text: 'Unsupported input' });
             } else if (requiresBootstrap) {
                 bootstrap();
             }
@@ -109,7 +120,7 @@ module.exports = function (RED) {
         }
 
         function send(event, manual) {
-            node.send({topic: event.topic, payload: event.payload});
+            node.send({ topic: event.topic, payload: event.payload });
             node.status({
                 fill: manual ? 'blue' : 'green',
                 shape: event.shape,
@@ -121,8 +132,8 @@ module.exports = function (RED) {
             var now = moment();
             var matches = new RegExp(/(\d+):(\d+)/).exec(event.time);
             if (matches && matches.length) {
-                // Don't use 'now' here as hour and minute mutate the moment.
-                event.moment = moment().hour(matches[1]).minute(matches[2]);
+                // Don't use existing 'now' moment here as hour and minute mutate the moment.
+                event.moment = moment().hour(+matches[1]).minute(+matches[2]);
             } else {
                 var sunCalcTimes = SunCalc.getTimes(new Date(), config.lat, config.lon);
                 var date = sunCalcTimes[event.time];
@@ -130,66 +141,81 @@ module.exports = function (RED) {
                     event.moment = moment(date);
                 }
             }
-            if (event.moment) {
-                event.moment.seconds(0);
-                if (event.offset) {
-                    var adjustment = event.offset;
-                    if (event.randomoffset) {
-                        adjustment = event.offset * Math.random();
-                    }
-                    event.moment.add(adjustment, 'minutes');
-                }
-
-                if (!isInitial || isInitial && now.isAfter(event.moment)) {
-                    event.moment.add(1, 'day');
-                }
-
-                var delay = event.moment.diff(now);
-                if (event.timeout) {
-                    clearTimeout(event.timeout);
-                }
-                event.timeout = setTimeout(event.callback, delay);
-            } else {
-                node.status({fill: 'red', shape: 'dot', text: 'Invalid time: ' + event.time});
+            if (!event.moment) {
+                node.status({ fill: 'red', shape: 'dot', text: 'Invalid time: ' + event.time });
+                return false;
             }
+            event.moment.seconds(0);
+            if (!isInitial || isInitial && now.isAfter(event.moment)) {
+                event.moment.add(1, 'day');
+            }
+
+            if (event.offset) {
+                var adjustment = event.offset;
+                if (event.randomoffset) {
+                    adjustment = event.offset * Math.random();
+                }
+                event.moment.add(adjustment, 'minutes');
+            }
+
+            // Adjust weekday if not selected
+            while (!weekdays[event.moment.isoWeekday() - 1]) {
+                event.moment.add(1, 'day');
+            }
+
+            var delay = event.moment.diff(now);
+            if (event.timeout) {
+                clearTimeout(event.timeout);
+            }
+            event.timeout = setTimeout(event.callback, delay);
+            return true;
         }
 
         function suspend() {
             clearTimeout(events.on.timeout);
             clearTimeout(events.off.timeout);
-            node.status({fill: 'grey', shape: 'dot', text: 'Scheduling suspended - manual mode only'});
+            node.status({
+                fill: 'grey',
+                shape: 'dot',
+                text: 'Scheduling suspended ' + (weekdays.indexOf(true) === -1 ? '(no weekdays selected) ' : '') + '- manual mode only'
+            });
         }
 
         function resume() {
-            schedule(events.on, true);
-            schedule(events.off, true);
-            var firstEvent = events.on.moment.isBefore(events.off.moment) ? events.on : events.off;
-            var message = firstEvent.name + ' ' + firstEvent.moment.format(fmt) + ', ' +
-                firstEvent.inverse.name + ' ' + firstEvent.inverse.moment.format(fmt);
-            node.status({fill: 'yellow', shape: 'dot', text: message});
+            if (schedule(events.on, true) && schedule(events.off, true)) {
+                var firstEvent = events.on.moment.isBefore(events.off.moment) ? events.on : events.off;
+                var message = firstEvent.name + ' ' + firstEvent.moment.format(fmt) + ', ' +
+                    firstEvent.inverse.name + ' ' + firstEvent.inverse.moment.format(fmt);
+                node.status({ fill: 'yellow', shape: 'dot', text: message });
+            }
         }
 
         function bootstrap() {
-            if (config.suspended) {
+            if (config.suspended || weekdays.indexOf(true) === -1) {
                 suspend();
             } else {
                 resume();
             }
         }
 
-        function eachProp(callback) {
-            Object.keys(events).forEach(function (eventName) {
-                callback(eventName, 'time', String);
-                callback(eventName, 'topic', String);
-                callback(eventName, 'payload', String);
-                callback(eventName, 'offset', Number);
-                callback(eventName, 'randomoffset', toBoolean);
+        function enumerateOnOffEvents(callback) {
+            // The keys here will be ['on', 'off']
+            Object.keys(events).forEach(function (eventType) {
+                callback(eventType, 'time', String);
+                callback(eventType, 'topic', String);
+                callback(eventType, 'payload', String);
+                callback(eventType, 'offset', Number);
+                callback(eventType, 'randomoffset', toBoolean);
             });
         }
 
         function toBoolean(val) {
             return (val + '').toLowerCase() === 'true';
         }
+
+        node.schedexEvents = function () {
+            return events;
+        };
 
         bootstrap();
     });
