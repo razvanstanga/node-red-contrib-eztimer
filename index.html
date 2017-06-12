@@ -164,6 +164,7 @@ THE SOFTWARE.
 <h1 id="schedex">Schedex</h1>
 <p>Scheduler for node-red which allows you to enter on/off times as 24hr clock (e.g. 01:10) or suncalc events (e.g. goldenHour).<br>It also allows you to offset times and randomise the time within the offset.</p>
 <p>Inspired by Pete Scargill&#39;s <a href="http://tech.scargill.net/big-timer/">BigTimer</a></p>
+<p><strong>NOTE: When upgrading from versions prior to 1.0.0, you will see a message for each Schedex node in the Node-RED debug window. This message is to advise that the Schedex configuration changed slightly in version 1.0.0<br>in order to accomodate days of the week when scheduling. To remedy, simply edit each Schedex node, tick the days of the week you want Schedex enabled and re-deploy.</strong></p>
 <h1 id="installation">Installation</h1>
 <pre><code>$ cd ~/.node-red
 $ npm install node-red-contrib-schedex
