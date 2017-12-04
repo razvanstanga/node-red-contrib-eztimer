@@ -77,8 +77,8 @@ module.exports = function(RED) {
                     node.send({
                         topic: 'info',
                         payload: {
-                            on: isSuspended() ? 'suspended' : events.on.moment.format(),
-                            off: isSuspended() ? 'suspended' : events.off.moment.format(),
+                            on: isSuspended() ? 'suspended' : events.on.moment.toDate().toUTCString(),
+                            off: isSuspended() ? 'suspended' : events.off.moment.toDate().toUTCString(),
                             state: isSuspended()
                                 ? 'suspended'
                                 : events.off.moment.isAfter(events.on.moment) ? 'off' : 'on'
