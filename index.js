@@ -77,8 +77,11 @@ module.exports = function(RED) {
                     node.send({
                         topic: 'info',
                         payload: {
-                            on: isSuspended() ? 'suspended' : events.on.moment.format(fmt),
-                            off: isSuspended() ? 'suspended' : events.off.moment.format(fmt)
+                            on: isSuspended() ? 'suspended' : events.on.moment.format(),
+                            off: isSuspended() ? 'suspended' : events.off.moment.format(),
+                            state: isSuspended()
+                                ? 'suspended'
+                                : events.off.moment.isAfter(events.on.moment) ? 'off' : 'on'
                         }
                     });
                 } else {
