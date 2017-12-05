@@ -140,6 +140,41 @@ describe('schedex', function() {
             done();
         }, 60000 * 3);
     });
+    it('should emit the correct info', function() {
+        var ontime = moment()
+            .seconds(0)
+            .add(1, 'minute');
+        var offtime = moment()
+            .seconds(0)
+            .add(2, 'minute');
+
+        var node = newNode({
+            ontime: ontime.format('HH:mm'),
+            offtime: offtime.format('HH:mm'),
+            onoffset: '',
+            offoffset: ''
+        });
+
+        node.emit('input', { payload: 'info' });
+        assert.strictEqual(node.sent(0).payload.on, ontime.toDate().toUTCString());
+        assert.strictEqual(node.sent(0).payload.off, offtime.toDate().toUTCString());
+        assert.strictEqual(node.sent(0).payload.state, 'off');
+
+        node.emit('input', { payload: 'suspended true' });
+
+        node.emit('input', { payload: 'info' });
+        assert.strictEqual(node.sent(1).payload.on, 'suspended');
+        assert.strictEqual(node.sent(1).payload.off, 'suspended');
+        assert.strictEqual(node.sent(1).payload.state, 'suspended');
+
+        ontime = ontime.subtract(3, 'minute').add(1, 'day');
+        node.emit('input', { payload: { suspended: false, ontime: ontime.format('HH:mm') } });
+
+        node.emit('input', { payload: 'info' });
+        assert.strictEqual(node.sent(2).payload.on, ontime.toDate().toUTCString());
+        assert.strictEqual(node.sent(2).payload.off, offtime.toDate().toUTCString());
+        assert.strictEqual(node.sent(2).payload.state, 'on');
+    });
 });
 
 function newNode(configOverrides) {
