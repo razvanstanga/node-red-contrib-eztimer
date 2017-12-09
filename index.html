@@ -162,18 +162,18 @@ THE SOFTWARE.
 <script type="text/x-red" data-help-name="schedex">
 <!-- START -->
 <h1 id="schedex">Schedex</h1>
-<p>Scheduler for node-red which allows you to enter on/off times as 24hr clock (e.g. 01:10) or suncalc events (e.g. goldenHour).<br>It also allows you to offset times and randomise the time within the offset.</p>
+<p>Scheduler for node-red which allows you to enter on/off times as 24hr clock (e.g. 01:10) or suncalc events (e.g.<br>goldenHour). It also allows you to offset times and randomise the time within the offset.</p>
 <p>Inspired by Pete Scargill&#39;s <a href="http://tech.scargill.net/big-timer/">BigTimer</a></p>
-<p><strong>NOTE: When upgrading from versions prior to 1.0.0, you will see a message for each Schedex node in the Node-RED debug window. This message is to advise that the Schedex configuration changed slightly in version 1.0.0<br>in order to accomodate days of the week when scheduling. To remedy, simply edit each Schedex node, tick the days of the week you want Schedex enabled and re-deploy.</strong></p>
+<p><strong>NOTE: When upgrading from versions prior to 1.0.0, you will see a message for each Schedex node in the Node-RED debug<br>window. This message is to advise that the Schedex configuration changed slightly in version 1.0.0 in order to<br>accomodate days of the week when scheduling. To remedy, simply edit each Schedex node, tick the days of the week you<br>want Schedex enabled and re-deploy.</strong></p>
 <h1 id="installation">Installation</h1>
 <pre><code>$ cd ~/.node-red
 $ npm install node-red-contrib-schedex
 </code></pre><h1 id="configuration">Configuration</h1>
 <h2 id="schedule">Schedule</h2>
-<p>The scheduling days allow you to choose which days of the week to schedule events. Unticking all days<br>will suspend scheduling.</p>
+<p>The scheduling days allow you to choose which days of the week to schedule events. Unticking all days will suspend<br>scheduling.</p>
 <h2 id="suspending-scheduling">Suspending scheduling</h2>
-<p>The &#39;Suspend scheduling&#39; checkbox allows you to disable time scheduling. If scheduling is suspended,<br>Schedex will only generate output events upon receipt of input &#39;on&#39; and &#39;off&#39; events (see below).</p>
-<p>This setting is provided for the situation where you temporarily don&#39;t want time based activation<br>and don&#39;t want to rewire your Node-RED flow.</p>
+<p>The &#39;Suspend scheduling&#39; checkbox allows you to disable time scheduling. If scheduling is suspended, Schedex will only<br>generate output events upon receipt of input &#39;on&#39; and &#39;off&#39; events (see below).</p>
+<p>This setting is provided for the situation where you temporarily don&#39;t want time based activation and don&#39;t want to<br>rewire your Node-RED flow.</p>
 <h2 id="times">Times</h2>
 <p>The times can be a 24 hour time or a <a href="https://github.com/mourner/suncalc">suncalc</a> event:</p>
 <table>
@@ -249,16 +249,38 @@ $ npm install node-red-contrib-schedex
 <h2 id="offsets">Offsets</h2>
 <p>The on and off time can have an offset. This is specified in minutes:</p>
 <ul>
-<li>-ve number brings the time forward. E.g. if the time is dusk and offset is -60, a message will be generated 60 minutes before dusk.</li>
+<li>-ve number brings the time forward. E.g. if the time is dusk and offset is -60, a message will be generated 60 minutes<br>before dusk.</li>
 <li>+ve number delays the time by the specified number of minutes</li>
 </ul>
 <h2 id="randomisation-of-times">Randomisation of times</h2>
-<p>Both on and off times can be randomised by ticking &quot;Use random time within offset period&quot;. For example, if you specify dusk with<br>an offset of -60 minutes, every day a message will be generated at a random time in a 60 minute window before dusk.</p>
+<p>Both on and off times can be randomised by ticking &quot;Use random time within offset period&quot;. For example, if you specify<br>dusk with an offset of -60 minutes, every day a message will be generated at a random time in a 60 minute window before<br>dusk.</p>
 <h2 id="inputs">Inputs</h2>
-<p>You can wire inject nodes to the input of this node. To turn on manually, simply send a payload of &#39;on&#39;. To turn off manually,<br>send a payload of &#39;off&#39;. Injecting on or off causes this node emit the configured topic and payload. The manual mode is reset when the next on or off time is reached.</p>
-<h2 id="programmatic-control">Programmatic Control</h2>
-<p>This node supports programmatic time control as well as configuration via the NodeRED UI. </p>
-<p><strong>It is very important to note that properties set programmatically in this manner are transient. They will not persist over a NodeRED restart<br>or redeploy!</strong></p>
+<p>You can wire inject nodes to the input of this node and send the following in <code>msg.payload</code>.</p>
+<table>
+<thead>
+<tr>
+<th>msg.payload</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>on</code></td>
+<td>Triggers manual on mode and causes Schedex to emit the configured on event. Manual mode is reset when the next on or off time is reached</td>
+</tr>
+<tr>
+<td><code>off</code></td>
+<td>Triggers manual off mode and causes Schedex to emit the configured off event. Manual mode is reset when the next on or off time is reached</td>
+</tr>
+<tr>
+<td><code>info</code></td>
+<td>Schedex emits an object containing the on and off times in UTC format. It also contains the state which is either on or off.</td>
+</tr>
+</tbody>
+</table>
+<p>&#39;## Programmatic Control</p>
+<p>This node supports programmatic time control as well as configuration via the NodeRED UI.</p>
+<p><strong>It is very important to note that properties set programmatically in this manner are transient. They will not persist<br>over a NodeRED restart or redeploy!</strong></p>
 <p>You can set the following:</p>
 <table>
 <thead>
