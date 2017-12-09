@@ -22,7 +22,7 @@
  THE SOFTWARE.
  */
 
-"use strict";
+'use strict';
 
 var assert = require('chai').assert;
 var _ = require('lodash');
@@ -30,9 +30,8 @@ var moment = require('moment');
 var mock = require('node-red-contrib-mock-node');
 var nodeRedModule = require('../index.js');
 
-
-describe('schedex', function () {
-    it('should schedule initially', function () {
+describe('schedex', function() {
+    it('should schedule initially', function() {
         var node = newNode();
         assert.strictEqual(node.schedexEvents().on.time, '11:45');
         assert.strictEqual(node.schedexEvents().off.time, 'dawn');
@@ -45,7 +44,7 @@ describe('schedex', function () {
         assert.strictEqual(node.sent(1).payload, 'off payload');
         assert.strictEqual(node.sent(1).topic, 'off topic');
     });
-    it('should handle programmatic scheduling', function () {
+    it('should handle programmatic scheduling', function() {
         var node = newNode();
         node.emit('input', { payload: 'ontime 11:12' });
         assert.strictEqual(node.schedexEvents().on.time, '11:12');
@@ -57,7 +56,7 @@ describe('schedex', function () {
         node.emit('input', { payload: { offtime: '22:12' } });
         assert.strictEqual(node.schedexEvents().off.time, '22:12');
     });
-    it('should indicate bad programmatic input', function () {
+    it('should indicate bad programmatic input', function() {
         var node = newNode();
         node.emit('input', { payload: 'wibble' });
         assert.strictEqual(node.status().text, 'Unsupported input');
@@ -66,20 +65,20 @@ describe('schedex', function () {
         node.emit('input', { payload: '4412' });
         assert.strictEqual(node.status().text, 'Unsupported input');
     });
-    it('should indicate bad configuration', function () {
+    it('should indicate bad configuration', function() {
         var node = newNode({ ontime: '5555' });
         assert.strictEqual(node.status().text, 'Invalid time: 5555');
     });
-    it('should suspend initially', function () {
+    it('should suspend initially', function() {
         var node = newNode({ suspended: true });
         assert(node.status().text.indexOf('Scheduling suspended') === 0);
     });
-    it('should suspend if all weekdays are unticked and disabled', function () {
+    it('should suspend if all weekdays are unticked and disabled', function() {
         var config = _.zipObject(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], _.times(7, () => false));
         var node = newNode(config);
         assert(node.status().text.indexOf('Scheduling suspended') === 0);
     });
-    it('should suspend programtically', function () {
+    it('should suspend programtically', function() {
         var node = newNode();
         node.emit('input', { payload: { suspended: true } });
         assert(node.status().text.indexOf('Scheduling suspended') === 0);
@@ -88,23 +87,32 @@ describe('schedex', function () {
         node.emit('input', { payload: 'suspended true' });
         assert(node.status().text.indexOf('Scheduling suspended') === 0);
     });
-    it('should handle day configuration', function () {
+    it('should handle day configuration', function() {
         var now = moment();
         // Start by disabling today in the configuration.
-        var config = _.zipObject(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], _.times(7, index => now.isoWeekday() !== (index + 1)));
+        var config = _.zipObject(
+            ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+            _.times(7, index => now.isoWeekday() !== index + 1)
+        );
         // Make sure we schedule 'on' for today by making the time after now. That way, disabling
         // today in the config will force the 'on' to be tomorrow and we can assert it.
-        config.ontime = moment().add(1, 'minute').format('HH:mm');
+        config.ontime = moment()
+            .add(1, 'minute')
+            .format('HH:mm');
         var node = newNode(config);
         assert.strictEqual(node.schedexEvents().on.moment.isoWeekday(), now.add(1, 'day').isoWeekday());
     });
-    it('should send something when tiggered', function (done) {
+    it('should send something when tiggered', function(done) {
         this.timeout(60000 * 5);
         console.log('This test will take 3 minutes, please wait...');
-        var ontime = moment().add(1, 'minute').format('HH:mm');
-        var offtime = moment().add(2, 'minute').format('HH:mm');
+        var ontime = moment()
+            .add(1, 'minute')
+            .format('HH:mm');
+        var offtime = moment()
+            .add(2, 'minute')
+            .format('HH:mm');
         var node = newNode({ ontime: ontime, offtime: offtime, offoffset: 0, offrandomoffset: '0' });
-        setTimeout(function () {
+        setTimeout(function() {
             assert.strictEqual(node.sent(0).payload, 'on payload');
             assert.strictEqual(node.sent(0).topic, 'on topic');
             assert.strictEqual(node.sent(1).payload, 'off payload');
@@ -112,15 +120,19 @@ describe('schedex', function () {
             done();
         }, 60000 * 3);
     });
-    it('should send something after programmatic configuration when tiggered', function (done) {
+    it('should send something after programmatic configuration when tiggered', function(done) {
         this.timeout(60000 * 5);
         console.log('This test will take 3 minutes, please wait...');
-        var ontime = moment().add(1, 'minute').format('HH:mm');
-        var offtime = moment().add(2, 'minute').format('HH:mm');
+        var ontime = moment()
+            .add(1, 'minute')
+            .format('HH:mm');
+        var offtime = moment()
+            .add(2, 'minute')
+            .format('HH:mm');
         var node = newNode({ offoffset: 0, offrandomoffset: '0' });
         node.emit('input', { payload: 'ontime ' + ontime });
         node.emit('input', { payload: 'offtime ' + offtime });
-        setTimeout(function () {
+        setTimeout(function() {
             assert.strictEqual(node.sent(0).payload, 'on payload');
             assert.strictEqual(node.sent(0).topic, 'on topic');
             assert.strictEqual(node.sent(1).payload, 'off payload');
@@ -128,8 +140,42 @@ describe('schedex', function () {
             done();
         }, 60000 * 3);
     });
-});
+    it('should emit the correct info', function() {
+        var ontime = moment()
+            .seconds(0)
+            .add(1, 'minute');
+        var offtime = moment()
+            .seconds(0)
+            .add(2, 'minute');
 
+        var node = newNode({
+            ontime: ontime.format('HH:mm'),
+            offtime: offtime.format('HH:mm'),
+            onoffset: '',
+            offoffset: ''
+        });
+
+        node.emit('input', { payload: 'info' });
+        assert.strictEqual(node.sent(0).payload.on, ontime.toDate().toUTCString());
+        assert.strictEqual(node.sent(0).payload.off, offtime.toDate().toUTCString());
+        assert.strictEqual(node.sent(0).payload.state, 'off');
+
+        node.emit('input', { payload: 'suspended true' });
+
+        node.emit('input', { payload: 'info' });
+        assert.strictEqual(node.sent(1).payload.on, 'suspended');
+        assert.strictEqual(node.sent(1).payload.off, 'suspended');
+        assert.strictEqual(node.sent(1).payload.state, 'suspended');
+
+        ontime = ontime.subtract(3, 'minute').add(1, 'day');
+        node.emit('input', { payload: { suspended: false, ontime: ontime.format('HH:mm') } });
+
+        node.emit('input', { payload: 'info' });
+        assert.strictEqual(node.sent(2).payload.on, ontime.toDate().toUTCString());
+        assert.strictEqual(node.sent(2).payload.off, offtime.toDate().toUTCString());
+        assert.strictEqual(node.sent(2).payload.state, 'on');
+    });
+});
 
 function newNode(configOverrides) {
     var config = {
