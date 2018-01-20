@@ -24,7 +24,7 @@
 
 'use strict';
 
-const { assert } = require('chai');
+const assert = require('chai').assert;
 const _ = require('lodash');
 const moment = require('moment');
 const mock = require('node-red-contrib-mock-node');
@@ -36,41 +36,65 @@ describe('schedex', function() {
         assert.strictEqual(node.schedexEvents().on.time, '11:45');
         assert.strictEqual(node.schedexEvents().off.time, 'dawn');
 
-        node.emit('input', { payload: 'on' });
+        node.emit('input', {
+            payload: 'on'
+        });
         assert.strictEqual(node.sent(0).payload, 'on payload');
         assert.strictEqual(node.sent(0).topic, 'on topic');
 
-        node.emit('input', { payload: 'off' });
+        node.emit('input', {
+            payload: 'off'
+        });
         assert.strictEqual(node.sent(1).payload, 'off payload');
         assert.strictEqual(node.sent(1).topic, 'off topic');
     });
     it('should handle programmatic scheduling', function() {
         const node = newNode();
-        node.emit('input', { payload: 'ontime 11:12' });
+        node.emit('input', {
+            payload: 'ontime 11:12'
+        });
         assert.strictEqual(node.schedexEvents().on.time, '11:12');
-        node.emit('input', { payload: { ontime: '23:12' } });
+        node.emit('input', {
+            payload: {
+                ontime: '23:12'
+            }
+        });
         assert.strictEqual(node.schedexEvents().on.time, '23:12');
 
-        node.emit('input', { payload: 'offtime 10:12' });
+        node.emit('input', {
+            payload: 'offtime 10:12'
+        });
         assert.strictEqual(node.schedexEvents().off.time, '10:12');
-        node.emit('input', { payload: { offtime: '22:12' } });
+        node.emit('input', {
+            payload: {
+                offtime: '22:12'
+            }
+        });
         assert.strictEqual(node.schedexEvents().off.time, '22:12');
     });
     it('should indicate bad programmatic input', function() {
         const node = newNode();
-        node.emit('input', { payload: 'wibble' });
+        node.emit('input', {
+            payload: 'wibble'
+        });
         assert.strictEqual(node.status().text, 'Unsupported input');
 
         node.status().text = '';
-        node.emit('input', { payload: '4412' });
+        node.emit('input', {
+            payload: '4412'
+        });
         assert.strictEqual(node.status().text, 'Unsupported input');
     });
     it('should indicate bad configuration', function() {
-        const node = newNode({ ontime: '5555' });
+        const node = newNode({
+            ontime: '5555'
+        });
         assert.strictEqual(node.status().text, 'Invalid time: 5555');
     });
     it('should suspend initially', function() {
-        const node = newNode({ suspended: true });
+        const node = newNode({
+            suspended: true
+        });
         assert(node.status().text.indexOf('Scheduling suspended') === 0);
     });
     it('should suspend if all weekdays are unticked and disabled', function() {
@@ -80,11 +104,17 @@ describe('schedex', function() {
     });
     it('should suspend programtically', function() {
         let node = newNode();
-        node.emit('input', { payload: { suspended: true } });
+        node.emit('input', {
+            payload: {
+                suspended: true
+            }
+        });
         assert(node.status().text.indexOf('Scheduling suspended') === 0);
 
         node = newNode();
-        node.emit('input', { payload: 'suspended true' });
+        node.emit('input', {
+            payload: 'suspended true'
+        });
         assert(node.status().text.indexOf('Scheduling suspended') === 0);
     });
     it('should handle day configuration', function() {
@@ -111,7 +141,12 @@ describe('schedex', function() {
         const offtime = moment()
             .add(2, 'minute')
             .format('HH:mm');
-        const node = newNode({ ontime, offtime, offoffset: 0, offrandomoffset: '0' });
+        const node = newNode({
+            ontime,
+            offtime,
+            offoffset: 0,
+            offrandomoffset: '0'
+        });
         setTimeout(function() {
             assert.strictEqual(node.sent(0).payload, 'on payload');
             assert.strictEqual(node.sent(0).topic, 'on topic');
@@ -129,9 +164,16 @@ describe('schedex', function() {
         const offtime = moment()
             .add(2, 'minute')
             .format('HH:mm');
-        const node = newNode({ offoffset: 0, offrandomoffset: '0' });
-        node.emit('input', { payload: `ontime ${ontime}` });
-        node.emit('input', { payload: `offtime ${offtime}` });
+        const node = newNode({
+            offoffset: 0,
+            offrandomoffset: '0'
+        });
+        node.emit('input', {
+            payload: `ontime ${ontime}`
+        });
+        node.emit('input', {
+            payload: `offtime ${offtime}`
+        });
         setTimeout(function() {
             assert.strictEqual(node.sent(0).payload, 'on payload');
             assert.strictEqual(node.sent(0).topic, 'on topic');
@@ -155,35 +197,88 @@ describe('schedex', function() {
             offoffset: ''
         });
 
-        node.emit('input', { payload: 'info' });
+        node.emit('input', {
+            payload: 'info'
+        });
         assert.strictEqual(node.sent(0).payload.on, ontime.toDate().toUTCString());
         assert.strictEqual(node.sent(0).payload.off, offtime.toDate().toUTCString());
         assert.strictEqual(node.sent(0).payload.state, 'off');
 
-        node.emit('input', { payload: 'suspended true' });
+        node.emit('input', {
+            payload: 'suspended true'
+        });
 
-        node.emit('input', { payload: 'info' });
+        node.emit('input', {
+            payload: 'info'
+        });
         assert.strictEqual(node.sent(1).payload.on, 'suspended');
         assert.strictEqual(node.sent(1).payload.off, 'suspended');
         assert.strictEqual(node.sent(1).payload.state, 'suspended');
 
         ontime = ontime.subtract(3, 'minute').add(1, 'day');
-        node.emit('input', { payload: { suspended: false, ontime: ontime.format('HH:mm') } });
+        node.emit('input', {
+            payload: {
+                suspended: false,
+                ontime: ontime.format('HH:mm')
+            }
+        });
 
-        node.emit('input', { payload: 'info' });
+        node.emit('input', {
+            payload: 'info'
+        });
         assert.strictEqual(node.sent(2).payload.on, ontime.toDate().toUTCString());
         assert.strictEqual(node.sent(2).payload.off, offtime.toDate().toUTCString());
         assert.strictEqual(node.sent(2).payload.state, 'on');
     });
-    it('issue#29: should schedule correctly if on time before now but offset makes it after now', function() {
-        const now = moment();
-        const ontime = now.subtract(1, 'minute').format('HH:mm');
-        const node = newNode({ ontime, onoffset: 60 });
+    it('issue#24: should schedule correctly if on time before now but offset makes it after midnight', function() {
+        const node = newNode({
+            ontime: '23:45',
+            onoffset: 20
+        });
+        const now = moment()
+            .hour(23)
+            .minute(46)
+            .seconds(0);
+        node.now = function() {
+            return now.clone();
+        };
+        // We've overridden the now method after the initial scheduling. Cheat a bit and
+        // suspend then unsuspend to force initial scheduling again and have our new now
+        // method used.
+        node.emit('input', {
+            payload: {
+                suspended: true
+            }
+        });
+        node.emit('input', {
+            payload: {
+                suspended: false
+            }
+        });
         const events = node.schedexEvents();
+        console.log(now.toString());
         console.log(events.on.moment.toString());
         const duration = Math.round(moment.duration(events.on.moment.diff(now)).asMinutes());
         console.log(duration);
-        assert.strictEqual(59, duration);
+        assert.strictEqual(duration, 19);
+    });
+    it('issue#29: should schedule correctly if on time before now but offset makes it after now', function() {
+        const now = moment().seconds(0);
+        console.log('now: ' + now.toString());
+        const ontime = now
+            .clone()
+            .subtract(1, 'minute')
+            .format('HH:mm');
+        console.log('ontime pre offset: ' + ontime.toString());
+        const node = newNode({
+            ontime,
+            onoffset: 60
+        });
+        const events = node.schedexEvents();
+        console.log('ontime: ' + events.on.moment.toString());
+        const duration = moment.duration(events.on.moment.diff(now)).asMinutes();
+        console.log(duration);
+        assert.strictEqual(Math.round(duration), 59);
     });
 });
 
@@ -202,7 +297,14 @@ function newNode(configOverrides) {
         offrandomoffset: 1,
         lat: 51.33411,
         lon: -0.83716,
-        unittest: true
+        unittest: true,
+        mon: true,
+        tue: true,
+        wed: true,
+        thu: true,
+        fri: true,
+        sat: true,
+        sun: true
     };
     if (configOverrides) {
         _.assign(config, configOverrides);
