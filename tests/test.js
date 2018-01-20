@@ -175,6 +175,16 @@ describe('schedex', function() {
         assert.strictEqual(node.sent(2).payload.off, offtime.toDate().toUTCString());
         assert.strictEqual(node.sent(2).payload.state, 'on');
     });
+    it('should schedule correctly if on time before now but offset makes it after now', function() {
+        const now = moment();
+        const ontime = now.subtract(1, 'minute').format('HH:mm');
+        const node = newNode({ ontime, onoffset: 60 });
+        const events = node.schedexEvents();
+        console.log(events.on.moment.toString());
+        const duration = Math.round(moment.duration(events.on.moment.diff(now)).asMinutes());
+        console.log(duration);
+        assert.strictEqual(59, duration);
+    });
 });
 
 function newNode(configOverrides) {
