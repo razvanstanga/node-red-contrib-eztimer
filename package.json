@@ -1,54 +1,64 @@
 {
-    "name": "node-red-contrib-schedex",
-    "version": "1.1.1",
-    "description": "",
-    "main": "index.js",
-    "keywords": ["node-red", "schedule", "scheduler", "timer", "sun events"],
-    "scripts": {
-        "test": "nyc --reporter=html node_modules/.bin/mocha -R spec ./tests/test.js",
-        "readme2html": "node_modules/.bin/markdown README.md -f gfm"
-    },
-    "author": "@biddster",
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/biddster/node-red-contrib-schedex.git"
-    },
-    "bugs": {
-        "url": "https://github.com/biddster/node-red-contrib-schedex/issues"
-    },
-    "dependencies": {
-        "lodash": "^4.15.0",
-        "moment": "^2.14.1",
-        "suncalc": "^1.7.0"
-    },
-    "devDependencies": {
-        "chai": "^4.0.1",
-        "eslint": "^3.19.0",
-        "eslint-config-biddster": "^0.3.0",
-        "eslint-config-prettier": "^2.4.0",
-        "markdown-to-html": "0.0.13",
-        "mocha": "^3.4.2",
-        "node-red-contrib-mock-node": "^0.3.0",
-        "nyc": "^11.0.2",
-        "prettier": "^1.9.1"
-    },
-    "node-red": {
-        "nodes": {
-            "schedex": "index.js"
-        }
-    },
-    "eslintConfig": {
-        "env": {
-            "es6": true,
-            "node": true,
-            "mocha": true
-        },
-        "extends": ["eslint-config-biddster/es6-node", "prettier"]
-    },
-    "prettier": {
-        "singleQuote": true,
-        "tabWidth": 4,
-        "printWidth": 120
+  "name": "node-red-contrib-schedex",
+  "version": "1.1.1",
+  "description": "",
+  "main": "index.js",
+  "keywords": [
+    "node-red",
+    "schedule",
+    "scheduler",
+    "timer",
+    "sun events"
+  ],
+  "scripts": {
+    "test": "nyc --reporter=html node_modules/.bin/mocha -R spec ./tests/test.js",
+    "readme2html": "node_modules/.bin/markdown README.md -f gfm"
+  },
+  "author": "@biddster",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/biddster/node-red-contrib-schedex.git"
+  },
+  "bugs": {
+    "url": "https://github.com/biddster/node-red-contrib-schedex/issues"
+  },
+  "dependencies": {
+    "lodash": "^4.17.4",
+    "moment": "^2.20.1",
+    "suncalc": "^1.8.0"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "eslint": "^4.16.0",
+    "eslint-config-biddster": "^0.4.0",
+    "eslint-config-prettier": "^2.9.0",
+    "markdown-to-html": "0.0.13",
+    "mocha": "^5.0.0",
+    "node-red-contrib-mock-node": "^0.4.0",
+    "nsp": "^3.1.0",
+    "nyc": "^11.4.1",
+    "prettier": "^1.10.2"
+  },
+  "node-red": {
+    "nodes": {
+      "schedex": "index.js"
     }
+  },
+  "eslintConfig": {
+    "env": {
+      "es6": true,
+      "node": true,
+      "mocha": true
+    },
+    "extends": [
+      "eslint-config-biddster/es6-node",
+      "prettier"
+    ]
+  },
+  "prettier": {
+    "singleQuote": true,
+    "tabWidth": 4,
+    "printWidth": 120
+  }
 }

@@ -25,7 +25,8 @@
 'use strict';
 
 const assert = require('chai').assert;
-const _ = require('lodash');
+
+const146 _ = require('lodash');
 const moment = require('moment');
 const mock = require('node-red-contrib-mock-node');
 const nodeRedModule = require('../index.js');
