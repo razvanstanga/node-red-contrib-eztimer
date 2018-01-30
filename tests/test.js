@@ -135,7 +135,7 @@ describe('schedex', function() {
     });
     it('should send something when tiggered', function(done) {
         this.timeout(60000 * 5);
-        console.log('This test will take 3 minutes, please wait...');
+        console.log(`\t[${this.test.title}] will take 3 minutes, please wait...`);
         const ontime = moment()
             .add(1, 'minute')
             .format('HH:mm');
@@ -158,7 +158,7 @@ describe('schedex', function() {
     });
     it('should send something after programmatic configuration when triggered', function(done) {
         this.timeout(60000 * 5);
-        console.log('This test will take 3 minutes, please wait...');
+        console.log(`\t[${this.test.title}] will take 3 minutes, please wait...`);
         const ontime = moment()
             .add(1, 'minute')
             .format('HH:mm');
