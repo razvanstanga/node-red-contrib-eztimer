@@ -165,11 +165,12 @@ module.exports = function(RED) {
         }
 
         function schedule(event, isInitial) {
-            var now = moment();
+            var now = node.now();
             var matches = new RegExp(/(\d+):(\d+)/).exec(event.time);
             if (matches && matches.length) {
                 // Don't use existing 'now' moment here as hour and minute mutate the moment.
-                event.moment = moment()
+                event.moment = node
+                    .now()
                     .hour(+matches[1])
                     .minute(+matches[2]);
             } else {
@@ -188,9 +189,6 @@ module.exports = function(RED) {
                 return false;
             }
             event.moment.seconds(0);
-            if (!isInitial || (isInitial && now.isAfter(event.moment))) {
-                event.moment.add(1, 'day');
-            }
 
             if (event.offset) {
                 var adjustment = event.offset;
@@ -198,6 +196,10 @@ module.exports = function(RED) {
                     adjustment = event.offset * Math.random();
                 }
                 event.moment.add(adjustment, 'minutes');
+            }
+
+            if (!isInitial || (isInitial && now.isAfter(event.moment))) {
+                event.moment.add(1, 'day');
             }
 
             // Adjust weekday if not selected
@@ -274,8 +276,14 @@ module.exports = function(RED) {
             return (val + '').toLowerCase() === 'true';
         }
 
+        // Bodge to allow testing
         node.schedexEvents = function() {
             return events;
+        };
+
+        // Bodge to allow testing
+        node.now = function() {
+            return moment();
         };
 
         bootstrap();
