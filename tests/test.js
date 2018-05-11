@@ -54,6 +54,7 @@ describe('schedex', function() {
             payload: 'ontime 11:12'
         });
         assert.strictEqual(node.schedexEvents().on.time, '11:12');
+
         node.emit('input', {
             payload: {
                 ontime: '23:12'
@@ -65,12 +66,28 @@ describe('schedex', function() {
             payload: 'offtime 10:12'
         });
         assert.strictEqual(node.schedexEvents().off.time, '10:12');
+
         node.emit('input', {
             payload: {
                 offtime: '22:12'
             }
         });
         assert.strictEqual(node.schedexEvents().off.time, '22:12');
+
+        node.emit('input', {
+            payload: 'mon true'
+        });
+        assert.strictEqual(node.config().mon, true);
+
+        node.emit('input', {
+            payload: 'mon false'
+        });
+        assert.strictEqual(node.config().mon, false);
+
+        node.emit('input', {
+            payload: { mon: true }
+        });
+        assert.strictEqual(node.config().mon, true);
     });
     it('should indicate bad programmatic input', function() {
         const node = newNode();

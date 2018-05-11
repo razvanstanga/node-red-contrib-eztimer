@@ -100,19 +100,15 @@ module.exports = function(RED) {
                         config.suspended = toBoolean(match[1]);
                         requiresBootstrap = requiresBootstrap || previous !== config.suspended;
                     }
-                    enumerateOnOffEvents(function(
-                        eventType,
-                        eventName,
-                        eventNameTypeConverter
-                    ) {
-                        const prop = eventType + eventName;
-                        const match = new RegExp(`.*${prop}\\s+(\\S+)`).exec(msg.payload);
+                    enumerateProgrammables(function(obj, prop, payloadName, typeConverter) {
+                        const match = new RegExp(`.*${payloadName}\\s+(\\S+)`).exec(
+                            msg.payload
+                        );
                         if (match) {
                             handled = true;
-                            const previous = events[eventType][eventName];
-                            events[eventType][eventName] = eventNameTypeConverter(match[1]);
-                            requiresBootstrap =
-                                requiresBootstrap || previous !== events[eventType][eventName];
+                            const previous = obj[prop];
+                            obj[prop] = typeConverter(match[1]);
+                            requiresBootstrap = requiresBootstrap || previous !== obj[prop];
                         }
                     });
                 }
@@ -123,16 +119,12 @@ module.exports = function(RED) {
                     config.suspended = !!msg.payload.suspended;
                     requiresBootstrap = requiresBootstrap || previous !== config.suspended;
                 }
-                enumerateOnOffEvents(function(eventType, eventName, eventNameTypeConverter) {
-                    const prop = eventType + eventName;
-                    if (msg.payload.hasOwnProperty(prop)) {
+                enumerateProgrammables(function(obj, prop, payloadName, typeConverter) {
+                    if (msg.payload.hasOwnProperty(payloadName)) {
                         handled = true;
-                        const previous = events[eventType][eventName];
-                        events[eventType][eventName] = eventNameTypeConverter(
-                            msg.payload[prop]
-                        );
-                        requiresBootstrap =
-                            requiresBootstrap || previous !== events[eventType][eventName];
+                        const previous = obj[prop];
+                        obj[prop] = typeConverter(msg.payload[payloadName]);
+                        requiresBootstrap = requiresBootstrap || previous !== obj[prop];
                     }
                 });
             }
@@ -275,27 +267,35 @@ module.exports = function(RED) {
             return config.suspended || weekdays.indexOf(true) === -1;
         }
 
-        function enumerateOnOffEvents(callback) {
-            // The keys here will be ['on', 'off']
-            Object.keys(events).forEach(function(eventType) {
-                callback(eventType, 'time', String);
-                callback(eventType, 'topic', String);
-                callback(eventType, 'payload', String);
-                callback(eventType, 'offset', Number);
-                callback(eventType, 'randomoffset', toBoolean);
-            });
+        function enumerateProgrammables(callback) {
+            callback(events.on, 'time', 'ontime', String);
+            callback(events.on, 'topic', 'ontopic', String);
+            callback(events.on, 'payload', 'onpayload', String);
+            callback(events.on, 'offset', 'onoffset', Number);
+            callback(events.on, 'randomoffset', 'onrandomoffset', toBoolean);
+            callback(events.off, 'time', 'offtime', String);
+            callback(events.off, 'topic', 'offtopic', String);
+            callback(events.off, 'payload', 'offpayload', String);
+            callback(events.off, 'offset', 'offoffset', Number);
+            callback(events.off, 'randomoffset', 'offrandomoffset', toBoolean);
+            callback(config, 'mon', 'mon', toBoolean);
+            callback(config, 'tue', 'tue', toBoolean);
+            callback(config, 'wed', 'wed', toBoolean);
+            callback(config, 'thu', 'thu', toBoolean);
+            callback(config, 'fri', 'fri', toBoolean);
+            callback(config, 'sat', 'sat', toBoolean);
+            callback(config, 'sun', 'sun', toBoolean);
+            callback(config, 'lon', 'lon', String);
+            callback(config, 'lat', 'lat', String);
         }
 
         function toBoolean(val) {
             return (val + '').toLowerCase() === 'true';
         }
 
-        // Bodge to allow testing
-        node.schedexEvents = function() {
-            return events;
-        };
-
-        // Bodge to allow testing
+        // Bodges to allow testing
+        node.schedexEvents = () => events;
+        node.config = () => config;
         node.now = moment;
 
         bootstrap();
