@@ -1,31 +1,30 @@
 /**
- The MIT License (MIT)
-
- Copyright (c) 2016 @biddster
-
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in
- all copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- THE SOFTWARE.
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2016 @biddster
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 'use strict';
 
 const assert = require('chai').assert;
-
 const _ = require('lodash');
 const moment = require('moment');
 const mock = require('node-red-contrib-mock-node');
@@ -99,7 +98,10 @@ describe('schedex', function() {
         assert(node.status().text.indexOf('Scheduling suspended') === 0);
     });
     it('should suspend if all weekdays are unticked and disabled', function() {
-        const config = _.zipObject(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], _.times(7, () => false));
+        const config = _.zipObject(
+            ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+            _.times(7, () => false)
+        );
         const node = newNode(config);
         assert(node.status().text.indexOf('Scheduling suspended') === 0);
     });
@@ -125,13 +127,18 @@ describe('schedex', function() {
             ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
             _.times(7, index => now.isoWeekday() !== index + 1)
         );
-        // Make sure we schedule 'on' for today by making the time after now. That way, disabling
-        // today in the config will force the 'on' to be tomorrow and we can assert it.
+        /*
+         * Make sure we schedule 'on' for today by making the time after now. That way, disabling
+         * today in the config will force the 'on' to be tomorrow and we can assert it.
+         */
         config.ontime = moment()
             .add(1, 'minute')
             .format('HH:mm');
         const node = newNode(config);
-        assert.strictEqual(node.schedexEvents().on.moment.isoWeekday(), now.add(1, 'day').isoWeekday());
+        assert.strictEqual(
+            node.schedexEvents().on.moment.isoWeekday(),
+            now.add(1, 'day').isoWeekday()
+        );
     });
     it('should send something when tiggered', function(done) {
         this.timeout(60000 * 5);
@@ -243,9 +250,11 @@ describe('schedex', function() {
         node.now = function() {
             return now.clone();
         };
-        // We've overridden the now method after the initial scheduling. Cheat a bit and
-        // suspend then unsuspend to force initial scheduling again and have our new now
-        // method used.
+        /*
+         * We've overridden the now method after the initial scheduling. Cheat a bit and
+         * suspend then unsuspend to force initial scheduling again and have our new now
+         * method used.
+         */
         node.emit('input', {
             payload: {
                 suspended: true
@@ -265,18 +274,18 @@ describe('schedex', function() {
     });
     it('issue#29: should schedule correctly if on time before now but offset makes it after now', function() {
         const now = moment().seconds(0);
-        console.log('now: ' + now.toString());
+        console.log(`now: ${now.toString()}`);
         const ontime = now
             .clone()
             .subtract(1, 'minute')
             .format('HH:mm');
-        console.log('ontime pre offset: ' + ontime.toString());
+        console.log(`ontime pre offset: ${ontime.toString()}`);
         const node = newNode({
             ontime,
             onoffset: 60
         });
         const events = node.schedexEvents();
-        console.log('ontime: ' + events.on.moment.toString());
+        console.log(`ontime: ${events.on.moment.toString()}`);
         const duration = moment.duration(events.on.moment.diff(now)).asMinutes();
         console.log(duration);
         assert.strictEqual(Math.round(duration), 59);
