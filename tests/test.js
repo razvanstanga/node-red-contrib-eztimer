@@ -77,17 +77,17 @@ describe('schedex', function() {
         node.emit('input', {
             payload: 'mon true'
         });
-        assert.strictEqual(node.config().mon, true);
+        assert.strictEqual(node.schedexConfig().mon, true);
 
         node.emit('input', {
             payload: 'mon false'
         });
-        assert.strictEqual(node.config().mon, false);
+        assert.strictEqual(node.schedexConfig().mon, false);
 
         node.emit('input', {
             payload: { mon: true }
         });
-        assert.strictEqual(node.config().mon, true);
+        assert.strictEqual(node.schedexConfig().mon, true);
     });
     it('should indicate bad programmatic input', function() {
         const node = newNode();

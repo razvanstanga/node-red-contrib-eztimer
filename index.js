@@ -1,3 +1,4 @@
+/* eslint-disable no-invalid-this,consistent-this */
 /**
  * The MIT License (MIT)
  *
@@ -290,12 +291,13 @@ module.exports = function(RED) {
         }
 
         function toBoolean(val) {
+            // eslint-disable-next-line prefer-template
             return (val + '').toLowerCase() === 'true';
         }
 
         // Bodges to allow testing
         node.schedexEvents = () => events;
-        node.config = () => config;
+        node.schedexConfig = () => config;
         node.now = moment;
 
         bootstrap();
