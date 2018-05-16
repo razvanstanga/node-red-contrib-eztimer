@@ -286,8 +286,8 @@ module.exports = function(RED) {
             callback(config, 'fri', 'fri', toBoolean);
             callback(config, 'sat', 'sat', toBoolean);
             callback(config, 'sun', 'sun', toBoolean);
-            callback(config, 'lon', 'lon', String);
-            callback(config, 'lat', 'lat', String);
+            callback(config, 'lon', 'lon', Number);
+            callback(config, 'lat', 'lat', Number);
         }
 
         function toBoolean(val) {

@@ -88,6 +88,16 @@ describe('schedex', function() {
             payload: { mon: true }
         });
         assert.strictEqual(node.schedexConfig().mon, true);
+
+        node.emit('input', {
+            payload: { lat: -1.1 }
+        });
+        assert.strictEqual(node.schedexConfig().lat, -1.1);
+
+        node.emit('input', {
+            payload: 'lat -99.9'
+        });
+        assert.strictEqual(node.schedexConfig().lat, -99.9);
     });
     it('should indicate bad programmatic input', function() {
         const node = newNode();
