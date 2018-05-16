@@ -18,21 +18,21 @@
         "url": "https://github.com/biddster/node-red-contrib-schedex/issues"
     },
     "dependencies": {
-        "lodash": "^4.17.4",
-        "moment": "^2.20.1",
+        "lodash": "^4.17.10",
+        "moment": "^2.22.1",
         "suncalc": "^1.8.0"
     },
     "devDependencies": {
         "chai": "^4.1.2",
-        "eslint": "^4.16.0",
-        "eslint-config-biddster": "^0.4.0",
+        "eslint": "^4.19.1",
+        "eslint-config-biddster": "^0.6.0",
         "eslint-config-prettier": "^2.9.0",
         "markdown-to-html": "0.0.13",
-        "mocha": "^5.0.0",
+        "mocha": "^5.1.1",
         "node-red-contrib-mock-node": "^0.4.0",
-        "nsp": "^3.1.0",
-        "nyc": "^11.4.1",
-        "prettier": "^1.10.2"
+        "nsp": "^3.2.1",
+        "nyc": "^11.8.0",
+        "prettier": "^1.12.1"
     },
     "node-red": {
         "nodes": {
