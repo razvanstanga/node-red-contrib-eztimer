@@ -12,6 +12,8 @@ want Schedex enabled and re-deploy.**
 
 # Installation
 
+This node requires node 4.x. It's tested against 4.6.1.
+
     $ cd ~/.node-red
     $ npm install node-red-contrib-schedex
 
