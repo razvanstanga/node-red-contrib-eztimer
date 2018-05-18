@@ -281,6 +281,7 @@ $ npm install node-red-contrib-schedex
 <p>&#39;## Programmatic Control</p>
 <p>This node supports programmatic time control as well as configuration via the NodeRED UI.</p>
 <p><strong>It is very important to note that properties set programmatically in this manner are transient. They will not persist<br>over a NodeRED restart or redeploy!</strong></p>
+<p>Note that both the property-based and string-based specifications are overrides that violate the usual behavior.<br>See here for further discussion <a href="https://github.com/node-red/node-red/issues/399">https://github.com/node-red/node-red/issues/399</a>.</p>
 <p>You can set the following:</p>
 <table>
 <thead>
@@ -334,6 +335,34 @@ $ npm install node-red-contrib-schedex
 <td><code>msg.payload.offrandomoffset</code></td>
 <td>Boolean value as specified above in Randomisation of Times</td>
 </tr>
+<tr>
+<td><code>msg.payload.mon</code></td>
+<td>Boolean: true enables the schedule on a Monday, false disables it.</td>
+</tr>
+<tr>
+<td><code>msg.payload.tue</code></td>
+<td>Boolean: true enables the schedule on a Tuesday, false disables it.</td>
+</tr>
+<tr>
+<td><code>msg.payload.wed</code></td>
+<td>Boolean: true enables the schedule on a Wednesday, false disables it.</td>
+</tr>
+<tr>
+<td><code>msg.payload.thu</code></td>
+<td>Boolean: true enables the schedule on a Thursday, false disables it.</td>
+</tr>
+<tr>
+<td><code>msg.payload.fri</code></td>
+<td>Boolean: true enables the schedule on a Friday, false disables it.</td>
+</tr>
+<tr>
+<td><code>msg.payload.sat</code></td>
+<td>Boolean: true enables the schedule on a Saturday, false disables it.</td>
+</tr>
+<tr>
+<td><code>msg.payload.sun</code></td>
+<td>Boolean: true enables the schedule on a Sunday, false disables it.</td>
+</tr>
 </tbody>
 </table>
 <p>Alternatively, you can send msg.payload as a string with the following values:</p>
@@ -355,19 +384,19 @@ $ npm install node-red-contrib-schedex
 </tr>
 <tr>
 <td><code>ontopic my_topic</code></td>
-<td>Override the topic for the on event (no spaces)</td>
+<td>Sets the topic for the on event (no spaces)</td>
 </tr>
 <tr>
 <td><code>onpayload my_payload</code></td>
-<td>Override the payload for the on event (no spaces)</td>
+<td>Sets the payload for the on event (no spaces)</td>
 </tr>
 <tr>
 <td><code>onoffset 30</code></td>
-<td>Override the offset for the on event</td>
+<td>Sets the offset for the on event</td>
 </tr>
 <tr>
 <td><code>onrandomoffset true</code></td>
-<td>Override the random offset for the on event</td>
+<td>Sets the random offset for the on event</td>
 </tr>
 <tr>
 <td><code>offtime dusk</code></td>
@@ -375,23 +404,31 @@ $ npm install node-red-contrib-schedex
 </tr>
 <tr>
 <td><code>offtopic my_topic</code></td>
-<td>Override the topic for the off event (no spaces)</td>
+<td>Sets the topic for the off event (no spaces)</td>
 </tr>
 <tr>
 <td><code>offpayload my_payload</code></td>
-<td>Override the payload for the off event (no spaces)</td>
+<td>Sets the payload for the off event (no spaces)</td>
 </tr>
 <tr>
 <td><code>offoffset -30</code></td>
-<td>Override the offset for the off event</td>
+<td>Sets the offset for the off event</td>
 </tr>
 <tr>
 <td><code>offrandomoffset false</code></td>
-<td>Override the random offset for the off event</td>
+<td>Sets the random offset for the off event</td>
+</tr>
+<tr>
+<td><code>mon false</code></td>
+<td>Disables the schedule on a Monday</td>
+</tr>
+<tr>
+<td><code>tue true</code></td>
+<td>Enables the schedule on a Tuesday</td>
 </tr>
 <tr>
 <td><code>ontime 16:30 onoffset 60 onrandomoffset true</code></td>
-<td>Override the time, offset and random offset for the on event</td>
+<td>Sets the time, offset and random offset for the on event</td>
 </tr>
 </tbody>
 </table>

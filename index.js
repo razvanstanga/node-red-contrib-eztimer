@@ -1,38 +1,37 @@
+/* eslint-disable no-invalid-this,consistent-this */
 /**
- The MIT License (MIT)
-
- Copyright (c) 2016 @biddster
-
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in
- all copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- THE SOFTWARE.
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2016 @biddster
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
-
+'use strict';
 module.exports = function(RED) {
-    'use strict';
-
-    var moment = require('moment');
-    var SunCalc = require('suncalc');
-    var _ = require('lodash');
-    var fmt = 'YYYY-MM-DD HH:mm';
+    const moment = require('moment');
+    const SunCalc = require('suncalc');
+    const _ = require('lodash');
+    const fmt = 'YYYY-MM-DD HH:mm';
 
     RED.nodes.registerType('schedex', function(config) {
         RED.nodes.createNode(this, config);
-        var node = this,
+        const node = this,
             events = {
                 on: setupEvent('on', 'dot'),
                 off: setupEvent('off', 'ring')
@@ -50,19 +49,25 @@ module.exports = function(RED) {
             config.fri === undefined &&
             config.sat === undefined
         ) {
-            const name = config.name || config.ontime + ' - ' + config.offtime;
+            const name = config.name || `${config.ontime} - ${config.offtime}`;
             node.warn(
-                'Schedex [' +
-                    name +
-                    ']: New weekday configuration attributes are not defined, please edit the node. Defaulting to true.'
+                `Schedex [${name}]: New weekday configuration attributes are not defined, please edit the node. Defaulting to true.`
             );
             config.sun = config.mon = config.tue = config.wed = config.thu = config.fri = config.sat = true;
         }
 
-        var weekdays = [config.mon, config.tue, config.wed, config.thu, config.fri, config.sat, config.sun];
+        const weekdays = [
+            config.mon,
+            config.tue,
+            config.wed,
+            config.thu,
+            config.fri,
+            config.sat,
+            config.sun
+        ];
 
         node.on('input', function(msg) {
-            var handled = false,
+            let handled = false,
                 requiresBootstrap = false;
             if (_.isString(msg.payload)) {
                 // TODO - with these payload options, we can't support on and ontime etc.
@@ -77,8 +82,12 @@ module.exports = function(RED) {
                     node.send({
                         topic: 'info',
                         payload: {
-                            on: isSuspended() ? 'suspended' : events.on.moment.toDate().toUTCString(),
-                            off: isSuspended() ? 'suspended' : events.off.moment.toDate().toUTCString(),
+                            on: isSuspended()
+                                ? 'suspended'
+                                : events.on.moment.toDate().toUTCString(),
+                            off: isSuspended()
+                                ? 'suspended'
+                                : events.off.moment.toDate().toUTCString(),
                             state: isSuspended()
                                 ? 'suspended'
                                 : events.off.moment.isAfter(events.on.moment) ? 'off' : 'on'
@@ -87,36 +96,36 @@ module.exports = function(RED) {
                 } else {
                     if (msg.payload.indexOf('suspended') !== -1) {
                         handled = true;
-                        var match = /.*suspended\s+(\S+)/.exec(msg.payload);
-                        var previous = config.suspended;
+                        const match = /.*suspended\s+(\S+)/.exec(msg.payload);
+                        const previous = config.suspended;
                         config.suspended = toBoolean(match[1]);
                         requiresBootstrap = requiresBootstrap || previous !== config.suspended;
                     }
-                    enumerateOnOffEvents(function(eventType, eventName, eventNameTypeConverter) {
-                        var prop = eventType + eventName;
-                        var match = new RegExp('.*' + prop + '\\s+(\\S+)').exec(msg.payload);
+                    enumerateProgrammables(function(obj, prop, payloadName, typeConverter) {
+                        const match = new RegExp(`.*${payloadName}\\s+(\\S+)`).exec(
+                            msg.payload
+                        );
                         if (match) {
                             handled = true;
-                            var previous = events[eventType][eventName];
-                            events[eventType][eventName] = eventNameTypeConverter(match[1]);
-                            requiresBootstrap = requiresBootstrap || previous !== events[eventType][eventName];
+                            const previous = obj[prop];
+                            obj[prop] = typeConverter(match[1]);
+                            requiresBootstrap = requiresBootstrap || previous !== obj[prop];
                         }
                     });
                 }
             } else {
                 if (msg.payload.hasOwnProperty('suspended')) {
                     handled = true;
-                    var previous = config.suspended;
+                    const previous = config.suspended;
                     config.suspended = !!msg.payload.suspended;
                     requiresBootstrap = requiresBootstrap || previous !== config.suspended;
                 }
-                enumerateOnOffEvents(function(eventType, eventName, eventNameTypeConverter) {
-                    var prop = eventType + eventName;
-                    if (msg.payload.hasOwnProperty(prop)) {
+                enumerateProgrammables(function(obj, prop, payloadName, typeConverter) {
+                    if (msg.payload.hasOwnProperty(payloadName)) {
                         handled = true;
-                        var previous = events[eventType][eventName];
-                        events[eventType][eventName] = eventNameTypeConverter(msg.payload[prop]);
-                        requiresBootstrap = requiresBootstrap || previous !== events[eventType][eventName];
+                        const previous = obj[prop];
+                        obj[prop] = typeConverter(msg.payload[payloadName]);
+                        requiresBootstrap = requiresBootstrap || previous !== obj[prop];
                     }
                 });
             }
@@ -134,10 +143,10 @@ module.exports = function(RED) {
         node.on('close', suspend);
 
         function setupEvent(eventName, shape) {
-            var filtered = _.pickBy(config, function(value, key) {
+            const filtered = _.pickBy(config, function(value, key) {
                 return key && key.indexOf(eventName) === 0;
             });
-            var event = _.mapKeys(filtered, function(value, key) {
+            const event = _.mapKeys(filtered, function(value, key) {
                 return key.substring(eventName.length).toLowerCase();
             });
             event.name = eventName.toUpperCase();
@@ -160,13 +169,15 @@ module.exports = function(RED) {
                 text:
                     event.name +
                     (manual ? ' manual' : ' auto') +
-                    (isSuspended() ? ' - scheduling suspended' : ' until ' + event.inverse.moment.format(fmt))
+                    (isSuspended()
+                        ? ' - scheduling suspended'
+                        : ` until ${event.inverse.moment.format(fmt)}`)
             });
         }
 
         function schedule(event, isInitial) {
-            var now = node.now();
-            var matches = new RegExp(/(\d+):(\d+)/).exec(event.time);
+            const now = node.now();
+            const matches = new RegExp(/(\d+):(\d+)/).exec(event.time);
             if (matches && matches.length) {
                 // Don't use existing 'now' moment here as hour and minute mutate the moment.
                 event.moment = node
@@ -174,8 +185,8 @@ module.exports = function(RED) {
                     .hour(+matches[1])
                     .minute(+matches[2]);
             } else {
-                var sunCalcTimes = SunCalc.getTimes(new Date(), config.lat, config.lon);
-                var date = sunCalcTimes[event.time];
+                const sunCalcTimes = SunCalc.getTimes(new Date(), config.lat, config.lon);
+                const date = sunCalcTimes[event.time];
                 if (date) {
                     event.moment = moment(date);
                 }
@@ -184,14 +195,14 @@ module.exports = function(RED) {
                 node.status({
                     fill: 'red',
                     shape: 'dot',
-                    text: 'Invalid time: ' + event.time
+                    text: `Invalid time: ${event.time}`
                 });
                 return false;
             }
             event.moment.seconds(0);
 
             if (event.offset) {
-                var adjustment = event.offset;
+                let adjustment = event.offset;
                 if (event.randomoffset) {
                     adjustment = event.offset * Math.random();
                 }
@@ -207,10 +218,10 @@ module.exports = function(RED) {
                 event.moment.add(1, 'day');
             }
 
-            var delay = event.moment.diff(now);
             if (event.timeout) {
                 clearTimeout(event.timeout);
             }
+            const delay = event.moment.diff(now);
             event.timeout = setTimeout(event.callback, delay);
             return true;
         }
@@ -223,24 +234,20 @@ module.exports = function(RED) {
             node.status({
                 fill: 'grey',
                 shape: 'dot',
-                text:
-                    'Scheduling suspended ' +
-                    (weekdays.indexOf(true) === -1 ? '(no weekdays selected) ' : '') +
-                    '- manual mode only'
+                text: `Scheduling suspended ${
+                    weekdays.indexOf(true) === -1 ? '(no weekdays selected) ' : ''
+                } - manual mode only`
             });
         }
 
         function resume() {
             if (schedule(events.on, true) && schedule(events.off, true)) {
-                var firstEvent = events.on.moment.isBefore(events.off.moment) ? events.on : events.off;
-                var message =
-                    firstEvent.name +
-                    ' ' +
-                    firstEvent.moment.format(fmt) +
-                    ', ' +
-                    firstEvent.inverse.name +
-                    ' ' +
-                    firstEvent.inverse.moment.format(fmt);
+                const firstEvent = events.on.moment.isBefore(events.off.moment)
+                    ? events.on
+                    : events.off;
+                const message = `${firstEvent.name} ${firstEvent.moment.format(fmt)}, ${
+                    firstEvent.inverse.name
+                } ${firstEvent.inverse.moment.format(fmt)}`;
                 node.status({
                     fill: 'yellow',
                     shape: 'dot',
@@ -261,30 +268,37 @@ module.exports = function(RED) {
             return config.suspended || weekdays.indexOf(true) === -1;
         }
 
-        function enumerateOnOffEvents(callback) {
-            // The keys here will be ['on', 'off']
-            Object.keys(events).forEach(function(eventType) {
-                callback(eventType, 'time', String);
-                callback(eventType, 'topic', String);
-                callback(eventType, 'payload', String);
-                callback(eventType, 'offset', Number);
-                callback(eventType, 'randomoffset', toBoolean);
-            });
+        function enumerateProgrammables(callback) {
+            callback(events.on, 'time', 'ontime', String);
+            callback(events.on, 'topic', 'ontopic', String);
+            callback(events.on, 'payload', 'onpayload', String);
+            callback(events.on, 'offset', 'onoffset', Number);
+            callback(events.on, 'randomoffset', 'onrandomoffset', toBoolean);
+            callback(events.off, 'time', 'offtime', String);
+            callback(events.off, 'topic', 'offtopic', String);
+            callback(events.off, 'payload', 'offpayload', String);
+            callback(events.off, 'offset', 'offoffset', Number);
+            callback(events.off, 'randomoffset', 'offrandomoffset', toBoolean);
+            callback(config, 'mon', 'mon', toBoolean);
+            callback(config, 'tue', 'tue', toBoolean);
+            callback(config, 'wed', 'wed', toBoolean);
+            callback(config, 'thu', 'thu', toBoolean);
+            callback(config, 'fri', 'fri', toBoolean);
+            callback(config, 'sat', 'sat', toBoolean);
+            callback(config, 'sun', 'sun', toBoolean);
+            callback(config, 'lon', 'lon', Number);
+            callback(config, 'lat', 'lat', Number);
         }
 
         function toBoolean(val) {
+            // eslint-disable-next-line prefer-template
             return (val + '').toLowerCase() === 'true';
         }
 
-        // Bodge to allow testing
-        node.schedexEvents = function() {
-            return events;
-        };
-
-        // Bodge to allow testing
-        node.now = function() {
-            return moment();
-        };
+        // Bodges to allow testing
+        node.schedexEvents = () => events;
+        node.schedexConfig = () => config;
+        node.now = moment;
 
         bootstrap();
     });
