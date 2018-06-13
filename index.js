@@ -90,7 +90,11 @@ module.exports = function(RED) {
                                 : events.off.moment.toDate().toUTCString(),
                             state: isSuspended()
                                 ? 'suspended'
-                                : events.off.moment.isAfter(events.on.moment) ? 'off' : 'on'
+                                : events.off.moment.isAfter(events.on.moment) ? 'off' : 'on',
+                            ontopic: events.on.topic,
+                            onpayload: events.on.payload,
+                            offtopic: events.off.topic,
+                            offpayload: events.off.payload
                         }
                     });
                 } else {
