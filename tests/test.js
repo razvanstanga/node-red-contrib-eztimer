@@ -31,6 +31,28 @@ const mock = require('node-red-contrib-mock-node');
 const nodeRedModule = require('../index.js');
 
 describe('schedex', function() {
+    it('issue#22: should schedule correctly with ontime no offtime', function() {
+        const node = newNode({
+            ontime: '23:59',
+            offtime: ''
+        });
+        assert.strictEqual(node.status().text, `ON ${moment().format('YYYY-MM-DD')} 23:59`);
+    });
+    it('issue#22: should schedule correctly with offtime no ontime', function() {
+        const node = newNode({
+            ontime: '',
+            offtime: '23:59',
+            offoffset: 0
+        });
+        assert.strictEqual(node.status().text, `OFF ${moment().format('YYYY-MM-DD')} 23:59`);
+    });
+    it('issue#22: should indicate error if no on or off time', function() {
+        const node = newNode({
+            ontime: '',
+            offtime: ''
+        });
+        assert.strictEqual(node.status().text, 'No on or off time');
+    });
     it('should schedule initially', function() {
         const node = newNode();
         assert.strictEqual(node.schedexEvents().on.time, '11:45');
@@ -116,7 +138,7 @@ describe('schedex', function() {
         const node = newNode({
             ontime: '5555'
         });
-        assert.strictEqual(node.status().text, 'Invalid time: 5555');
+        assert.strictEqual(node.status().text, 'Invalid time [5555]');
     });
     it('should suspend initially', function() {
         const node = newNode({

@@ -51,5 +51,8 @@
         "singleQuote": true,
         "tabWidth": 4,
         "printWidth": 96
+    },
+    "nyc": {
+        "exclude": "tests/**"
     }
 }

@@ -29,6 +29,13 @@ module.exports = function(RED) {
     const _ = require('lodash');
     const fmt = 'YYYY-MM-DD HH:mm';
 
+    const Status = Object.freeze({
+        SCHEDULED: Symbol('scheduled'),
+        SUSPENDED: Symbol('suspended'),
+        FIRED: Symbol('fired'),
+        ERROR: Symbol('error')
+    });
+
     RED.nodes.registerType('schedex', function(config) {
         RED.nodes.createNode(this, config);
         const node = this,
@@ -90,7 +97,9 @@ module.exports = function(RED) {
                                 : events.off.moment.toDate().toUTCString(),
                             state: isSuspended()
                                 ? 'suspended'
-                                : events.off.moment.isAfter(events.on.moment) ? 'off' : 'on',
+                                : events.off.moment.isAfter(events.on.moment)
+                                    ? 'off'
+                                    : 'on',
                             ontopic: events.on.topic,
                             onpayload: events.on.payload,
                             offtopic: events.off.topic,
@@ -134,11 +143,7 @@ module.exports = function(RED) {
                 });
             }
             if (!handled) {
-                node.status({
-                    fill: 'red',
-                    shape: 'dot',
-                    text: 'Unsupported input'
-                });
+                setStatus(Status.ERROR, { error: 'Unsupported input' });
             } else if (requiresBootstrap) {
                 bootstrap();
             }
@@ -167,19 +172,13 @@ module.exports = function(RED) {
                 topic: event.topic,
                 payload: event.payload
             });
-            node.status({
-                fill: manual ? 'blue' : 'green',
-                shape: event.shape,
-                text:
-                    event.name +
-                    (manual ? ' manual' : ' auto') +
-                    (isSuspended()
-                        ? ' - scheduling suspended'
-                        : ` until ${event.inverse.moment.format(fmt)}`)
-            });
+            setStatus(Status.FIRED, { event, manual });
         }
 
         function schedule(event, isInitial) {
+            if (!event.time) {
+                return true;
+            }
             const now = node.now();
             const matches = new RegExp(/(\d+):(\d+)/).exec(event.time);
             if (matches && matches.length) {
@@ -196,11 +195,7 @@ module.exports = function(RED) {
                 }
             }
             if (!event.moment) {
-                node.status({
-                    fill: 'red',
-                    shape: 'dot',
-                    text: `Invalid time: ${event.time}`
-                });
+                setStatus(Status.ERROR, { error: `Invalid time [${event.time}]` });
                 return false;
             }
             event.moment.seconds(0);
@@ -235,29 +230,59 @@ module.exports = function(RED) {
             events.on.moment = null;
             clearTimeout(events.off.timeout);
             events.off.moment = null;
-            node.status({
-                fill: 'grey',
-                shape: 'dot',
-                text: `Scheduling suspended ${
-                    weekdays.indexOf(true) === -1 ? '(no weekdays selected) ' : ''
-                } - manual mode only`
-            });
+            setStatus(Status.SUSPENDED);
         }
 
         function resume() {
             if (schedule(events.on, true) && schedule(events.off, true)) {
-                const firstEvent = events.on.moment.isBefore(events.off.moment)
-                    ? events.on
-                    : events.off;
-                const message = `${firstEvent.name} ${firstEvent.moment.format(fmt)}, ${
-                    firstEvent.inverse.name
-                } ${firstEvent.inverse.moment.format(fmt)}`;
-                node.status({
-                    fill: 'yellow',
-                    shape: 'dot',
-                    text: message
-                });
+                setStatus(Status.SCHEDULED);
             }
+        }
+
+        function setStatus(status, { event = null, manual = false, error = null } = {}) {
+            const message = [];
+            let shape = 'dot',
+                fill = 'red';
+            if (status === Status.SCHEDULED) {
+                if (events.on.moment && events.off.moment) {
+                    const firstEvent = events.on.moment.isBefore(events.off.moment)
+                        ? events.on
+                        : events.off;
+                    message.push(firstEvent.name);
+                    message.push(firstEvent.moment.format(fmt));
+                    message.push(firstEvent.inverse.name);
+                    message.push(firstEvent.inverse.moment.format(fmt));
+                } else if (events.on.moment) {
+                    message.push(events.on.name);
+                    message.push(events.on.moment.format(fmt));
+                } else if (events.off.moment) {
+                    message.push(events.off.name);
+                    message.push(events.off.moment.format(fmt));
+                } else {
+                    message.push('No on or off time');
+                }
+            } else if (status === Status.FIRED) {
+                shape = { event };
+                fill = manual ? 'blue' : 'green';
+                message.push(event.name);
+                message.push(manual ? 'manual' : 'auto');
+                if (isSuspended()) {
+                    message.push('- scheduling suspended');
+                } else {
+                    message.push(` until ${event.inverse.moment.format(fmt)}`);
+                }
+            } else if (status === Status.SUSPENDED) {
+                fill = 'grey';
+                message.push('Scheduling suspended');
+                if (weekdays.indexOf(true) === -1) {
+                    message.push('(no weekdays selected)');
+                }
+                message.push('- manual mode only');
+            } else if (status === Status.ERROR) {
+                message.push(error);
+            }
+
+            node.status({ fill, shape, text: message.join(' ') });
         }
 
         function bootstrap() {
