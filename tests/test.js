@@ -46,12 +46,15 @@ describe('schedex', function() {
         });
         assert.strictEqual(node.status().text, `OFF ${moment().format('YYYY-MM-DD')} 23:59`);
     });
-    it('issue#22: should indicate error if no on or off time', function() {
+    it('issue#22: should indicate scheduling suspended if no on or off time', function() {
         const node = newNode({
             ontime: '',
             offtime: ''
         });
-        assert.strictEqual(node.status().text, 'No on or off time');
+        assert.strictEqual(
+            node.status().text,
+            'Scheduling suspended (no on or off time) - manual mode only'
+        );
     });
     it('should schedule initially', function() {
         const node = newNode();

@@ -258,8 +258,6 @@ module.exports = function(RED) {
                 } else if (events.off.moment) {
                     message.push(events.off.name);
                     message.push(events.off.moment.format(fmt));
-                } else {
-                    message.push('No on or off time');
                 }
             } else if (status === Status.FIRED) {
                 shape = { event };
@@ -276,6 +274,8 @@ module.exports = function(RED) {
                 message.push('Scheduling suspended');
                 if (weekdays.indexOf(true) === -1) {
                     message.push('(no weekdays selected)');
+                } else if (!events.on.time && !events.off.time) {
+                    message.push('(no on or off time)');
                 }
                 message.push('- manual mode only');
             } else if (status === Status.ERROR) {
@@ -294,7 +294,11 @@ module.exports = function(RED) {
         }
 
         function isSuspended() {
-            return config.suspended || weekdays.indexOf(true) === -1;
+            return (
+                config.suspended ||
+                weekdays.indexOf(true) === -1 ||
+                (!events.on.time && !events.off.time)
+            );
         }
 
         function enumerateProgrammables(callback) {
