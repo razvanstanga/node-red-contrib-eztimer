@@ -107,13 +107,6 @@ module.exports = function(RED) {
                         }
                     });
                 } else {
-                    if (msg.payload.indexOf('suspended') !== -1) {
-                        handled = true;
-                        const match = /.*suspended\s+(\S+)/.exec(msg.payload);
-                        const previous = config.suspended;
-                        config.suspended = toBoolean(match[1]);
-                        requiresBootstrap = requiresBootstrap || previous !== config.suspended;
-                    }
                     enumerateProgrammables(function(obj, prop, payloadName, typeConverter) {
                         const match = new RegExp(`.*${payloadName}\\s+(\\S+)`).exec(
                             msg.payload
@@ -127,12 +120,6 @@ module.exports = function(RED) {
                     });
                 }
             } else {
-                if (msg.payload.hasOwnProperty('suspended')) {
-                    handled = true;
-                    const previous = config.suspended;
-                    config.suspended = !!msg.payload.suspended;
-                    requiresBootstrap = requiresBootstrap || previous !== config.suspended;
-                }
                 enumerateProgrammables(function(obj, prop, payloadName, typeConverter) {
                     if (msg.payload.hasOwnProperty(payloadName)) {
                         handled = true;
@@ -244,6 +231,7 @@ module.exports = function(RED) {
             let shape = 'dot',
                 fill = 'red';
             if (status === Status.SCHEDULED) {
+                fill = 'yellow';
                 if (events.on.moment && events.off.moment) {
                     const firstEvent = events.on.moment.isBefore(events.off.moment)
                         ? events.on
@@ -321,6 +309,7 @@ module.exports = function(RED) {
             callback(config, 'sun', 'sun', toBoolean);
             callback(config, 'lon', 'lon', Number);
             callback(config, 'lat', 'lat', Number);
+            callback(config, 'suspended', 'suspended', toBoolean);
         }
 
         function toBoolean(val) {
