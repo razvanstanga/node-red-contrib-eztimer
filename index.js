@@ -1,4 +1,4 @@
-/* eslint-disable no-invalid-this,consistent-this */
+/* eslint-disable no-invalid-this,consistent-this,max-lines-per-function */
 /**
  * The MIT License (MIT)
  *
@@ -39,10 +39,7 @@ module.exports = function(RED) {
     RED.nodes.registerType('schedex', function(config) {
         RED.nodes.createNode(this, config);
         const node = this,
-            events = {
-                on: setupEvent('on', 'dot'),
-                off: setupEvent('off', 'ring')
-            };
+            events = { on: setupEvent('on', 'dot'), off: setupEvent('off', 'ring') };
         events.on.inverse = events.off;
         events.off.inverse = events.on;
 
@@ -63,7 +60,7 @@ module.exports = function(RED) {
             config.sun = config.mon = config.tue = config.wed = config.thu = config.fri = config.sat = true;
         }
 
-        const weekdays = [
+        const weekdays = Object.freeze([
             config.mon,
             config.tue,
             config.wed,
@@ -71,7 +68,7 @@ module.exports = function(RED) {
             config.fri,
             config.sat,
             config.sun
-        ];
+        ]);
 
         node.on('input', function(msg) {
             let handled = false,
@@ -108,7 +105,7 @@ module.exports = function(RED) {
                     });
                 } else {
                     enumerateProgrammables(function(obj, prop, payloadName, typeConverter) {
-                        const match = new RegExp(`.*${payloadName}\\s+(\\S+)`).exec(
+                        const match = new RegExp(`.*${payloadName}\\s+(\\S+)`, 'u').exec(
                             msg.payload
                         );
                         if (match) {
@@ -155,10 +152,7 @@ module.exports = function(RED) {
         }
 
         function send(event, manual) {
-            node.send({
-                topic: event.topic,
-                payload: event.payload
-            });
+            node.send({ topic: event.topic, payload: event.payload });
             setStatus(Status.FIRED, { event, manual });
         }
 
@@ -167,7 +161,7 @@ module.exports = function(RED) {
                 return true;
             }
             const now = node.now();
-            const matches = new RegExp(/(\d+):(\d+)/).exec(event.time);
+            const matches = new RegExp('(\\d+):(\\d+)', 'u').exec(event.time);
             if (matches && matches.length) {
                 // Don't use existing 'now' moment here as hour and minute mutate the moment.
                 event.moment = node
@@ -255,7 +249,7 @@ module.exports = function(RED) {
                 if (isSuspended()) {
                     message.push('- scheduling suspended');
                 } else {
-                    message.push(` until ${event.inverse.moment.format(fmt)}`);
+                    message.push(`until ${event.inverse.moment.format(fmt)}`);
                 }
             } else if (status === Status.SUSPENDED) {
                 fill = 'grey';

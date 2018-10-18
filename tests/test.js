@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /**
  * The MIT License (MIT)
  *
@@ -31,6 +32,16 @@ const mock = require('node-red-contrib-mock-node');
 const nodeRedModule = require('../index.js');
 
 describe('schedex', function() {
+    it('should visually indicate manual on off', function() {
+        let node = newNode();
+        node.emit('input', { payload: 'on' });
+        console.log(node.status().text);
+        assert(node.status().text.indexOf('ON manual until') === 0);
+
+        node = newNode();
+        node.emit('input', { payload: 'off' });
+        assert(node.status().text.indexOf('OFF manual until') === 0);
+    });
     it('issue#22: should schedule correctly with ontime no offtime', function() {
         const node = newNode({
             ontime: '23:59',
