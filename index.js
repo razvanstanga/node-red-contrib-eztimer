@@ -40,8 +40,10 @@ module.exports = function(RED) {
         RED.nodes.createNode(this, config);
         const node = this,
             events = { on: setupEvent('on', 'dot'), off: setupEvent('off', 'ring') };
-        events.on.inverse = events.off;
-        events.off.inverse = events.on;
+
+        function inverse(event) {
+            return event === events.on ? events.off : events.on;
+        }
 
         // migration code : if new values are undefined, set all to true
         if (
@@ -232,8 +234,8 @@ module.exports = function(RED) {
                         : events.off;
                     message.push(firstEvent.name);
                     message.push(firstEvent.moment.format(fmt));
-                    message.push(firstEvent.inverse.name);
-                    message.push(firstEvent.inverse.moment.format(fmt));
+                    message.push(inverse(firstEvent).name);
+                    message.push(inverse(firstEvent).moment.format(fmt));
                 } else if (events.on.moment) {
                     message.push(events.on.name);
                     message.push(events.on.moment.format(fmt));
@@ -242,14 +244,15 @@ module.exports = function(RED) {
                     message.push(events.off.moment.format(fmt));
                 }
             } else if (status === Status.FIRED) {
-                shape = { event };
+                // eslint-disable-next-line prefer-destructuring
+                shape = event.shape;
                 fill = manual ? 'blue' : 'green';
                 message.push(event.name);
                 message.push(manual ? 'manual' : 'auto');
                 if (isSuspended()) {
                     message.push('- scheduling suspended');
                 } else {
-                    message.push(`until ${event.inverse.moment.format(fmt)}`);
+                    message.push(`until ${inverse(event).moment.format(fmt)}`);
                 }
             } else if (status === Status.SUSPENDED) {
                 fill = 'grey';
