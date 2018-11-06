@@ -1,21 +1,20 @@
-# Schedex
+# eztimer
 
-Scheduler for node-red which allows you to enter on/off times as 24hr clock (e.g. 01:10) or suncalc events (e.g.
+Timer/scheduler for node-red which allows you to enter on/off times as 24hr clock (e.g. 01:10) or suncalc events (e.g.
 goldenHour). It also allows you to offset times and randomise the time within the offset.
 
-Inspired by Pete Scargill's [BigTimer](http://tech.scargill.net/big-timer/)
+Forked from (retaining much of the code, including this document) [schedex](https://github.com/biddster/node-red-contrib-schedex) which was in turn inspired by Pete Scargill's [BigTimer](http://tech.scargill.net/big-timer/), so
+hat-tip to both those coders.
 
-**NOTE: When upgrading from versions prior to 1.0.0, you will see a message for each Schedex node in the Node-RED debug
-window. This message is to advise that the Schedex configuration changed slightly in version 1.0.0 in order to
-accomodate days of the week when scheduling. To remedy, simply edit each Schedex node, tick the days of the week you
-want Schedex enabled and re-deploy.**
+Emphasis has been put on creating a simple interface and utilising built-in node-red formatting helpers (such as creating
+a JSON payload).
 
 # Installation
 
 This node requires node 4.x. It's tested against 4.6.1.
 
     $ cd ~/.node-red
-    $ npm install node-red-contrib-schedex
+    $ npm install node-red-contrib-eztimer
 
 # Configuration
 
@@ -26,7 +25,7 @@ scheduling.
 
 ## Suspending scheduling
 
-The 'Suspend scheduling' checkbox allows you to disable time scheduling. If scheduling is suspended, Schedex will only
+The 'Suspend scheduling' checkbox allows you to disable time scheduling. If scheduling is suspended, eztimer will only
 generate output events upon receipt of input 'on' and 'off' events (see below).
 
 This setting is provided for the situation where you temporarily don't want time based activation and don't want to
@@ -34,25 +33,8 @@ rewire your Node-RED flow.
 
 ## Times
 
-The times can be a 24 hour time or a [suncalc](https://github.com/mourner/suncalc) event:
-
-| Time              | Description                                                              |
-| ----------------- | ------------------------------------------------------------------------ |
-| `00:00 ... 23:59` | 24hr time                                                                |
-| `sunrise`         | sunrise (top edge of the sun appears on the horizon)                     |
-| `sunriseEnd`      | sunrise ends (bottom edge of the sun touches the horizon)                |
-| `goldenHourEnd`   | morning golden hour (soft light, best time for photography) ends         |
-| `solarNoon`       | solar noon (sun is in the highest position)                              |
-| `goldenHour`      | evening golden hour starts                                               |
-| `sunsetStart`     | sunset starts (bottom edge of the sun touches the horizon)               |
-| `sunset`          | sunset (sun disappears below the horizon, evening civil twilight starts) |
-| `dusk`            | dusk (evening nautical twilight starts)                                  |
-| `nauticalDusk`    | nautical dusk (evening astronomical twilight starts)                     |
-| `night`           | night starts (dark enough for astronomical observations)                 |
-| `nadir`           | nadir (darkest moment of the night, sun is in the lowest position)       |
-| `nightEnd`        | night ends (morning astronomical twilight starts)                        |
-| `nauticalDawn`    | nautical dawn (morning nautical twilight starts)                         |
-| `dawn`            | dawn (morning nautical twilight ends, morning civil twilight starts)     |
+Select the type of trigger from the dropdown and this will provide either a fruther dropdown (for suncalc events), or a text
+box to enter either a 24hr time (HH:mm) or, for the off event, a duration (hh:mm:ss).
 
 ## Offsets
 
@@ -74,9 +56,9 @@ You can wire inject nodes to the input of this node and send the following in `m
 
 | msg.payload | Description                                                                                                                                |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `on`        | Triggers manual on mode and causes Schedex to emit the configured on event. Manual mode is reset when the next on or off time is reached   |
-| `off`       | Triggers manual off mode and causes Schedex to emit the configured off event. Manual mode is reset when the next on or off time is reached |
-| `info`      | Schedex emits an object containing the on and off times in UTC format. It also contains the state which is either on or off.               |
+| `on`        | Triggers manual on mode and causes eztimer to emit the configured on event. Manual mode is reset when the next on or off time is reached   |
+| `off`       | Triggers manual off mode and causes eztimer to emit the configured off event. Manual mode is reset when the next on or off time is reached |
+| `info`      | eztimer emits an object containing the on and off times in UTC format. It also contains the state which is either on or off.               |
 
 '## Programmatic Control
 

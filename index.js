@@ -29,31 +29,25 @@ module.exports = function(RED) {
     const _ = require('lodash');
     const fmt = 'YYYY-MM-DD HH:mm';
 
-    RED.nodes.registerType('schedex', function(config) {
+    RED.nodes.registerType('eztimer', function(config) {
         RED.nodes.createNode(this, config);
-        const node = this,
-            events = {
-                on: setupEvent('on', 'dot'),
-                off: setupEvent('off', 'ring')
-            };
-        events.on.inverse = events.off;
-        events.off.inverse = events.on;
+        const node = this
+        var events = {};
 
-        // migration code : if new values are undefined, set all to true
-        if (
-            config.sun === undefined &&
-            config.mon === undefined &&
-            config.tue === undefined &&
-            config.wed === undefined &&
-            config.thu === undefined &&
-            config.fri === undefined &&
-            config.sat === undefined
-        ) {
-            const name = config.name || `${config.ontime} - ${config.offtime}`;
-            node.warn(
-                `Schedex [${name}]: New weekday configuration attributes are not defined, please edit the node. Defaulting to true.`
-            );
-            config.sun = config.mon = config.tue = config.wed = config.thu = config.fri = config.sat = true;
+        switch (config.timerType) {
+            case '1':
+                events.on = setupEvent('on', 'dot');
+                events.off = setupEvent('off', 'ring');
+                break;
+            case '2':
+                events.on = setupEvent('on', 'ring');
+                events.off = null;
+                break;
+        }
+
+        if (events.on && events.off) {
+            events.on.inverse = events.off;
+            events.off.inverse = events.on;
         }
 
         const weekdays = [
@@ -156,6 +150,7 @@ module.exports = function(RED) {
             event.name = eventName.toUpperCase();
             event.shape = shape;
             event.callback = function() {
+                //console.log('trigger: ' + event.name + ' (' + event.moment.toString() + ')');
                 send(event);
                 schedule(event);
             };
@@ -163,38 +158,71 @@ module.exports = function(RED) {
         }
 
         function send(event, manual) {
-            node.send({
-                topic: event.topic,
-                payload: event.payload
-            });
-            node.status({
+            var msg = {};
+            var currPart = msg;
+            var spl = event.property.split('.');
+            for (var i in spl) {
+              if (i < (spl.length - 1)) {
+                if (!currPart[spl[i]]) currPart[spl[i]] = {};
+                currPart = currPart[spl[i]];    
+              } else {
+                if (event.valuetype == 'json') {
+                    currPart[spl[i]] = JSON.parse(event.value);
+                } else {
+                    currPart[spl[i]] = event.value;
+                }
+              }
+            }
+            node.send(msg);
+            
+            var status = {
                 fill: manual ? 'blue' : 'green',
                 shape: event.shape,
-                text:
-                    event.name +
-                    (manual ? ' manual' : ' auto') +
-                    (isSuspended()
-                        ? ' - scheduling suspended'
-                        : ` until ${event.inverse.moment.format(fmt)}`)
-            });
+                text: {}
+            }
+            if (event.inverse) {
+                status.text = event.name + (manual ? ' manual' : ' auto') + (isSuspended() ? ' - scheduling suspended' : ` until ${event.inverse.moment.format(fmt)}`)
+            } else {
+                message = `trigger @ ${event.moment.format(fmt)}`;
+            }
+
+            node.status(status);
         }
 
         function schedule(event, isInitial) {
             const now = node.now();
-            const matches = new RegExp(/(\d+):(\d+)/).exec(event.time);
-            if (matches && matches.length) {
-                // Don't use existing 'now' moment here as hour and minute mutate the moment.
-                event.moment = node
-                    .now()
-                    .hour(+matches[1])
-                    .minute(+matches[2]);
-            } else {
-                const sunCalcTimes = SunCalc.getTimes(new Date(), config.lat, config.lon);
-                const date = sunCalcTimes[event.time];
-                if (date) {
-                    event.moment = moment(date);
-                }
+
+            switch (event.type) {
+                case '1': //Sun
+                    const sunCalcTimes = SunCalc.getTimes(new Date(), config.lat, config.lon);
+                    const date = sunCalcTimes[event.timesun];
+                    if (date) {
+                        event.moment = moment(date);
+                    }
+                    break;
+                case '2': //Time of Day
+                    var matches = new RegExp(/(\d+):(\d+)/).exec(event.timetod);
+                    if (matches && matches.length) {
+                        // Don't use existing 'now' moment here as hour and minute mutate the moment.
+                        event.moment = node
+                            .now()
+                            .hour(+matches[1])
+                            .minute(+matches[2]);
+                    }
+                    event.moment.seconds(0);
+                    break;
+                case '3': //Duration
+                    var matches = new RegExp(/(\d+):(\d+):(\d+)/).exec(event.duration);
+                    var secs = (matches[3] * 1) + (matches[2] * 60) + (matches[1] * 3600);
+                    event.moment = moment(event.inverse.moment).add(secs, 'seconds');
+
+                    // See if we can roll back a day - the on-time has passed, but the off-time might not have.
+                    if (isInitial && moment(event.moment).add(-1, 'days').isAfter(now)) {
+                        event.moment.add(-1, 'day');
+                    }
+                    break;
             }
+
             if (!event.moment) {
                 node.status({
                     fill: 'red',
@@ -203,7 +231,6 @@ module.exports = function(RED) {
                 });
                 return false;
             }
-            event.moment.seconds(0);
 
             if (event.offset) {
                 let adjustment = event.offset;
@@ -213,6 +240,7 @@ module.exports = function(RED) {
                 event.moment.add(adjustment, 'minutes');
             }
 
+            // Add a day if the moment is in the past
             if (!isInitial || (isInitial && now.isAfter(event.moment))) {
                 event.moment.add(1, 'day');
             }
@@ -225,6 +253,8 @@ module.exports = function(RED) {
             if (event.timeout) {
                 clearTimeout(event.timeout);
             }
+
+            //console.log('schedule: ' + event.name + ' => ' + event.moment.toString());
             const delay = event.moment.diff(now);
             event.timeout = setTimeout(event.callback, delay);
             return true;
@@ -245,13 +275,14 @@ module.exports = function(RED) {
         }
 
         function resume() {
-            if (schedule(events.on, true) && schedule(events.off, true)) {
-                const firstEvent = events.on.moment.isBefore(events.off.moment)
-                    ? events.on
-                    : events.off;
-                const message = `${firstEvent.name} ${firstEvent.moment.format(fmt)}, ${
-                    firstEvent.inverse.name
-                } ${firstEvent.inverse.moment.format(fmt)}`;
+            if (schedule(events.on, true) && (!events.off || (events.off && schedule(events.off, true)))) {
+                const firstEvent = events.off && events.off.moment.isBefore(events.on.moment) ? events.off : events.on;
+                var message
+                if (events.off && events.off.moment) {
+                    message = `${firstEvent.name} @ ${firstEvent.moment.format(fmt)}, ${firstEvent.inverse.name} @ ${firstEvent.inverse.moment.format(fmt)}`;
+                } else {
+                    message = `trigger @ ${firstEvent.moment.format(fmt)}`;
+                }
                 node.status({
                     fill: 'yellow',
                     shape: 'dot',
@@ -265,6 +296,18 @@ module.exports = function(RED) {
                 suspend();
             } else {
                 resume();
+                // Wait 2.5 for startup, then fire PREVIOUS event to ensure we're in the right state.
+                setTimeout(function() {
+                    if (config.startupMessage && config.startupMessage == true && events.on && events.on.moment && events.off && events.off.moment) {
+                        if (events.off.moment.isAfter(events.on.moment)) {
+                            //Next event is ON, send OFF
+                            send(events.off);
+                        } else {
+                            //Next event is OFF, send ON
+                            send(events.on);
+                        }
+                    }
+                }, 2500);
             }
         }
 
@@ -300,8 +343,8 @@ module.exports = function(RED) {
         }
 
         // Bodges to allow testing
-        node.schedexEvents = () => events;
-        node.schedexConfig = () => config;
+        node.eztimerEvents = () => events;
+        node.eztimerConfig = () => config;
         node.now = moment;
 
         bootstrap();

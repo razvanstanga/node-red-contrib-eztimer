@@ -23,24 +23,37 @@ THE SOFTWARE.
 -->
 
 <script type="text/javascript">
-    RED.nodes.registerType('schedex', {
+    RED.nodes.registerType('eztimer', {
         category: 'input',
-        color: '#f37a33',
+        color: '#7283ff',
         defaults: {
             name: {value: ''},
+            autoname: {value: null},
             suspended: {value: false},
             lat: {value: ''},
             lon: {value: ''},
-            ontime: {value: '07:28'},
-            ontopic: {value: ''},
-            onpayload: {value: ''},
+            timerType: {value: '1'},
+            startupMessage: {value: true},
+            // ON config params
+            ontype: {value: '1'},
+            ontimesun: {value: 'dawn'},
+            ontimetod: {value: '17:00'},
+            onproperty: {value: 'payload'},
+            onvaluetype: {value: 'num'},
+            onvalue: {value: 1},
             onoffset: {value: 0},
             onrandomoffset: {value: 0},
-            offtime: {value: 'goldenHour'},
-            offtopic: {value: ''},
-            offpayload: {value: ''},
+            // OFF config params
+            offtype: {value: '1'},
+            offtimesun: {value: 'dusk'},
+            offtimetod: {value: 'dusk'},
+            offduration: {value: 0},
+            offproperty: {value: 'payload'},
+            offvaluetype: {value: 'num'},
+            offvalue: {value: 0},
             offoffset: {value: 0},
             offrandomoffset: {value: 0},
+            // Days of the week
             mon: {value: true},
             tue: {value: true},
             wed: {value: true},
@@ -53,11 +66,48 @@ THE SOFTWARE.
         outputs: 1,
         icon: 'datetime.png',
         label: function () {
-            return this.name || this.ontime + ' - ' + this.offtime;
+            return this.name || this.autoname || 'eztimer';
         },
-        paletteLabel: 'schedex',
+        paletteLabel: 'eztimer', 
         align: 'left',
-        oneditprepare: function () {
+        oneditsave: function(scope) {
+            var autoname = '';
+            switch ($('#node-input-timerType').val()) {
+                    case "1": 
+                        switch ($('#node-input-ontype').val()) {
+                            case "1": 
+                                autoname = $('#node-input-ontimesun').val();
+                                break;
+                            case "2":
+                                autoname = $('#node-input-ontimetod').val();
+                                break;
+                        }
+                        switch ($('#node-input-offtype').val()) {
+                            case "1": 
+                                autoname = autoname + ' - ' + $('#node-input-offtimesun').val();
+                                break;
+                            case "2":
+                                autoname = autoname + ' - ' + $('#node-input-offtimetod').val();
+                                break;
+                            case "3":
+                                autoname = autoname + ' + ' + $('#node-input-offduration').val();
+                        }
+                        break;
+                    case "2": 
+                        switch ($('#node-input-ontype').val()) {
+                            case "1": 
+                                autoname = $('#node-input-ontimesun').val();
+                                break;
+                            case "2":
+                                autoname = $('#node-input-ontimetod').val();
+                                break;
+                        }
+                        break;
+            }
+            $("#node-input-autoname").val(autoname);
+        },
+        
+        oneditprepare: function (scope) {
             if (!$("#node-input-lat").val().trim() && !$("#node-input-lon").val().trim()) {
                 if ('geolocation' in navigator) {
                     navigator.geolocation.getCurrentPosition(function (position) {
@@ -66,14 +116,69 @@ THE SOFTWARE.
                     });
                 }
             }
+
+            //Timer Type
+            $('#node-input-timerType').on('change', function(data) {
+                switch ($('#node-input-timerType').val()) {
+                    case "1": 
+                        $('.eztimer-event-trigger').hide();
+                        $('.eztimer-event-switch').show();
+                        break;
+                    case "2": 
+                        $('.eztimer-event-switch').hide(); 
+                        $('.eztimer-event-trigger').show();
+                        break;
+                }
+            });
+
+            //On
+            $("#node-input-onproperty").typedInput({default:this.propertyType||'msg',types:['msg','flow','global','jsonata']});
+            $("#node-input-onvaluetype").val(this.onvaluetype);
+
+            $("#node-input-onvalue").typedInput({
+                default: 'str',
+                typeField: $("#node-input-onvaluetype"),
+                types:['flow','global','str','num','bool','json','bin','date','env']
+            });
+
+            $('#node-input-ontype').on('change', function(data) {
+                $('.eztimer-ontype').hide();
+                switch ($('#node-input-ontype').val()) {
+                    case "1": $('.eztimer-ontype-sun').show(); break;
+                    case "2": $('.eztimer-ontype-time').show(); break;
+                }
+            });
+
+            //Off
+            $("#node-input-offproperty").typedInput({default:this.propertyType||'msg',types:['msg','flow','global','jsonata']});
+            $("#node-input-offvaluetype").val(this.offvaluetype);
+
+            $("#node-input-offvalue").typedInput({
+                default: 'str',
+                typeField: $("#node-input-offvaluetype"),
+                types:['flow','global','str','num','bool','json','bin','date','env']
+            });
+
+            $('#node-input-offtype').on('change', function(data) {
+                $('.eztimer-offtype').hide();
+                switch ($('#node-input-offtype').val()) {
+                    case "1": $('.eztimer-offtype-sun').show(); break;
+                    case "2": $('.eztimer-offtype-time').show(); break;
+                    case "3": $('.eztimer-offtype-duration').show(); break;
+                }
+            });
         }
     });
 </script>
 
-<script type="text/x-red" data-template-name="schedex">
+<script type="text/x-red" data-template-name="eztimer">
+    <div class="form-row">
+        <span ng-bind="firstName"></span>
+    </div>
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
+        <input type="hidden" id="node-input-autoname">
     </div>
     <hr>
     <div class="form-row">
@@ -97,6 +202,7 @@ THE SOFTWARE.
         </label>
     </div>
     <hr>
+    <h4>general info</h4>
     <div class="form-row">
 		<label for="node-input-lat"><i class="fa fa-globe"></i> Latitude</label>
 		<input type="text" id="node-input-lat" placeholder="51.025">
@@ -104,148 +210,154 @@ THE SOFTWARE.
 	<div class="form-row">
 		<label for="node-input-lon"><i class="fa fa-globe"></i> Longitude</label>
 		<input type="text" id="node-input-lon" placeholder="-1.4">
-	</div>
-
-	<hr>
-    <div class="form-row">
-        <label for="node-input-ontime"><i class="fa fa-clock-o"></i> On time</label>
-        <input type="text" id="node-input-ontime" placeholder="">
     </div>
     <div class="form-row">
-        <label for="node-input-ontopic"><i class="icon-tag"></i>On Topic</label>
-        <input type="text" id="node-input-ontopic" placeholder="">
-    </div>
-    <div class="form-row">
-        <label for="node-input-onpayload"><i class="icon-tag"></i>On Payload</label>
-        <input type="text" id="node-input-onpayload" placeholder="">
-    </div>
-    <div class="form-row">
-        <label for="node-input-onoffset"><i class="icon-tag"></i>On Offset</label>
-        <input type="number" id="node-input-onoffset" placeholder="0">
+        <label for="node-input-timerType">Timer Type</label>
+        <select id="node-input-timerType">
+            <option value="1">on/off</option>
+            <option value="2">trigger only</option>
+        </select>  
     </div>
     <div class="form-row">
         <label style="margin-left: 100px; width: 70%">
-            <input type="checkbox" id="node-input-onrandomoffset" placeholder="" style="width: 20px; margin: 0">
-            Use random on time within offset period
+            <input type="checkbox" id="node-input-startupMessage" style="width: 20px; margin: 0">
+            Send previous event on startup
         </label>
     </div>
-
-    <hr>
-    <div class="form-row">
-        <label for="node-input-offtime"><i class="fa fa-clock-o"></i> Off time</label>
-        <input type="text" id="node-input-offtime" placeholder="">
+    <div class="eztimer-event eztimer-event-switch eztimer-event-trigger">
+        <hr>
+        <h4 class="eztimer-event-switch">[on] event</h4>
+        <h4 class="eztimer-event-trigger">[trigger] event</h4>
+        <div class="form-row">
+            <label for="node-input-ontype"><i class="fa fa-clock-o"></i> Type</label>
+            <select id="node-input-ontype">
+                <option value="1">Sun Event</option>
+                <option value="2">Time of Day</option>
+                <option value="9">Manual</option>
+            </select>
+        </div>
+        <div class="form-row eztimer-ontype eztimer-ontype-sun">
+            <label for="node-input-ontimesun"><i class="fa fa-clock-o"></i> Sun Event</label>
+            <select id="node-input-ontimesun">
+                <option value="nightEnd">Night End</option>
+                <option value="nauticalDawn">Nautical Dawn</option>
+                <option value="dawn">Dawn</option>
+                <option value="sunrise">Sunrise</option>
+                <option value="sunriseEnd">Sunrise End</option>
+                <option value="goldenHourEnd">Golden Hour End</option>
+                <option value="solarNoon">Solar Noon</option>
+                <option value="goldenHour">Golden Hour</option>
+                <option value="sunsetStart">Sunset Start</option>
+                <option value="sunset">Sunset</option>
+                <option value="dusk">Dusk</option>
+                <option value="nauticalDusk">Nautical Dusk</option>
+                <option value="night">Night</option>
+                <option value="nadir">Nadir</option>
+            </select>
+        </div>    
+        <div class="form-row eztimer-ontype eztimer-ontype-time">
+            <label for="node-input-ontimetod"><i class="fa fa-clock-o"></i> Time (24hr)</label>
+            <input type="text" id="node-input-ontimetod" placeholder="HH:mm">
+        </div>
+        <div class="form-row eztimer-ontype eztimer-ontype-sun eztimer-ontype-time">
+            <label for="node-input-onoffset"><i class="fa fa-clock-o"></i> Offset (mins)</label>
+            <input type="number" id="node-input-onoffset" placeholder="0">
+        </div>
+        <div class="form-row eztimer-ontype eztimer-ontype-sun eztimer-ontype-time">
+            <label style="margin-left: 100px; width: 70%">
+                <input type="checkbox" id="node-input-onrandomoffset" placeholder="" style="width: 20px; margin: 0">
+                Randomise time within offset
+            </label>
+        </div>
+        <div class="form-row">
+            <label for="node-input-onproperty">Property</label>
+            <input type="text" id="node-input-onproperty" style="width: 70%"/>
+        </div>
+        <div class="form-row">
+            <label for="node-input-onvalue">Value</label>
+            <input type="text" id="node-input-onvalue" style="width:70%">
+            <input type="hidden" id="node-input-onvaluetype">
+        </div>
     </div>
-    <div class="form-row">
-        <label for="node-input-offtopic"><i class="icon-tag"></i>Off Topic</label>
-        <input type="text" id="node-input-offtopic" placeholder="">
+    <div class="eztimer-event eztimer-event-switch">
+        <hr>
+        <h4>[off] event</h4>
+        <div class="form-row">
+            <label for="node-input-offtype"><i class="fa fa-clock-o"></i> Type</label>
+            <select id="node-input-offtype">
+                <option value="1">Sun Event</option>
+                <option value="2">Time of Day</option>
+                <option value="3">Duration</option>
+                <option value="9">Input Trigger</option>
+            </select>
+        </div>
+        <div class="form-row eztimer-offtype eztimer-offtype-sun">
+            <label for="node-input-offtimesun"><i class="fa fa-clock-o"></i> Sun Event</label>
+            <select id="node-input-offtimesun">
+                <option value="nightEnd">Night End</option>
+                <option value="nauticalDawn">Nautical Dawn</option>
+                <option value="dawn">Dawn</option>
+                <option value="sunrise">Sunrise</option>
+                <option value="sunriseEnd">Sunrise End</option>
+                <option value="goldenHourEnd">Golden Hour End</option>
+                <option value="solarNoon">Solar Noon</option>
+                <option value="goldenHour">Golden Hour</option>
+                <option value="sunsetStart">Sunset Start</option>
+                <option value="sunset">Sunset</option>
+                <option value="dusk">Dusk</option>
+                <option value="nauticalDusk">Nautical Dusk</option>
+                <option value="night">Night</option>
+                <option value="nadir">Nadir</option>
+            </select>
+        </div> 
+        <div class="form-row eztimer-offtype eztimer-offtype-time">
+            <label for="node-input-offtimetod"><i class="fa fa-clock-o"></i> Time (24hr)</label>
+            <input type="text" id="node-input-offtimetod" placeholder="HH:mm">
+        </div>
+        <div class="form-row eztimer-offtype eztimer-offtype-sun eztimer-offtype-time">
+            <label for="node-input-offoffset"><i class="fa fa-clock-o"></i> Offset (mins)</label>
+            <input type="number" id="node-input-offoffset" placeholder="0">
+        </div>
+        <div class="form-row eztimer-offtype eztimer-offtype-duration">
+            <label for="node-input-offduration"><i class="fa fa-clock-o"></i> Duration</label>
+            <input type="text" id="node-input-offduration" placeholder="HH:mm:ss">
+        </div>
+        <div class="form-row eztimer-offtype eztimer-offtype-sun eztimer-offtype-time">
+            <label style="margin-left: 100px; width: 70%">
+                <input type="checkbox" id="node-input-offrandomoffset" placeholder="" style="width: 20px; margin: 0">
+                Randomise time within offset
+            </label>
+        </div>
+        <div class="form-row">
+            <label for="node-input-offproperty">Property</label>
+            <input type="text" id="node-input-offproperty" style="width: 70%"/>
+        </div>
+        <div class="form-row">
+            <label for="node-input-offvalue">Value</label>
+            <input type="text" id="node-input-offvalue" style="width:70%">
+            <input type="hidden" id="node-input-offvaluetype">
+        </div>
     </div>
-    <div class="form-row">
-        <label for="node-input-offpayload"><i class="icon-tag"></i>Off Payload</label>
-        <input type="text" id="node-input-offpayload" placeholder="">
-    </div>
-    <div class="form-row">
-        <label for="node-input-offoffset"><i class="icon-tag"></i>Off Offset</label>
-        <input type="number" id="node-input-offoffset" placeholder="0">
-    </div>
-    <div class="form-row">
-        <label style="margin-left: 100px; width: 70%">
-            <input type="checkbox" id="node-input-offrandomoffset" placeholder="" style="width: 20px; margin: 0">
-            Use random off time within offset period
-        </label>
-    </div>
-
-
-
-
 </script>
 
-<script type="text/x-red" data-help-name="schedex">
+<script type="text/x-red" data-help-name="eztimer">
 <!-- START -->
-<h1 id="schedex">Schedex</h1>
-<p>Scheduler for node-red which allows you to enter on/off times as 24hr clock (e.g. 01:10) or suncalc events (e.g.<br>goldenHour). It also allows you to offset times and randomise the time within the offset.</p>
-<p>Inspired by Pete Scargill&#39;s <a href="http://tech.scargill.net/big-timer/">BigTimer</a></p>
-<p><strong>NOTE: When upgrading from versions prior to 1.0.0, you will see a message for each Schedex node in the Node-RED debug<br>window. This message is to advise that the Schedex configuration changed slightly in version 1.0.0 in order to<br>accomodate days of the week when scheduling. To remedy, simply edit each Schedex node, tick the days of the week you<br>want Schedex enabled and re-deploy.</strong></p>
+<h1 id="eztimer">eztimer</h1>
+<p>Timer/scheduler for node-red which allows you to enter on/off times as 24hr clock (e.g. 01:10) or suncalc events (e.g.<br>goldenHour). It also allows you to offset times and randomise the time within the offset.</p>
+<p>Forked from (retaining much of the code, including this document) <a href="https://github.com/biddster/node-red-contrib-schedex">schedex</a> which was in turn inspired by Pete Scargill&#39;s <a href="http://tech.scargill.net/big-timer/">BigTimer</a>, so<br>hat-tip to both those coders.</p>
+<p>Emphasis has been put on creating a simple interface and utilising built-in node-red formatting helpers (such as creating<br>a JSON payload).</p>
 <h1 id="installation">Installation</h1>
+<p>This node requires node 4.x. It&#39;s tested against 4.6.1.</p>
 <pre><code>$ cd ~/.node-red
-$ npm install node-red-contrib-schedex
+$ npm install node-red-contrib-eztimer
 </code></pre><h1 id="configuration">Configuration</h1>
 <h2 id="schedule">Schedule</h2>
 <p>The scheduling days allow you to choose which days of the week to schedule events. Unticking all days will suspend<br>scheduling.</p>
 <h2 id="suspending-scheduling">Suspending scheduling</h2>
-<p>The &#39;Suspend scheduling&#39; checkbox allows you to disable time scheduling. If scheduling is suspended, Schedex will only<br>generate output events upon receipt of input &#39;on&#39; and &#39;off&#39; events (see below).</p>
+<p>The &#39;Suspend scheduling&#39; checkbox allows you to disable time scheduling. If scheduling is suspended, eztimer will only<br>generate output events upon receipt of input &#39;on&#39; and &#39;off&#39; events (see below).</p>
 <p>This setting is provided for the situation where you temporarily don&#39;t want time based activation and don&#39;t want to<br>rewire your Node-RED flow.</p>
 <h2 id="times">Times</h2>
-<p>The times can be a 24 hour time or a <a href="https://github.com/mourner/suncalc">suncalc</a> event:</p>
-<table>
-<thead>
-<tr>
-<th>Time</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>00:00 ... 23:59</code></td>
-<td>24hr time</td>
-</tr>
-<tr>
-<td><code>sunrise</code></td>
-<td>sunrise (top edge of the sun appears on the horizon)</td>
-</tr>
-<tr>
-<td><code>sunriseEnd</code></td>
-<td>sunrise ends (bottom edge of the sun touches the horizon)</td>
-</tr>
-<tr>
-<td><code>goldenHourEnd</code></td>
-<td>morning golden hour (soft light, best time for photography) ends</td>
-</tr>
-<tr>
-<td><code>solarNoon</code></td>
-<td>solar noon (sun is in the highest position)</td>
-</tr>
-<tr>
-<td><code>goldenHour</code></td>
-<td>evening golden hour starts</td>
-</tr>
-<tr>
-<td><code>sunsetStart</code></td>
-<td>sunset starts (bottom edge of the sun touches the horizon)</td>
-</tr>
-<tr>
-<td><code>sunset</code></td>
-<td>sunset (sun disappears below the horizon, evening civil twilight starts)</td>
-</tr>
-<tr>
-<td><code>dusk</code></td>
-<td>dusk (evening nautical twilight starts)</td>
-</tr>
-<tr>
-<td><code>nauticalDusk</code></td>
-<td>nautical dusk (evening astronomical twilight starts)</td>
-</tr>
-<tr>
-<td><code>night</code></td>
-<td>night starts (dark enough for astronomical observations)</td>
-</tr>
-<tr>
-<td><code>nadir</code></td>
-<td>nadir (darkest moment of the night, sun is in the lowest position)</td>
-</tr>
-<tr>
-<td><code>nightEnd</code></td>
-<td>night ends (morning astronomical twilight starts)</td>
-</tr>
-<tr>
-<td><code>nauticalDawn</code></td>
-<td>nautical dawn (morning nautical twilight starts)</td>
-</tr>
-<tr>
-<td><code>dawn</code></td>
-<td>dawn (morning nautical twilight ends, morning civil twilight starts)</td>
-</tr>
-</tbody>
-</table>
+<p>Select the type of trigger from the dropdown and this will provide either a fruther dropdown (for suncalc events), or a text<br>box to enter either a 24hr time (HH:mm) or, for the off event, a duration (hh:mm:ss).</p>
 <h2 id="offsets">Offsets</h2>
 <p>The on and off time can have an offset. This is specified in minutes:</p>
 <ul>
@@ -266,15 +378,15 @@ $ npm install node-red-contrib-schedex
 <tbody>
 <tr>
 <td><code>on</code></td>
-<td>Triggers manual on mode and causes Schedex to emit the configured on event. Manual mode is reset when the next on or off time is reached</td>
+<td>Triggers manual on mode and causes eztimer to emit the configured on event. Manual mode is reset when the next on or off time is reached</td>
 </tr>
 <tr>
 <td><code>off</code></td>
-<td>Triggers manual off mode and causes Schedex to emit the configured off event. Manual mode is reset when the next on or off time is reached</td>
+<td>Triggers manual off mode and causes eztimer to emit the configured off event. Manual mode is reset when the next on or off time is reached</td>
 </tr>
 <tr>
 <td><code>info</code></td>
-<td>Schedex emits an object containing the on and off times in UTC format. It also contains the state which is either on or off.</td>
+<td>eztimer emits an object containing the on and off times in UTC format. It also contains the state which is either on or off.</td>
 </tr>
 </tbody>
 </table>
