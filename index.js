@@ -183,7 +183,7 @@ module.exports = function(RED) {
             if (event.inverse) {
                 status.text = event.name + (manual ? ' manual' : ' auto') + (isSuspended() ? ' - scheduling suspended' : ` until ${event.inverse.moment.format(fmt)}`)
             } else {
-                message = `trigger @ ${event.moment.format(fmt)}`;
+                status.text = `trigger @ ${event.moment.format(fmt)}`;
             }
 
             node.status(status);
@@ -261,23 +261,28 @@ module.exports = function(RED) {
         }
 
         function suspend() {
+            if (events.off) {
+                send(events.off);
+                clearTimeout(events.off.timeout);
+                events.off.moment = null;
+            }
+
             clearTimeout(events.on.timeout);
             events.on.moment = null;
-            clearTimeout(events.off.timeout);
-            events.off.moment = null;
+            
             node.status({
                 fill: 'grey',
                 shape: 'dot',
                 text: `Scheduling suspended ${
                     weekdays.indexOf(true) === -1 ? '(no weekdays selected) ' : ''
-                } - manual mode only`
+                }`
             });
         }
 
         function resume() {
             if (schedule(events.on, true) && (!events.off || (events.off && schedule(events.off, true)))) {
                 const firstEvent = events.off && events.off.moment.isBefore(events.on.moment) ? events.off : events.on;
-                var message
+                var message;
                 if (events.off && events.off.moment) {
                     message = `${firstEvent.name} @ ${firstEvent.moment.format(fmt)}, ${firstEvent.inverse.name} @ ${firstEvent.inverse.moment.format(fmt)}`;
                 } else {
