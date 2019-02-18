@@ -30,6 +30,7 @@ THE SOFTWARE.
             name: {value: ''},
             autoname: {value: null},
             suspended: {value: false},
+            sendEventsOnSuspend: {value: false},
             lat: {value: ''},
             lon: {value: ''},
             timerType: {value: '1'},
@@ -199,6 +200,12 @@ THE SOFTWARE.
         <label style="margin-left: 100px; width: 70%">
             <input type="checkbox" id="node-input-suspended" placeholder="" style="width: 20px; margin: 0">
             Suspend scheduling
+        </label>
+    </div>
+    <div class="form-row">
+        <label style="margin-left: 100px; width: 70%">
+            <input type="checkbox" id="node-input-sendEventsOnSuspend" placeholder="" style="width: 20px; margin: 0">
+            Send 'off' event on suspend
         </label>
     </div>
     <hr>
@@ -410,6 +417,10 @@ $ npm install node-red-contrib-eztimer
 <tr>
 <td><code>msg.payload.ontime</code></td>
 <td>String value as specified in the table above for time configuration</td>
+</tr>
+<tr>
+<td><code>msg.payload.triggertime</code></td>
+<td>Alias of 'ontime'</td>
 </tr>
 <tr>
 <td><code>msg.payload.ontopic</code></td>

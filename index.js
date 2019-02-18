@@ -24,6 +24,7 @@
  */
 'use strict';
 module.exports = function(RED) {
+    const debug = true;
     const moment = require('moment');
     const SunCalc = require('suncalc');
     const _ = require('lodash');
@@ -97,7 +98,7 @@ module.exports = function(RED) {
                         const match = /.*suspended\s+(\S+)/.exec(msg.payload);
                         const previous = config.suspended;
                         config.suspended = toBoolean(match[1]);
-                        requiresBootstrap = requiresBootstrap || previous !== config.suspended;
+                        requiresBootstrap = requiresBootstrap || (previous !== config.suspended && config.sendEventsOnSuspend);
                     }
                     enumerateProgrammables(function(obj, prop, payloadName, typeConverter) {
                         const match = new RegExp(`.*${payloadName}\\s+(\\S+)`).exec(
@@ -150,14 +151,16 @@ module.exports = function(RED) {
             event.name = eventName.toUpperCase();
             event.shape = shape;
             event.callback = function() {
-                //console.log('trigger: ' + event.name + ' (' + event.moment.toString() + ')');
+                // Send the event
                 send(event);
-                schedule(event);
+                // Schedule the next event
+                schedule(event, null);
             };
             return event;
         }
 
         function send(event, manual) {
+            //node.warn('sending \'' + event.name + '\'');
             var msg = {};
             var currPart = msg;
             var spl = event.property.split('.');
@@ -189,15 +192,19 @@ module.exports = function(RED) {
             node.status(status);
         }
 
-        function schedule(event, isInitial) {
-            const now = node.now();
-
+        function schedule(event, init) {
+            var now = node.now();
+            
             switch (event.type) {
                 case '1': //Sun
-                    const sunCalcTimes = SunCalc.getTimes(new Date(), config.lat, config.lon);
+                    var nextDate = new Date();
+                    // Get tomorrow's sun data 
+                    if (!init) nextDate = nextDate.setDate(nextDate.getDate() + 1);
+                    const sunCalcTimes = SunCalc.getTimes(nextDate, config.lat, config.lon);
                     const date = sunCalcTimes[event.timesun];
                     if (date) {
                         event.moment = moment(date);
+                        //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' raw');
                     }
                     break;
                 case '2': //Time of Day
@@ -207,18 +214,24 @@ module.exports = function(RED) {
                         event.moment = node
                             .now()
                             .hour(+matches[1])
-                            .minute(+matches[2]);
+                            .minute(+matches[2])
+                            .second(0)
+                            .millisecond(0);
+                        // If a standard run, add a day
+                        if (!init) event.moment = event.moment.add(1, 'days');
                     }
-                    event.moment.seconds(0);
+                    //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' raw');
                     break;
                 case '3': //Duration
                     var matches = new RegExp(/(\d+):(\d+):(\d+)/).exec(event.duration);
                     var secs = (matches[3] * 1) + (matches[2] * 60) + (matches[1] * 3600);
                     event.moment = moment(event.inverse.moment).add(secs, 'seconds');
+                    //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' raw');
 
                     // See if we can roll back a day - the on-time has passed, but the off-time might not have.
-                    if (isInitial && moment(event.moment).add(-1, 'days').isAfter(now)) {
+                    if (init && moment(event.moment).add(-1, 'days').isAfter(now)) {
                         event.moment.add(-1, 'day');
+                        //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' rollback');
                     }
                     break;
             }
@@ -238,16 +251,22 @@ module.exports = function(RED) {
                     adjustment = event.offset * Math.random();
                 }
                 event.moment.add(adjustment, 'minutes');
+
+                //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' offset');
             }
 
             // Add a day if the moment is in the past
-            if (!isInitial || (isInitial && now.isAfter(event.moment))) {
+            //if (!isInitial || (isInitial && now.isAfter(event.moment))) {
+            if (now.isAfter(event.moment)) {
+                //node.warn('event \'' + event.name + '\' - \'' + now.format('DD/MM HH:mm:ss.SSS') + '\' is after \'' + event.moment.format('DD/MM HH:mm:ss.SSS') + '\', adding a day.');
                 event.moment.add(1, 'day');
+                //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' past');
             }
 
             // Adjust weekday if not selected
             while (!weekdays[event.moment.isoWeekday() - 1]) {
                 event.moment.add(1, 'day');
+                //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' skip');
             }
 
             if (event.timeout) {
@@ -262,7 +281,7 @@ module.exports = function(RED) {
 
         function suspend() {
             if (events.off) {
-                send(events.off);
+                if (config.sendEventsOnSuspend) send(events.off);
                 clearTimeout(events.off.timeout);
                 events.off.moment = null;
             }
@@ -321,12 +340,13 @@ module.exports = function(RED) {
         }
 
         function enumerateProgrammables(callback) {
-            callback(events.on, 'time', 'ontime', String);
+            callback(events.on, 'timetod', 'triggertime', String);
+            callback(events.on, 'timetod', 'ontime', String);
             callback(events.on, 'topic', 'ontopic', String);
             callback(events.on, 'payload', 'onpayload', String);
             callback(events.on, 'offset', 'onoffset', Number);
             callback(events.on, 'randomoffset', 'onrandomoffset', toBoolean);
-            callback(events.off, 'time', 'offtime', String);
+            callback(events.off, 'timetod', 'offtime', String);
             callback(events.off, 'topic', 'offtopic', String);
             callback(events.off, 'payload', 'offpayload', String);
             callback(events.off, 'offset', 'offoffset', Number);

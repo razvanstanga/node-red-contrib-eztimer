@@ -76,6 +76,7 @@ You can set the following:
 | ----------------------------- | --------------------------------------------------------------------- |
 | `msg.payload.suspended`       | Boolean: true will suspend scheduling, false will resume scheduling   |
 | `msg.payload.ontime`          | String value as specified in the table above for time configuration   |
+| `msg.payload.triggertime`     | Alias of `ontime`                                                     |
 | `msg.payload.ontopic`         | String value emitted as the topic for the on event                    |
 | `msg.payload.onpayload`       | String value emitted as the payload for the on event                  |
 | `msg.payload.onoffset`        | Number value as specified above for Offset configuration              |
