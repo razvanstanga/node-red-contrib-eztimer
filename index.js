@@ -72,6 +72,9 @@ module.exports = function(RED) {
                 } else if (msg.payload === 'off') {
                     handled = true;
                     send(events.off, true);
+                } else if (msg.payload === 'trigger') {
+                    handled = true;
+                    send(events.on);
                 } else if (msg.payload === 'info') {
                     handled = true;
                     node.send({
@@ -171,6 +174,8 @@ module.exports = function(RED) {
               } else {
                 if (event.valuetype == 'json') {
                     currPart[spl[i]] = JSON.parse(event.value);
+                } else if (event.valuetype == 'bool') {
+                    currPart[spl[i]] = (event.value == "true");
                 } else {
                     currPart[spl[i]] = event.value;
                 }
@@ -303,15 +308,19 @@ module.exports = function(RED) {
                 const firstEvent = events.off && events.off.moment.isBefore(events.on.moment) ? events.off : events.on;
                 var message;
                 if (events.off && events.off.moment) {
-                    message = `${firstEvent.name} @ ${firstEvent.moment.format(fmt)}, ${firstEvent.inverse.name} @ ${firstEvent.inverse.moment.format(fmt)}`;
+                    message = {
+                        fill: 'yellow',
+                        shape: 'dot',
+                        text: `${firstEvent.name} @ ${firstEvent.moment.format(fmt)}, ${firstEvent.inverse.name} @ ${firstEvent.inverse.moment.format(fmt)}`
+                    }
                 } else {
-                    message = `trigger @ ${firstEvent.moment.format(fmt)}`;
+                    message = {
+                        fill: 'green',
+                        shape: 'ring',
+                        text: `trigger @ ${firstEvent.moment.format(fmt)}`
+                    }
                 }
-                node.status({
-                    fill: 'yellow',
-                    shape: 'dot',
-                    text: message
-                });
+                node.status(message);
             }
         }
 
@@ -330,6 +339,9 @@ module.exports = function(RED) {
                             //Next event is OFF, send ON
                             send(events.on);
                         }
+                    } else if (config.startupMessage && config.startupMessage == true && events.on && !events.off) {
+                        //Trigger
+                        send(events.on);
                     }
                 }, 2500);
             }

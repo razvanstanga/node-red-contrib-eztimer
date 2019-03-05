@@ -56,6 +56,7 @@ You can wire inject nodes to the input of this node and send the following in `m
 
 | msg.payload | Description                                                                                                                                |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `trigger`   | Causes eztimer to emit the configured trigger event.                                                                                       |
 | `on`        | Triggers manual on mode and causes eztimer to emit the configured on event. Manual mode is reset when the next on or off time is reached   |
 | `off`       | Triggers manual off mode and causes eztimer to emit the configured off event. Manual mode is reset when the next on or off time is reached |
 | `info`      | eztimer emits an object containing the on and off times in UTC format. It also contains the state which is either on or off.               |
@@ -112,3 +113,11 @@ Alternatively, you can send msg.payload as a string with the following values:
 | `mon false`                                    | Disables the schedule on a Monday                            |
 | `tue true`                                     | Enables the schedule on a Tuesday                            |
 | `ontime 16:30 onoffset 60 onrandomoffset true` | Sets the time, offset and random offset for the on event     |
+
+# Change Log
+## 1.0.6
+* Enabled startup events for `trigger`, configured off by default.  Caution required due to this being on by default for exisitng nodes.
+* Fixed boolean data type to correctly output boolean rather than a string representation - credit @marc-gist.
+
+## 1.0.5
+* Fix `ontime` and `offtime` inputs, added `triggertime` as an alias of `ontime`.

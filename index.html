@@ -109,6 +109,11 @@ THE SOFTWARE.
         },
         
         oneditprepare: function (scope) {
+            var atLoad = {
+                "type": $('#node-input-timerType').val(),
+                "startupMessage": $('#node-input-startupMessage').prop("checked")
+            };
+
             if (!$("#node-input-lat").val().trim() && !$("#node-input-lon").val().trim()) {
                 if ('geolocation' in navigator) {
                     navigator.geolocation.getCurrentPosition(function (position) {
@@ -120,14 +125,29 @@ THE SOFTWARE.
 
             //Timer Type
             $('#node-input-timerType').on('change', function(data) {
+                var atEvent = {
+                    "type": $('#node-input-timerType').val(),
+                    "startupMessage": $('#node-input-startupMessage').prop("checked")
+                };
+
                 switch ($('#node-input-timerType').val()) {
                     case "1": 
                         $('.eztimer-event-trigger').hide();
                         $('.eztimer-event-switch').show();
+                        $('#node-input-startupMessageText').text('Send previous event on startup');
+                        if (atLoad.type != atEvent.type)
+                            $('#node-input-startupMessage').prop("checked", true);
+                        else
+                            $('#node-input-startupMessage').prop("checked", atLoad.startupMessage);
                         break;
                     case "2": 
                         $('.eztimer-event-switch').hide(); 
                         $('.eztimer-event-trigger').show();
+                        $('#node-input-startupMessageText').text('Send [trigger] on startup');
+                        if (atLoad.type != atEvent.type) 
+                            $('#node-input-startupMessage').prop("checked", false);
+                        else
+                            $('#node-input-startupMessage').prop("checked", atLoad.startupMessage);
                         break;
                 }
             });
@@ -228,7 +248,7 @@ THE SOFTWARE.
     <div class="form-row">
         <label style="margin-left: 100px; width: 70%">
             <input type="checkbox" id="node-input-startupMessage" style="width: 20px; margin: 0">
-            Send previous event on startup
+            <span id="node-input-startupMessageText">Send previous event on startup</span>
         </label>
     </div>
     <div class="eztimer-event eztimer-event-switch eztimer-event-trigger">
