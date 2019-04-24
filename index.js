@@ -1,3 +1,5 @@
+const util = require('util');
+
 /* eslint-disable no-invalid-this,consistent-this */
 /**
  * The MIT License (MIT)
@@ -158,6 +160,8 @@ module.exports = function(RED) {
                 send(event);
                 // Schedule the next event
                 schedule(event, null);
+                // Update the status/icon
+                status(event);
             };
             return event;
         }
@@ -182,19 +186,6 @@ module.exports = function(RED) {
               }
             }
             node.send(msg);
-            
-            var status = {
-                fill: manual ? 'blue' : 'green',
-                shape: event.shape,
-                text: {}
-            }
-            if (event.inverse) {
-                status.text = event.name + (manual ? ' manual' : ' auto') + (isSuspended() ? ' - scheduling suspended' : ` until ${event.inverse.moment.format(fmt)}`)
-            } else {
-                status.text = `trigger @ ${event.moment.format(fmt)}`;
-            }
-
-            node.status(status);
         }
 
         function schedule(event, init) {
@@ -284,6 +275,21 @@ module.exports = function(RED) {
             return true;
         }
 
+        function status(event) {
+            var data = {
+                fill: manual ? 'blue' : 'green',
+                shape: event.shape,
+                text: {}
+            }
+            if (event.inverse) {
+                data.text = event.name + (manual ? ' manual' : ' auto') + (isSuspended() ? ' - scheduling suspended' : ` until ${event.inverse.moment.format(fmt)}`)
+            } else {
+                data.text = `trigger @ ${event.moment.format(fmt)}`;
+            }
+
+            node.status(data);
+        }
+
         function suspend() {
             if (events.off) {
                 if (config.sendEventsOnSuspend) send(events.off);
@@ -355,12 +361,13 @@ module.exports = function(RED) {
             callback(events.on, 'timetod', 'triggertime', String);
             callback(events.on, 'timetod', 'ontime', String);
             callback(events.on, 'topic', 'ontopic', String);
-            callback(events.on, 'payload', 'onpayload', String);
+            callback(events.on, 'value', 'triggervalue', String);
+            callback(events.on, 'value', 'onvalue', String);
             callback(events.on, 'offset', 'onoffset', Number);
             callback(events.on, 'randomoffset', 'onrandomoffset', toBoolean);
             callback(events.off, 'timetod', 'offtime', String);
             callback(events.off, 'topic', 'offtopic', String);
-            callback(events.off, 'payload', 'offpayload', String);
+            callback(events.off, 'value', 'offvalue', String);
             callback(events.off, 'offset', 'offoffset', Number);
             callback(events.off, 'randomoffset', 'offrandomoffset', toBoolean);
             callback(config, 'mon', 'mon', toBoolean);

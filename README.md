@@ -79,12 +79,13 @@ You can set the following:
 | `msg.payload.ontime`          | String value as specified in the table above for time configuration   |
 | `msg.payload.triggertime`     | Alias of `ontime`                                                     |
 | `msg.payload.ontopic`         | String value emitted as the topic for the on event                    |
-| `msg.payload.onpayload`       | String value emitted as the payload for the on event                  |
+| `msg.payload.onvalue`         | Update output value for on event (must be same as configured type)    |
+| `msg.payload.triggervalue`    | Alias of `onvalue`                                                    |
 | `msg.payload.onoffset`        | Number value as specified above for Offset configuration              |
 | `msg.payload.onrandomoffset`  | Boolean value as specified above in Randomisation of Times            |
 | `msg.payload.offtime`         | String value as specified in the table above for time configuration   |
 | `msg.payload.offtopic`        | String value emitted as the topic for the off event                   |
-| `msg.payload.offpayload`      | String value emitted as the payload for the off event                 |
+| `msg.payload.offvalue`        | Update output value for off event (must be same as configured type)   |
 | `msg.payload.offoffset`       | Number value as specified above for Offset configuration              |
 | `msg.payload.offrandomoffset` | Boolean value as specified above in Randomisation of Times            |
 | `msg.payload.mon`             | Boolean: true enables the schedule on a Monday, false disables it.    |
@@ -95,26 +96,17 @@ You can set the following:
 | `msg.payload.sat`             | Boolean: true enables the schedule on a Saturday, false disables it.  |
 | `msg.payload.sun`             | Boolean: true enables the schedule on a Sunday, false disables it.    |
 
-Alternatively, you can send msg.payload as a string with the following values:
-
-| Example msg.payload                            | Description                                                  |
-| ---------------------------------------------- | ------------------------------------------------------------ |
-| `suspended true`                               | true will suspend scheduling, false will resume scheduling   |
-| `ontime 12:00`                                 | Time as specified in the table above for time configuration  |
-| `ontopic my_topic`                             | Sets the topic for the on event (no spaces)                  |
-| `onpayload my_payload`                         | Sets the payload for the on event (no spaces)                |
-| `onoffset 30`                                  | Sets the offset for the on event                             |
-| `onrandomoffset true`                          | Sets the random offset for the on event                      |
-| `offtime dusk`                                 | Time as specified in the table above for time configuration  |
-| `offtopic my_topic`                            | Sets the topic for the off event (no spaces)                 |
-| `offpayload my_payload`                        | Sets the payload for the off event (no spaces)               |
-| `offoffset -30`                                | Sets the offset for the off event                            |
-| `offrandomoffset false`                        | Sets the random offset for the off event                     |
-| `mon false`                                    | Disables the schedule on a Monday                            |
-| `tue true`                                     | Enables the schedule on a Tuesday                            |
-| `ontime 16:30 onoffset 60 onrandomoffset true` | Sets the time, offset and random offset for the on event     |
-
 # Change Log
+
+## 1.0.8
+* Fixed next event status text for trigger
+
+## 1.0.7
+* Corrected commands to set output value for on/off events - `onvalue` and `offvalue` are more correct, as it's not necessarily the payload you're updating. 
+* Added `triggervalue` as an alias to `onvalue`.
+* Values must match the configured value type.
+* Removed the string command examples as they don't function correctly - the payload must be a JSON object to update a property value.
+
 ## 1.0.6
 * Enabled startup events for `trigger`, configured off by default.  Caution required due to this being on by default for exisitng nodes.
 * Fixed boolean data type to correctly output boolean rather than a string representation - credit @marc-gist.
