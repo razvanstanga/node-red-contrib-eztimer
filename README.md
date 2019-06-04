@@ -98,6 +98,9 @@ You can set the following:
 
 # Change Log
 
+## 1.0.10
+* Fixed issue where a manual `on` event (with a duration-based `off` event) wasn't scheduling it's `off` event
+
 ## 1.0.9
 * Fixed `manual` variable being used before declaration - credit @marc-gist.
 * Added UI tip for times and duration to make the HH:mm:ss requirement clearer - credit @stu-carter.

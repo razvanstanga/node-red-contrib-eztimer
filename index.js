@@ -71,6 +71,7 @@ module.exports = function(RED) {
                 if (msg.payload === 'on') {
                     handled = true;
                     send(events.on, true);
+                    if (events.off.type == '3') schedule(events.off, null, true); // If 'off' is of type duration, schedule 'off' event.
                     status(events.on, true);
                 } else if (msg.payload === 'off') {
                     handled = true;
@@ -84,15 +85,25 @@ module.exports = function(RED) {
                     node.send({
                         topic: 'info',
                         payload: {
-                            on: isSuspended()
-                                ? 'suspended'
-                                : events.on.moment.toDate().toUTCString(),
-                            off: isSuspended()
-                                ? 'suspended'
-                                : events.off.moment.toDate().toUTCString(),
-                            state: isSuspended()
-                                ? 'suspended'
-                                : events.off.moment.isAfter(events.on.moment) ? 'off' : 'on',
+                            on: function() {
+                                if (isSuspended()) return 'suspended';
+                                if (events.on.type == '9') return 'manual';
+                                if (!events.on.moment) return 'error';
+                                return events.on.moment.toDate().toString()
+                            }(),
+                            off: function() {
+                                if (config.timerType == '2') return undefined; // Trigger
+                                if (isSuspended()) return 'suspended';
+                                if (!events.off.moment) return 'manual';
+                                return events.off.moment.toDate().toString()
+                            }(),
+                            state: function() {
+                                if (config.timerType == '2') return undefined; // Trigger
+                                if (isSuspended()) return 'suspended';
+                                if (!events.on.moment && events.off.moment) return 'on'; // Manual on
+                                if (!events.on.moment && !events.off.moment) return 'off';
+                                return events.off.moment.isAfter(events.on.moment) ? 'off' : 'on';
+                            }(),
                             ontopic: events.on.topic,
                             onpayload: events.on.payload,
                             offtopic: events.off.topic,
@@ -160,8 +171,10 @@ module.exports = function(RED) {
             event.callback = function() {
                 // Send the event
                 send(event);
-                // Schedule the next event
-                schedule(event, null);
+                // Schedule the next event, if it's not a 'manual' timer
+                if (events.on.type != '9') schedule(event, null, null);
+                // Clear the event if it IS a 'manual' timer (as we don't know when the off event will be)
+                if (events.on.type == '9') event.moment = undefined;
                 // Update the status/icon
                 status(event);
             };
@@ -190,7 +203,7 @@ module.exports = function(RED) {
             node.send(msg);
         }
 
-        function schedule(event, init) {
+        function schedule(event, init, manual) {
             var now = node.now();
             
             switch (event.type) {
@@ -223,8 +236,13 @@ module.exports = function(RED) {
                 case '3': //Duration
                     var matches = new RegExp(/(\d+):(\d+):(\d+)/).exec(event.duration);
                     var secs = (matches[3] * 1) + (matches[2] * 60) + (matches[1] * 3600);
-                    event.moment = moment(event.inverse.moment).add(secs, 'seconds');
-                    //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' raw');
+                    if (manual) {
+                        //event is manual - schedule assuming 'now'
+                        event.moment = moment(node.now()).add(secs, 'seconds');
+                    } else {
+                        event.moment = moment(event.inverse.moment).add(secs, 'seconds');
+                        //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' raw');
+                    }
 
                     // See if we can roll back a day - the on-time has passed, but the off-time might not have.
                     if (init && moment(event.moment).add(-1, 'days').isAfter(now)) {
@@ -249,8 +267,6 @@ module.exports = function(RED) {
                     adjustment = event.offset * Math.random();
                 }
                 event.moment.add(adjustment, 'minutes');
-
-                //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' offset');
             }
 
             // Add a day if the moment is in the past
@@ -278,13 +294,18 @@ module.exports = function(RED) {
         }
 
         function status(event, manual) {
+            manual = manual || (events.on.type == 9)
             var data = {
                 fill: manual ? 'blue' : 'green',
                 shape: event.shape,
                 text: {}
             }
             if (event.inverse) {
-                data.text = event.name + (manual ? ' manual' : ' auto') + (isSuspended() ? ' - scheduling suspended' : ` until ${event.inverse.moment.format(fmt)}`)
+                if (event.inverse.moment && event.inverse.moment.isAfter(node.now())) {
+                    data.text = event.name + (manual ? ' manual' : ' auto') + (isSuspended() ? ' - scheduling suspended' : ` until ${event.inverse.moment.format(fmt)}`);
+                } else {
+                    data.text = event.name + (manual ? ' manual' : ' auto') + (isSuspended() ? ' - scheduling suspended' : ``);
+                }
             } else {
                 data.text = `trigger @ ${event.moment.format(fmt)}`;
             }
@@ -312,6 +333,7 @@ module.exports = function(RED) {
         }
 
         function resume() {
+            if (events.on.type == '9') return; // Don't do anything when resuming a manual timer
             if (schedule(events.on, true) && (!events.off || (events.off && schedule(events.off, true)))) {
                 const firstEvent = events.off && events.off.moment.isBefore(events.on.moment) ? events.off : events.on;
                 var message;
