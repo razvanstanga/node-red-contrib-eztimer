@@ -98,6 +98,10 @@ You can set the following:
 
 # Change Log
 
+## 1.0.9
+* Fixed `manual` variable being used before declaration - credit @marc-gist.
+* Added UI tip for times and duration to make the HH:mm:ss requirement clearer - credit @stu-carter.
+
 ## 1.0.8
 * Fixed next event status text for trigger
 

@@ -71,9 +71,11 @@ module.exports = function(RED) {
                 if (msg.payload === 'on') {
                     handled = true;
                     send(events.on, true);
+                    status(events.on, true);
                 } else if (msg.payload === 'off') {
                     handled = true;
                     send(events.off, true);
+                    status(events.off, true);
                 } else if (msg.payload === 'trigger') {
                     handled = true;
                     send(events.on);
@@ -275,7 +277,7 @@ module.exports = function(RED) {
             return true;
         }
 
-        function status(event) {
+        function status(event, manual) {
             var data = {
                 fill: manual ? 'blue' : 'green',
                 shape: event.shape,
