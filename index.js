@@ -36,6 +36,7 @@ module.exports = function(RED) {
         RED.nodes.createNode(this, config);
         const node = this
         var events = {};
+        var state = false;
 
         switch (config.timerType) {
             case '1':
@@ -65,17 +66,18 @@ module.exports = function(RED) {
 
         node.on('input', function(msg) {
             let handled = false,
-                requiresBootstrap = false;
+            requiresBootstrap = false;
             if (_.isString(msg.payload)) {
-                // TODO - with these payload options, we can't support on and ontime etc.
                 if (msg.payload === 'on') {
                     handled = true;
                     send(events.on, true);
                     if (events.off.type == '3') schedule(events.off, null, true); // If 'off' is of type duration, schedule 'off' event.
                     status(events.on, true);
                 } else if (msg.payload === 'off') {
+                    // Sends the off event, then re-schedules it
                     handled = true;
-                    send(events.off, true);
+                    send(events.off);
+                    schedule(events.off);
                     status(events.off, true);
                 } else if (msg.payload === 'trigger') {
                     handled = true;
@@ -100,9 +102,7 @@ module.exports = function(RED) {
                             state: function() {
                                 if (config.timerType == '2') return undefined; // Trigger
                                 if (isSuspended()) return 'suspended';
-                                if (!events.on.moment && events.off.moment) return 'on'; // Manual on
-                                if (!events.on.moment && !events.off.moment) return 'off';
-                                return events.off.moment.isAfter(events.on.moment) ? 'off' : 'on';
+                                if (state) { return 'on' } else { return 'off' }
                             }(),
                             ontopic: events.on.topic,
                             onpayload: events.on.payload,
@@ -168,6 +168,7 @@ module.exports = function(RED) {
             });
             event.name = eventName.toUpperCase();
             event.shape = shape;
+            event.state = (eventName == 'on');
             event.callback = function() {
                 // Send the event
                 send(event);
@@ -201,24 +202,9 @@ module.exports = function(RED) {
               }
             }
             node.send(msg);
+            state = event.state;
         }
 
-        function getMoment(todString) {
-            var m = node.now().millisecond(0);
-            var re = new RegExp(/\d+/g);
-            var p1, p2, p3;
-            p1 = re.exec(todString);
-            if (p1) p2 = re.exec(todString);
-            if (p2) p3 = re.exec(todString);
-          
-            if (p3) {
-              m.hour(+p1[0]).minute(+p2[0]).second(+p3[0]);
-            } else if (p2) {
-              m.hour(+p1[0]).minute(+p2[0]).second(0);
-            }
-          
-            return m;
-          }
 
         function schedule(event, init, manual) {
             var now = node.now();
@@ -252,7 +238,6 @@ module.exports = function(RED) {
                     }
                     if (m) {
                         event.moment = m;
-
                         // If a standard run, add a day
                         if (!init) event.moment = event.moment.add(1, 'days');
                     } else {

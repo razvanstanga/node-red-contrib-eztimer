@@ -104,6 +104,8 @@ You can set the following:
 * Enabled the use of seconds for time-based events (was documented but always reverted to 0).
 * Added [missing] input parameter `payload.duration` to allow prgrammatic adjustment of the duration.
 * Adjusted default value for `duration` to 00:01:00 (1 minute) - was 0, which broken the node.
+* Fixed re-schedule after manual `off` event.
+* Fixed state reporting in `info` output payload.
 
 Thanks to @stu-carter for detailed reports enabling the above fixes.
 
