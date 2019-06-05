@@ -48,7 +48,7 @@ THE SOFTWARE.
             offtype: {value: '1'},
             offtimesun: {value: 'dusk'},
             offtimetod: {value: 'dusk'},
-            offduration: {value: 0},
+            offduration: {value: '00:01:00'},
             offproperty: {value: 'payload'},
             offvaluetype: {value: 'num'},
             offvalue: {value: 0},
@@ -205,7 +205,7 @@ THE SOFTWARE.
     <div class="form-row">
         <label for="node-input-lat"><i class="fa fa-calendar"></i> Schedule</label>
         <table style="display: inline-block; position: relative; top: 5px; left: -5px;">
-          <tr>
+        <tr>
             <td><input type="checkbox" id="node-input-mon" placeholder="" style="width: 20px; margin: 0">Mon</td>
             <td><input type="checkbox" id="node-input-tue" placeholder="" style="width: 20px; margin: 0">Tue</td>
             <td><input type="checkbox" id="node-input-wed" placeholder="" style="width: 20px; margin: 0">Wed</td>
@@ -213,7 +213,7 @@ THE SOFTWARE.
             <td><input type="checkbox" id="node-input-fri" placeholder="" style="width: 20px; margin: 0">Fri</td>
             <td><input type="checkbox" id="node-input-sat" placeholder="" style="width: 20px; margin: 0">Sat</td>
             <td><input type="checkbox" id="node-input-sun" placeholder="" style="width: 20px; margin: 0">Sun</td>
-          </tr>
+        </tr>
         </table>
     </div>
     <div class="form-row">
@@ -405,184 +405,188 @@ $ npm install node-red-contrib-eztimer
 <h2 id="inputs">Inputs</h2>
 <p>You can wire inject nodes to the input of this node and send the following in <code>msg.payload</code>.</p>
 <table>
-<thead>
-<tr>
-<th>msg.payload</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>on</code></td>
-<td>Triggers manual on mode and causes eztimer to emit the configured on event. Manual mode is reset when the next on or off time is reached</td>
-</tr>
-<tr>
-<td><code>off</code></td>
-<td>Triggers manual off mode and causes eztimer to emit the configured off event. Manual mode is reset when the next on or off time is reached</td>
-</tr>
-<tr>
-<td><code>info</code></td>
-<td>eztimer emits an object containing the on and off times in UTC format. It also contains the state which is either on or off.</td>
-</tr>
-</tbody>
+    <thead>
+        <tr>
+            <th>msg.payload</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>on</code></td>
+            <td>Triggers manual on mode and causes eztimer to emit the configured on event. Manual mode is reset when the next on or off time is reached</td>
+        </tr>
+        <tr>
+            <td><code>off</code></td>
+            <td>Triggers manual off mode and causes eztimer to emit the configured off event. Manual mode is reset when the next on or off time is reached</td>
+        </tr>
+        <tr>
+            <td><code>info</code></td>
+            <td>eztimer emits an object containing the on and off times in UTC format. It also contains the state which is either on or off.</td>
+        </tr>
+    </tbody>
 </table>
-<p>&#39;## Programmatic Control</p>
+<h2 id="programmaticcontrol">Programmatic Control</h2>
 <p>This node supports programmatic time control as well as configuration via the NodeRED UI.</p>
 <p><strong>It is very important to note that properties set programmatically in this manner are transient. They will not persist<br>over a NodeRED restart or redeploy!</strong></p>
 <p>Note that both the property-based and string-based specifications are overrides that violate the usual behavior.<br>See here for further discussion <a href="https://github.com/node-red/node-red/issues/399">https://github.com/node-red/node-red/issues/399</a>.</p>
 <p>You can set the following:</p>
 <table>
-<thead>
-<tr>
-<th>Property</th>
-<th>Type</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>msg.payload.suspended</code></td>
-<td>Boolean: true will suspend scheduling, false will resume scheduling</td>
-</tr>
-<tr>
-<td><code>msg.payload.ontime</code></td>
-<td>String value as specified in the table above for time configuration</td>
-</tr>
-<tr>
-<td><code>msg.payload.triggertime</code></td>
-<td>Alias of 'ontime'</td>
-</tr>
-<tr>
-<td><code>msg.payload.ontopic</code></td>
-<td>String value emitted as the topic for the on event</td>
-</tr>
-<tr>
-<td><code>msg.payload.onpayload</code></td>
-<td>String value emitted as the payload for the on event</td>
-</tr>
-<tr>
-<td><code>msg.payload.onoffset</code></td>
-<td>Number value as specified above for Offset configuration</td>
-</tr>
-<tr>
-<td><code>msg.payload.onrandomoffset</code></td>
-<td>Boolean value as specified above in Randomisation of Times</td>
-</tr>
-<tr>
-<td><code>msg.payload.offtime</code></td>
-<td>String value as specified in the table above for time configuration</td>
-</tr>
-<tr>
-<td><code>msg.payload.offtopic</code></td>
-<td>String value emitted as the topic for the off event</td>
-</tr>
-<tr>
-<td><code>msg.payload.offpayload</code></td>
-<td>String value emitted as the payload for the off event</td>
-</tr>
-<tr>
-<td><code>msg.payload.offoffset</code></td>
-<td>Number value as specified above for Offset configuration</td>
-</tr>
-<tr>
-<td><code>msg.payload.offrandomoffset</code></td>
-<td>Boolean value as specified above in Randomisation of Times</td>
-</tr>
-<tr>
-<td><code>msg.payload.mon</code></td>
-<td>Boolean: true enables the schedule on a Monday, false disables it.</td>
-</tr>
-<tr>
-<td><code>msg.payload.tue</code></td>
-<td>Boolean: true enables the schedule on a Tuesday, false disables it.</td>
-</tr>
-<tr>
-<td><code>msg.payload.wed</code></td>
-<td>Boolean: true enables the schedule on a Wednesday, false disables it.</td>
-</tr>
-<tr>
-<td><code>msg.payload.thu</code></td>
-<td>Boolean: true enables the schedule on a Thursday, false disables it.</td>
-</tr>
-<tr>
-<td><code>msg.payload.fri</code></td>
-<td>Boolean: true enables the schedule on a Friday, false disables it.</td>
-</tr>
-<tr>
-<td><code>msg.payload.sat</code></td>
-<td>Boolean: true enables the schedule on a Saturday, false disables it.</td>
-</tr>
-<tr>
-<td><code>msg.payload.sun</code></td>
-<td>Boolean: true enables the schedule on a Sunday, false disables it.</td>
-</tr>
-</tbody>
+    <thead>
+        <tr>
+            <th>Property</th>
+            <th>Type</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>msg.payload.suspended</code></td>
+            <td>Boolean: true will suspend scheduling, false will resume scheduling</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.ontime</code></td>
+            <td>String value representing time of day (HH:mm:ss)</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.triggertime</code></td>
+            <td>Alias of 'ontime'</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.ontopic</code></td>
+            <td>String value emitted as the topic for the on event</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.onpayload</code></td>
+            <td>String value emitted as the payload for the on event</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.onoffset</code></td>
+            <td>Number value as specified above for Offset configuration</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.onrandomoffset</code></td>
+            <td>Boolean value as specified above in Randomisation of Times</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.offtime</code></td>
+            <td>String value representing time of day (HH:mm:ss)</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.duration</code></td>
+            <td>String value representing a timespan (HH:mm:ss)</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.offtopic</code></td>
+            <td>String value emitted as the topic for the off event</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.offpayload</code></td>
+            <td>String value emitted as the payload for the off event</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.offoffset</code></td>
+            <td>Number value as specified above for Offset configuration</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.offrandomoffset</code></td>
+            <td>Boolean value as specified above in Randomisation of Times</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.mon</code></td>
+            <td>Boolean: true enables the schedule on a Monday, false disables it.</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.tue</code></td>
+            <td>Boolean: true enables the schedule on a Tuesday, false disables it.</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.wed</code></td>
+            <td>Boolean: true enables the schedule on a Wednesday, false disables it.</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.thu</code></td>
+            <td>Boolean: true enables the schedule on a Thursday, false disables it.</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.fri</code></td>
+            <td>Boolean: true enables the schedule on a Friday, false disables it.</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.sat</code></td>
+            <td>Boolean: true enables the schedule on a Saturday, false disables it.</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.sun</code></td>
+            <td>Boolean: true enables the schedule on a Sunday, false disables it.</td>
+        </tr>
+    </tbody>
 </table>
 <p>Alternatively, you can send msg.payload as a string with the following values:</p>
 <table>
-<thead>
-<tr>
-<th>Example msg.payload</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>suspended true</code></td>
-<td>true will suspend scheduling, false will resume scheduling</td>
-</tr>
-<tr>
-<td><code>ontime 12:00</code></td>
-<td>Time as specified in the table above for time configuration</td>
-</tr>
-<tr>
-<td><code>ontopic my_topic</code></td>
-<td>Sets the topic for the on event (no spaces)</td>
-</tr>
-<tr>
-<td><code>onpayload my_payload</code></td>
-<td>Sets the payload for the on event (no spaces)</td>
-</tr>
-<tr>
-<td><code>onoffset 30</code></td>
-<td>Sets the offset for the on event</td>
-</tr>
-<tr>
-<td><code>onrandomoffset true</code></td>
-<td>Sets the random offset for the on event</td>
-</tr>
-<tr>
-<td><code>offtime dusk</code></td>
-<td>Time as specified in the table above for time configuration</td>
-</tr>
-<tr>
-<td><code>offtopic my_topic</code></td>
-<td>Sets the topic for the off event (no spaces)</td>
-</tr>
-<tr>
-<td><code>offpayload my_payload</code></td>
-<td>Sets the payload for the off event (no spaces)</td>
-</tr>
-<tr>
-<td><code>offoffset -30</code></td>
-<td>Sets the offset for the off event</td>
-</tr>
-<tr>
-<td><code>offrandomoffset false</code></td>
-<td>Sets the random offset for the off event</td>
-</tr>
-<tr>
-<td><code>mon false</code></td>
-<td>Disables the schedule on a Monday</td>
-</tr>
-<tr>
-<td><code>tue true</code></td>
-<td>Enables the schedule on a Tuesday</td>
-</tr>
-<tr>
-<td><code>ontime 16:30 onoffset 60 onrandomoffset true</code></td>
-<td>Sets the time, offset and random offset for the on event</td>
-</tr>
-</tbody>
+    <thead>
+        <tr>
+            <th>Example msg.payload</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>suspended true</code></td>
+            <td>true will suspend scheduling, false will resume scheduling</td>
+        </tr>
+        <tr>
+            <td><code>ontime 12:00</code></td>
+            <td>Time as specified in the table above for time configuration</td>
+        </tr>
+        <tr>
+            <td><code>ontopic my_topic</code></td>
+            <td>Sets the topic for the on event (no spaces)</td>
+        </tr>
+        <tr>
+            <td><code>onpayload my_payload</code></td>
+            <td>Sets the payload for the on event (no spaces)</td>
+        </tr>
+        <tr>
+            <td><code>onoffset 30</code></td>
+            <td>Sets the offset for the on event</td>
+        </tr>
+        <tr>
+            <td><code>onrandomoffset true</code></td>
+            <td>Sets the random offset for the on event</td>
+        </tr>
+        <tr>
+            <td><code>offtime dusk</code></td>
+            <td>Time as specified in the table above for time configuration</td>
+        </tr>
+        <tr>
+            <td><code>offtopic my_topic</code></td>
+            <td>Sets the topic for the off event (no spaces)</td>
+        </tr>
+        <tr>
+            <td><code>offpayload my_payload</code></td>
+            <td>Sets the payload for the off event (no spaces)</td>
+        </tr>
+        <tr>
+            <td><code>offoffset -30</code></td>
+            <td>Sets the offset for the off event</td>
+        </tr>
+        <tr>
+            <td><code>offrandomoffset false</code></td>
+            <td>Sets the random offset for the off event</td>
+        </tr>
+        <tr>
+            <td><code>mon false</code></td>
+            <td>Disables the schedule on a Monday</td>
+        </tr>
+        <tr>
+            <td><code>tue true</code></td>
+            <td>Enables the schedule on a Tuesday</td>
+        </tr>
+        <tr>
+            <td><code>ontime 16:30 onoffset 60 onrandomoffset true</code></td>
+            <td>Sets the time, offset and random offset for the on event</td>
+        </tr>
+    </tbody>
 </table>
 <!-- END -->
 

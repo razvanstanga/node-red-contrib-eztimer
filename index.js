@@ -30,7 +30,7 @@ module.exports = function(RED) {
     const moment = require('moment');
     const SunCalc = require('suncalc');
     const _ = require('lodash');
-    const fmt = 'YYYY-MM-DD HH:mm';
+    const fmt = 'YYYY-MM-DD HH:mm:ss';
 
     RED.nodes.registerType('eztimer', function(config) {
         RED.nodes.createNode(this, config);
@@ -203,6 +203,23 @@ module.exports = function(RED) {
             node.send(msg);
         }
 
+        function getMoment(todString) {
+            var m = node.now().millisecond(0);
+            var re = new RegExp(/\d+/g);
+            var p1, p2, p3;
+            p1 = re.exec(todString);
+            if (p1) p2 = re.exec(todString);
+            if (p2) p3 = re.exec(todString);
+          
+            if (p3) {
+              m.hour(+p1[0]).minute(+p2[0]).second(+p3[0]);
+            } else if (p2) {
+              m.hour(+p1[0]).minute(+p2[0]).second(0);
+            }
+          
+            return m;
+          }
+
         function schedule(event, init, manual) {
             var now = node.now();
             
@@ -219,18 +236,29 @@ module.exports = function(RED) {
                     }
                     break;
                 case '2': //Time of Day
-                    var matches = new RegExp(/(\d+):(\d+)/).exec(event.timetod);
-                    if (matches && matches.length) {
-                        // Don't use existing 'now' moment here as hour and minute mutate the moment.
-                        event.moment = node
-                            .now()
-                            .hour(+matches[1])
-                            .minute(+matches[2])
-                            .second(0)
-                            .millisecond(0);
+                    var m = node.now().millisecond(0);
+                    var re = new RegExp(/\d+/g);
+                    var p1, p2, p3;
+                    p1 = re.exec(event.timetod);
+                    if (p1) p2 = re.exec(event.timetod);
+                    if (p2) p3 = re.exec(event.timetod);
+                
+                    if (p3) {
+                        m.hour(+p1[0]).minute(+p2[0]).second(+p3[0]);
+                    } else if (p2) {
+                        m.hour(+p1[0]).minute(+p2[0]).second(0);
+                    } else {
+                        m = null;
+                    }
+                    if (m) {
+                        event.moment = m;
+
                         // If a standard run, add a day
                         if (!init) event.moment = event.moment.add(1, 'days');
+                    } else {
+                        event.moment = null;
                     }
+
                     //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' raw');
                     break;
                 case '3': //Duration
@@ -390,6 +418,7 @@ module.exports = function(RED) {
             callback(events.on, 'offset', 'onoffset', Number);
             callback(events.on, 'randomoffset', 'onrandomoffset', toBoolean);
             callback(events.off, 'timetod', 'offtime', String);
+            callback(events.off, 'duration', 'duration', String);
             callback(events.off, 'topic', 'offtopic', String);
             callback(events.off, 'value', 'offvalue', String);
             callback(events.off, 'offset', 'offoffset', Number);

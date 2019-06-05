@@ -76,14 +76,15 @@ You can set the following:
 | Property                      | Type                                                                  |
 | ----------------------------- | --------------------------------------------------------------------- |
 | `msg.payload.suspended`       | Boolean: true will suspend scheduling, false will resume scheduling   |
-| `msg.payload.ontime`          | String value as specified in the table above for time configuration   |
+| `msg.payload.ontime`          | String value representing time of day (HH:mm:ss)                      |
 | `msg.payload.triggertime`     | Alias of `ontime`                                                     |
 | `msg.payload.ontopic`         | String value emitted as the topic for the on event                    |
 | `msg.payload.onvalue`         | Update output value for on event (must be same as configured type)    |
 | `msg.payload.triggervalue`    | Alias of `onvalue`                                                    |
 | `msg.payload.onoffset`        | Number value as specified above for Offset configuration              |
 | `msg.payload.onrandomoffset`  | Boolean value as specified above in Randomisation of Times            |
-| `msg.payload.offtime`         | String value as specified in the table above for time configuration   |
+| `msg.payload.offtime`         | String value representing time of day (HH:mm:ss)                      |
+| `msg.payload.duration`        | String value representing a timespan (HH:mm:ss)                      |
 | `msg.payload.offtopic`        | String value emitted as the topic for the off event                   |
 | `msg.payload.offvalue`        | Update output value for off event (must be same as configured type)   |
 | `msg.payload.offoffset`       | Number value as specified above for Offset configuration              |
@@ -99,14 +100,19 @@ You can set the following:
 # Change Log
 
 ## 1.0.10
-* Fixed issue where a manual `on` event (with a duration-based `off` event) wasn't scheduling it's `off` event
+* Fixed bug where a manual `on` event (with a duration-based `off` event) wasn't scheduling it's `off` event.
+* Enabled the use of seconds for time-based events (was documented but always reverted to 0).
+* Added [missing] input parameter `payload.duration` to allow prgrammatic adjustment of the duration.
+* Adjusted default value for `duration` to 00:01:00 (1 minute) - was 0, which broken the node.
+
+Thanks to @stu-carter for detailed reports enabling the above fixes.
 
 ## 1.0.9
 * Fixed `manual` variable being used before declaration - credit @marc-gist.
 * Added UI tip for times and duration to make the HH:mm:ss requirement clearer - credit @stu-carter.
 
 ## 1.0.8
-* Fixed next event status text for trigger
+* Fixed next event status text for trigger.
 
 ## 1.0.7
 * Corrected commands to set output value for on/off events - `onvalue` and `offvalue` are more correct, as it's not necessarily the payload you're updating. 
