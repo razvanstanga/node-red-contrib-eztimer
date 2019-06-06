@@ -103,7 +103,7 @@ You can set the following:
 * Fixed bug where a manual `on` event (with a duration-based `off` event) wasn't scheduling it's `off` event.
 * Enabled the use of seconds for time-based events (was documented but always reverted to 0).
 * Added [missing] input parameter `payload.duration` to allow prgrammatic adjustment of the duration.
-* Adjusted default value for `duration` to 00:01:00 (1 minute) - was 0, which broken the node.
+* Adjusted default value for `duration` to 00:01:00 (1 minute) - was 0, which broke the node.
 * Fixed re-schedule after manual `off` event.
 * Fixed state reporting in `info` output payload.
 * Added node name to `info` output.  If no name is set, `eztimer` is returned.
