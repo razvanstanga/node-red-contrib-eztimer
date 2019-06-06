@@ -106,6 +106,7 @@ You can set the following:
 * Adjusted default value for `duration` to 00:01:00 (1 minute) - was 0, which broken the node.
 * Fixed re-schedule after manual `off` event.
 * Fixed state reporting in `info` output payload.
+* Added node name to `info` output.  If no name is set, `eztimer` is returned.
 
 Thanks to @stu-carter for detailed reports enabling the above fixes.
 
