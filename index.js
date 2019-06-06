@@ -87,6 +87,9 @@ module.exports = function(RED) {
                     node.send({
                         topic: 'info',
                         payload: {
+                            name: function() {
+                                return node.name || 'eztimer';
+                            }(),
                             on: function() {
                                 if (isSuspended()) return 'suspended';
                                 if (events.on.type == '9') return 'manual';
