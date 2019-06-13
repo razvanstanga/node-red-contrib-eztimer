@@ -54,15 +54,17 @@ module.exports = function(RED) {
             events.off.inverse = events.on;
         }
 
-        const weekdays = [
-            config.mon,
-            config.tue,
-            config.wed,
-            config.thu,
-            config.fri,
-            config.sat,
-            config.sun
-        ];
+        function weekdays() {
+            return [
+                config.mon,
+                config.tue,
+                config.wed,
+                config.thu,
+                config.fri,
+                config.sat,
+                config.sun
+            ];
+        }
 
         node.on('input', function(msg) {
             let handled = false,
@@ -294,7 +296,7 @@ module.exports = function(RED) {
             }
 
             // Adjust weekday if not selected
-            while (!weekdays[event.moment.isoWeekday() - 1]) {
+            while (!weekdays()[event.moment.isoWeekday() - 1]) {
                 event.moment.add(1, 'day');
                 //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' skip');
             }
@@ -343,7 +345,7 @@ module.exports = function(RED) {
                 fill: 'grey',
                 shape: 'dot',
                 text: `Scheduling suspended ${
-                    weekdays.indexOf(true) === -1 ? '(no weekdays selected) ' : ''
+                    weekdays().indexOf(true) === -1 ? '(no weekdays selected) ' : ''
                 }`
             });
         }
@@ -394,7 +396,7 @@ module.exports = function(RED) {
         }
 
         function isSuspended() {
-            return config.suspended || weekdays.indexOf(true) === -1;
+            return config.suspended || weekdays().indexOf(true) === -1;
         }
 
         function enumerateProgrammables(callback) {

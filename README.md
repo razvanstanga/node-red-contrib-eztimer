@@ -25,16 +25,15 @@ scheduling.
 
 ## Suspending scheduling
 
-The 'Suspend scheduling' checkbox allows you to disable time scheduling. If scheduling is suspended, eztimer will only
-generate output events upon receipt of input 'on' and 'off' events (see below).
+The **Suspend Scheduling** checkbox allows you to disable time scheduling. If scheduling is suspended, eztimer will only
+generate output events upon receipt of input `on` and `off` events (see below).
 
 This setting is provided for the situation where you temporarily don't want time based activation and don't want to
 rewire your Node-RED flow.
 
 ## Times
 
-Select the type of trigger from the dropdown and this will provide either a fruther dropdown (for suncalc events), or a text
-box to enter either a 24hr time (HH:mm) or, for the off event, a duration (hh:mm:ss).
+Select the type of trigger from the dropdown and this will provide either a fruther dropdown (for suncalc events), or a textbox to enter either a 24hr time (HH:mm[:ss]) or, for the `off` event, a duration (hh:mm:ss).
 
 ## Offsets
 
@@ -46,7 +45,7 @@ The on and off time can have an offset. This is specified in minutes:
 
 ## Randomisation of times
 
-Both on and off times can be randomised by ticking "Use random time within offset period". For example, if you specify
+Both `on` and `off` times can be randomised by ticking "Use random time within offset period". For example, if you specify
 dusk with an offset of -60 minutes, every day a message will be generated at a random time in a 60 minute window before
 dusk.
 
@@ -57,16 +56,15 @@ You can wire inject nodes to the input of this node and send the following in `m
 | msg.payload | Description                                                                                                                                |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `trigger`   | Causes eztimer to emit the configured trigger event.                                                                                       |
-| `on`        | Triggers manual on mode and causes eztimer to emit the configured on event. Manual mode is reset when the next on or off time is reached   |
-| `off`       | Triggers manual off mode and causes eztimer to emit the configured off event. Manual mode is reset when the next on or off time is reached |
-| `info`      | eztimer emits an object containing the on and off times in UTC format. It also contains the state which is either on or off.               |
+| `on`        | Triggers manual on mode and causes eztimer to emit the configured `on` event. Manual mode is reset when the next `on` or `off` time is reached   |
+| `off`       | Triggers manual off mode and causes eztimer to emit the configured `off` event. Manual mode is reset when the next `on` or `off` time is reached |
+| `info`      | eztimer emits an object containing the `on` and `off` times in UTC format. It also contains the state which is either `on` or `off`.               |
 
-'## Programmatic Control
+# Programmatic Control
 
 This node supports programmatic time control as well as configuration via the NodeRED UI.
 
-**It is very important to note that properties set programmatically in this manner are transient. They will not persist
-over a NodeRED restart or redeploy!**
+**It is very important to note that properties set programmatically in this manner are transient. They will not persist over a NodeRED restart or redeploy!**
 
 Note that both the property-based and string-based specifications are overrides that violate the usual behavior. 
 See here for further discussion https://github.com/node-red/node-red/issues/399.
@@ -76,15 +74,15 @@ You can set the following:
 | Property                      | Type                                                                  |
 | ----------------------------- | --------------------------------------------------------------------- |
 | `msg.payload.suspended`       | Boolean: true will suspend scheduling, false will resume scheduling   |
-| `msg.payload.ontime`          | String value representing time of day (HH:mm:ss)                      |
+| `msg.payload.ontime`          | String value representing time of day (HH:mm[:ss])                    |
 | `msg.payload.triggertime`     | Alias of `ontime`                                                     |
 | `msg.payload.ontopic`         | String value emitted as the topic for the on event                    |
 | `msg.payload.onvalue`         | Update output value for on event (must be same as configured type)    |
 | `msg.payload.triggervalue`    | Alias of `onvalue`                                                    |
 | `msg.payload.onoffset`        | Number value as specified above for Offset configuration              |
 | `msg.payload.onrandomoffset`  | Boolean value as specified above in Randomisation of Times            |
-| `msg.payload.offtime`         | String value representing time of day (HH:mm:ss)                      |
-| `msg.payload.duration`        | String value representing a timespan (HH:mm:ss)                      |
+| `msg.payload.offtime`         | String value representing time of day (HH:mm[:ss])                    |
+| `msg.payload.duration`        | String value representing a timespan (HH:mm[:ss])                     |
 | `msg.payload.offtopic`        | String value emitted as the topic for the off event                   |
 | `msg.payload.offvalue`        | Update output value for off event (must be same as configured type)   |
 | `msg.payload.offoffset`       | Number value as specified above for Offset configuration              |
@@ -98,6 +96,9 @@ You can set the following:
 | `msg.payload.sun`             | Boolean: true enables the schedule on a Sunday, false disables it.    |
 
 # Change Log
+
+## 1.0.11
+* Fixed programmatic alteration of day-of-week flag - credit @stu-carter.
 
 ## 1.0.10
 * Fixed bug where a manual `on` event (with a duration-based `off` event) wasn't scheduling it's `off` event.
