@@ -221,9 +221,11 @@ module.exports = function(RED) {
                     if (!init) nextDate = nextDate.setDate(nextDate.getDate() + 1);
                     const sunCalcTimes = SunCalc.getTimes(nextDate, config.lat, config.lon);
                     const date = sunCalcTimes[event.timesun];
-                    if (date) {
+                    if (date && moment(date).isValid()) {
                         event.moment = moment(date);
-                        //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' raw');
+                    } else {
+                        event.error = '\'' + event.timesun + '\' is currently invalid for lat/long \'' + config.lat + ', ' + config.lon + '\'';
+                        node.error({ "Error": 'The selected sun event (' + event.timesun + ') results in an invalid time - most likely due to polar day/night meaning this event doesn\'t technically [currently] occur for lat/long \'' + config.lat + ', ' + config.lon + '\'', "Calculated Times": sunCalcTimes});
                     }
                     break;
                 case '2': //Time of Day
@@ -274,7 +276,7 @@ module.exports = function(RED) {
                 node.status({
                     fill: 'red',
                     shape: 'dot',
-                    text: `Invalid time: ${event.time}`
+                    text: event.error ? event.error : `Invalid time: ${event.timetod}`
                 });
                 return false;
             }

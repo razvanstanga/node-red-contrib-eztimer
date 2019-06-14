@@ -97,8 +97,11 @@ You can set the following:
 
 # Change Log
 
+## 1.0.12
+* Error gracefully when sun events don't happen at particular lat/long (due to polar nights/days) - [credit @B0F1B0](https://github.com/mrgadget/node-red-contrib-eztimer/issues/9).
+
 ## 1.0.11
-* Fixed programmatic alteration of day-of-week flag - credit @stu-carter.
+* Fixed programmatic alteration of day-of-week flag - [credit @stu-carter](https://github.com/mrgadget/node-red-contrib-eztimer/issues/8).
 
 ## 1.0.10
 * Fixed bug where a manual `on` event (with a duration-based `off` event) wasn't scheduling it's `off` event.
@@ -109,7 +112,7 @@ You can set the following:
 * Fixed state reporting in `info` output payload.
 * Added node name to `info` output.  If no name is set, `eztimer` is returned.
 
-Thanks to @stu-carter for detailed reports enabling the above fixes.
+Thanks to @stu-carter for detailed reports enabling the above fixes ([related issue](https://github.com/mrgadget/node-red-contrib-eztimer/issues/6)).
 
 ## 1.0.9
 * Fixed `manual` variable being used before declaration - credit @marc-gist.
