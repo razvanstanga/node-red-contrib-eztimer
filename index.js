@@ -44,7 +44,8 @@ module.exports = function(RED) {
         "nauticalDawn",
         "nauticalDusk",
         "nightEnd",
-        "night"
+        "night",
+        "nadir"
     ];
 
     RED.nodes.registerType('eztimer', function(config) {
