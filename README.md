@@ -97,6 +97,9 @@ You can set the following:
 
 # Change Log
 
+## 1.0.13
+* Corrected invalid time received SunCalc based on events that don't happen at a particular lat/long by moving to the next closest valid event.  ie, if `night` was chosen, but doesn't exist, `nauticalDusk` would be used.  A warning is emitted each time an event is scheduled for a sun event different to that selected in the config. - [credit @B0F1B0](https://github.com/mrgadget/node-red-contrib-eztimer/issues/10).
+
 ## 1.0.12
 * Error gracefully when sun events don't happen at particular lat/long (due to polar nights/days) - [credit @B0F1B0](https://github.com/mrgadget/node-red-contrib-eztimer/issues/9).
 

@@ -31,6 +31,21 @@ module.exports = function(RED) {
     const SunCalc = require('suncalc');
     const _ = require('lodash');
     const fmt = 'YYYY-MM-DD HH:mm:ss';
+    const sunTimes = [
+        "solarNoon",
+        "goldenHourEnd",
+        "goldenHour",
+        "sunriseEnd",
+        "sunsetStart",
+        "sunrise",
+        "sunset",
+        "dawn",
+        "dusk",
+        "nauticalDawn",
+        "nauticalDusk",
+        "nightEnd",
+        "night"
+    ];
 
     RED.nodes.registerType('eztimer', function(config) {
         RED.nodes.createNode(this, config);
@@ -220,12 +235,19 @@ module.exports = function(RED) {
                     // Get tomorrow's sun data 
                     if (!init) nextDate = nextDate.setDate(nextDate.getDate() + 1);
                     const sunCalcTimes = SunCalc.getTimes(nextDate, config.lat, config.lon);
-                    const date = sunCalcTimes[event.timesun];
+                    // Get first event - move closer to noon if required.
+                    var t = sunTimes.indexOf(event.timesun);
+                    while (!moment(sunCalcTimes[sunTimes[t]]).isValid()) t = Math.max(t - 2, 0);
+                    // If we've had to move closer to noon, emit a warning
+                    if (event.timesun != sunTimes[t]) {
+                        node.warn({ "message": 'Sun event (' + event.timesun + ') invalid for chosen lat/long (due to polar proximity). Sun event \'' + sunTimes[t] + '\' has been chosen as the closest valid candidate.', "events": sunCalcTimes});
+                    }
+                    // Use determined event time
+                    var date = sunCalcTimes[sunTimes[t]];
                     if (date && moment(date).isValid()) {
                         event.moment = moment(date);
                     } else {
-                        event.error = '\'' + event.timesun + '\' is currently invalid for lat/long \'' + config.lat + ', ' + config.lon + '\'';
-                        node.error({ "Error": 'The selected sun event (' + event.timesun + ') results in an invalid time - most likely due to polar day/night meaning this event doesn\'t technically [currently] occur for lat/long \'' + config.lat + ', ' + config.lon + '\'', "Calculated Times": sunCalcTimes});
+                        event.error = 'Unable to determine time for \'' + event.timesun + '\'';
                     }
                     break;
                 case '2': //Time of Day
