@@ -87,6 +87,7 @@ module.exports = function(RED) {
             requiresBootstrap = false;
             if (_.isString(msg.payload)) {
                 if (msg.payload === 'on') {
+                    // Sends the on event without impacting the scheduled event
                     handled = true;
                     send(events.on, true);
                     if (events.off.type == '3') schedule(events.off, null, true); // If 'off' is of type duration, schedule 'off' event.
@@ -94,12 +95,21 @@ module.exports = function(RED) {
                 } else if (msg.payload === 'off') {
                     // Sends the off event, then re-schedules it
                     handled = true;
-                    send(events.off);
-                    schedule(events.off);
+                    send(events.off, true);
+                    if (!isSuspended()) schedule(events.off);
                     status(events.off, true);
                 } else if (msg.payload === 'trigger') {
+                    // Sends the trigger/on event without impact the scheduled event
                     handled = true;
                     send(events.on);
+                } else if (msg.payload === 'cancel' && config.timerType == '1') {
+                    // Cancels the current timer without sending the off event
+                    handled = true;
+                    if (!isSuspended()) {
+                        schedule(events.on);
+                        schedule(events.off);
+                    }
+                    status(events.off);
                 } else if (msg.payload === 'info') {
                     handled = true;
                     node.send({
@@ -147,7 +157,7 @@ module.exports = function(RED) {
                             handled = true;
                             const previous = obj[prop];
                             obj[prop] = typeConverter(match[1]);
-                            requiresBootstrap = requiresBootstrap || previous !== obj[prop];
+                            requiresBootstrap = requiresBootstrap || (previous !== obj[prop] && dynamicDuration(prop, obj[prop]));
                         }
                     });
                 }
@@ -163,7 +173,7 @@ module.exports = function(RED) {
                         handled = true;
                         const previous = obj[prop];
                         obj[prop] = typeConverter(msg.payload[payloadName]);
-                        requiresBootstrap = requiresBootstrap || previous !== obj[prop];
+                        requiresBootstrap = requiresBootstrap || (previous !== obj[prop] && dynamicDuration(prop, obj[prop]));
                     }
                 });
             }
@@ -178,6 +188,60 @@ module.exports = function(RED) {
             }
         });
 
+        function dynamicDuration(property, duration) {
+            // Return false if not a duration request
+            if (!property == "duration") return true;
+
+            if (state) {
+                // Timer currently 'on' - parse time
+                var secs = getSeconds(duration);
+                var offTime = moment(events.on.last.moment).add(secs, 'seconds');
+                
+                if (offTime.isBefore(node.now())) {
+                    // New time is before now - need to turn off and schedule
+                    node.log("Live duration change (" + duration + " => " + secs + "s) causes an off-time in the past, sending 'off' event.");
+                    send(events.off);
+                    schedule(events.off);
+                    status(events.off);
+                } else {
+                    // New time is after now - just update the scheduled off event (and status)
+                    node.log("Live duration change (" + duration + " => " + secs + "s), rescheduling 'off' time to " + offTime.toString());
+                    schedule(events.off, null, true);
+                    status(events.on);
+                }
+            } else {
+                // Timer currently 'off', just re-schedule of off event (if an on event is scheduled)
+                if (!isSuspended()) {
+                    schedule(events.off);
+                    status(events.off);
+                }
+            }
+            // Return false to indicate no bootstrap required
+            return false;
+        }
+
+        function getSeconds(val) {
+            var secs = 0;
+
+            // accept 00:00, 00:00:00, 45s, 45h,4m etc.
+            var matches = new RegExp(/(?:(\d+)[h:\s,]+)?(?:(\d+)[m:\s,]+)?(?:(\d+)[s\s]*)?$/).exec(val);
+            if (matches.length > 1) {
+                if (matches[1] != null) {
+                    secs += parseInt(matches[1]) * 3600; // hours
+                }
+                if (matches[2] != null) {
+                    secs += parseInt(matches[2]) * 60; // minutes
+                }
+                if (matches[3] != null) {
+                    secs += parseInt(matches[3]) * 1; // seconds
+                }
+            } else {
+                return 0;
+            }
+            
+            return secs;
+        }
+
         node.on('close', suspend);
 
         function setupEvent(eventName, shape) {
@@ -190,13 +254,17 @@ module.exports = function(RED) {
             event.name = eventName.toUpperCase();
             event.shape = shape;
             event.state = (eventName == 'on');
+            event.last = { moment: null };
             event.callback = function() {
                 // Send the event
                 send(event);
-                // Schedule the next event, if it's not a 'manual' timer
-                if (events.on.type != '9') schedule(event, null, null);
-                // Clear the event if it IS a 'manual' timer (as we don't know when the off event will be)
-                if (events.on.type == '9') event.moment = undefined;
+                if (events.on.type != '9' && !isSuspended()) {
+                    // Schedule the next event, if it's not a 'manual' timer
+                    schedule(event, null, null);
+                } else {
+                    // Else just clear the event - we don't know when the off event will be
+                    event.moment = undefined;
+                }
                 // Update the status/icon
                 status(event);
             };
@@ -206,6 +274,7 @@ module.exports = function(RED) {
         function send(event, manual) {
             //node.warn('sending \'' + event.name + '\'');
             var msg = {};
+            msg.tag = config.tag || 'eztimer';
             var currPart = msg;
             var spl = event.property.split('.');
             for (var i in spl) {
@@ -222,7 +291,8 @@ module.exports = function(RED) {
                 }
               }
             }
-            node.send(msg);
+            event.last.moment = node.now();
+            if (!event.suppressrepeats || state != event.state) node.send(msg);
             state = event.state;
         }
 
@@ -269,28 +339,26 @@ module.exports = function(RED) {
                     if (m) {
                         event.moment = m;
                         // If a standard run, add a day
-                        if (!init) event.moment = event.moment.add(1, 'days');
+                        if (!init && !m.isAfter(now)) event.moment = event.moment.add(1, 'days');
                     } else {
                         event.moment = null;
                     }
 
-                    //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' raw');
                     break;
                 case '3': //Duration
-                    var matches = new RegExp(/(\d+):(\d+):(\d+)/).exec(event.duration);
-                    var secs = (matches[3] * 1) + (matches[2] * 60) + (matches[1] * 3600);
+                    var secs = getSeconds(event.duration);
+                    
                     if (manual) {
-                        //event is manual - schedule assuming 'now'
-                        event.moment = moment(node.now()).add(secs, 'seconds');
+                        //event is manual - schedule based on last 'on' event
+                        event.moment = moment(event.inverse.last.moment).add(secs, 'seconds');
                     } else {
+                        // event is auto - schedule based on current 'on' event
                         event.moment = moment(event.inverse.moment).add(secs, 'seconds');
-                        //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' raw');
                     }
 
                     // See if we can roll back a day - the on-time has passed, but the off-time might not have.
                     if (init && moment(event.moment).add(-1, 'days').isAfter(now)) {
                         event.moment.add(-1, 'day');
-                        //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' rollback');
                     }
                     break;
             }
@@ -313,22 +381,17 @@ module.exports = function(RED) {
             }
 
             // Add a day if the moment is in the past
-            //if (!isInitial || (isInitial && now.isAfter(event.moment))) {
             if (now.isAfter(event.moment)) {
-                //node.warn('event \'' + event.name + '\' - \'' + now.format('DD/MM HH:mm:ss.SSS') + '\' is after \'' + event.moment.format('DD/MM HH:mm:ss.SSS') + '\', adding a day.');
                 event.moment.add(1, 'day');
-                //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' past');
             }
 
-            // Adjust weekday if not selected
-            while (!weekdays()[event.moment.isoWeekday() - 1]) {
+            // Adjust weekday if not selected (and not manual)
+            while (!manual && !weekdays()[event.moment.isoWeekday() - 1]) {
                 event.moment.add(1, 'day');
-                //node.warn('event \'' + event.name + '\' scheduled for ' + event.moment.format('DD/MM HH:mm:ss.SSS') + ' skip');
             }
 
-            if (event.timeout) {
-                clearTimeout(event.timeout);
-            }
+            // Clear any pending event
+            if (event.timeout) clearTimeout(event.timeout);
 
             //console.log('schedule: ' + event.name + ' => ' + event.moment.toString());
             const delay = event.moment.diff(now);
@@ -345,7 +408,8 @@ module.exports = function(RED) {
             }
             if (event.inverse) {
                 if (event.inverse.moment && event.inverse.moment.isAfter(node.now())) {
-                    data.text = event.name + (manual ? ' manual' : ' auto') + (isSuspended() ? ' - scheduling suspended' : ` until ${event.inverse.moment.format(fmt)}`);
+                    //data.text = event.name + (manual ? ' manual' : ' auto') + (isSuspended() ? ' - scheduling suspended' : ` until ${event.inverse.moment.format(fmt)}`);
+                    data.text = event.name + (manual ? ' manual' : ' auto') + ` until ${event.inverse.moment.format(fmt)}`;
                 } else {
                     data.text = event.name + (manual ? ' manual' : ' auto') + (isSuspended() ? ' - scheduling suspended' : ``);
                 }

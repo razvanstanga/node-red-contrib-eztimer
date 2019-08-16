@@ -29,6 +29,7 @@ THE SOFTWARE.
         defaults: {
             name: {value: ''},
             autoname: {value: null},
+            tag: {value: 'eztimer'},
             suspended: {value: false},
             sendEventsOnSuspend: {value: false},
             lat: {value: ''},
@@ -44,6 +45,7 @@ THE SOFTWARE.
             onvalue: {value: 1},
             onoffset: {value: 0},
             onrandomoffset: {value: 0},
+            onsuppressrepeats: {value: false},
             // OFF config params
             offtype: {value: '1'},
             offtimesun: {value: 'dusk'},
@@ -54,6 +56,7 @@ THE SOFTWARE.
             offvalue: {value: 0},
             offoffset: {value: 0},
             offrandomoffset: {value: 0},
+            offsuppressrepeats: {value: false},
             // Days of the week
             mon: {value: true},
             tue: {value: true},
@@ -144,10 +147,13 @@ THE SOFTWARE.
                         $('.eztimer-event-switch').hide(); 
                         $('.eztimer-event-trigger').show();
                         $('#node-input-startupMessageText').text('Send [trigger] on startup');
-                        if (atLoad.type != atEvent.type) 
+                        if (atLoad.type != atEvent.type) {
                             $('#node-input-startupMessage').prop("checked", false);
-                        else
+                            $('#node-input-onsuppressrepeats').prop("checked", false);
+                        } else {
                             $('#node-input-startupMessage').prop("checked", atLoad.startupMessage);
+                            $('#node-input-onsuppressrepeats').prop("checked", atLoad.onsuppressrepeats);
+                        }
                         break;
                 }
             });
@@ -200,6 +206,11 @@ THE SOFTWARE.
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
         <input type="hidden" id="node-input-autoname">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Tag</label>
+        <input type="text" id="node-input-tag" placeholder="eztimer">
+        <input type="hidden" id="node-input-tag">
     </div>
     <hr>
     <div class="form-row">
@@ -308,6 +319,12 @@ THE SOFTWARE.
             <input type="text" id="node-input-onvalue" style="width:70%">
             <input type="hidden" id="node-input-onvaluetype">
         </div>
+        <div class="form-row eztimer-event eztimer-event-switch">
+            <label style="margin-left: 100px; width: 70%">
+                <input type="checkbox" id="node-input-onsuppressrepeats" placeholder="" style="width: 20px; margin: 0">
+                Suppress repeat <code>on</code> events
+            </label>
+        </div>
     </div>
     <div class="eztimer-event eztimer-event-switch">
         <hr>
@@ -373,6 +390,12 @@ THE SOFTWARE.
             <input type="text" id="node-input-offvalue" style="width:70%">
             <input type="hidden" id="node-input-offvaluetype">
         </div>
+        <div class="form-row eztimer-event eztimer-event-switch">
+            <label style="margin-left: 100px; width: 70%">
+                <input type="checkbox" id="node-input-offsuppressrepeats" placeholder="" style="width: 20px; margin: 0">
+                Suppress repeat <code>off</code> events
+            </label>
+        </div>
     </div>
 </script>
 
@@ -387,6 +410,8 @@ THE SOFTWARE.
 <pre><code>$ cd ~/.node-red
 $ npm install node-red-contrib-eztimer
 </code></pre><h1 id="configuration">Configuration</h1>
+<h2 id="tag">Tag</h2>
+<p>The value provided in the tag field will be emitted as a message property (<code>msg.tag</code>) allowing you to identify the source of the message.</p>
 <h2 id="schedule">Schedule</h2>
 <p>The scheduling days allow you to choose which days of the week to schedule events. Unticking all days will suspend<br>scheduling.</p>
 <h2 id="suspending-scheduling">Suspending scheduling</h2>
@@ -402,6 +427,8 @@ $ npm install node-red-contrib-eztimer
 </ul>
 <h2 id="randomisation-of-times">Randomisation of times</h2>
 <p>Both on and off times can be randomised by ticking &quot;Use random time within offset period&quot;. For example, if you specify<br>dusk with an offset of -60 minutes, every day a message will be generated at a random time in a 60 minute window before<br>dusk.</p>
+<h2 id="suppress-repeats">Suppression of repeating events</h2>
+<p>In some circumstances it may be required to re-start the timer _without_ re-sending the `on` event - this setting achieves this.  It's available for both `on` and `off` events, but disabled in `trigger` mode.</p>
 <h2 id="inputs">Inputs</h2>
 <p>You can wire inject nodes to the input of this node and send the following in <code>msg.payload</code>.</p>
 <table>
@@ -423,6 +450,10 @@ $ npm install node-red-contrib-eztimer
         <tr>
             <td><code>info</code></td>
             <td>eztimer emits an object containing the on and off times in UTC format. It also contains the state which is either on or off.</td>
+        </tr>
+        <tr>
+            <td><code>cancel</code></td>
+            <td>Cancels the current run (if any) of the timer (_without_ emitting an off event).</td>
         </tr>
     </tbody>
 </table>
