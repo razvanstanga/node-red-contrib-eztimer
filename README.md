@@ -116,6 +116,9 @@ You can set the following:
 
 # Change Log
 
+## 1.1.1
+* Fixed `timestamp` value type (previously emitted a blank value) so it outputs milliseconds since epoch - the same as the built-in _input_ node. [credit @marc-gist](https://github.com/mrgadget/node-red-contrib-eztimer/issues/12).
+ 
 ## 1.1.0
 A few changes in this one - have had it running in test for a month or two and believe it to be stable - as always, log any bugs at [github issues](https://github.com/mrgadget/node-red-contrib-eztimer/issues) and I'll tend to them as soon as possible.
 * Added ability to change duration without resetting timer (enabling duration change while timer is on)

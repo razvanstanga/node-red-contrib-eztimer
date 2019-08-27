@@ -286,6 +286,8 @@ module.exports = function(RED) {
                     currPart[spl[i]] = JSON.parse(event.value);
                 } else if (event.valuetype == 'bool') {
                     currPart[spl[i]] = (event.value == "true");
+                } else if (event.valuetype == 'date') {
+                    currPart[spl[i]] = (new Date()).getTime();
                 } else {
                     currPart[spl[i]] = event.value;
                 }
