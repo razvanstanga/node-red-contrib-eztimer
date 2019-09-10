@@ -190,7 +190,7 @@ module.exports = function(RED) {
 
         function dynamicDuration(property, duration) {
             // Return false if not a duration request
-            if (!property == "duration") return true;
+            if (property != "duration") return true;
 
             if (state) {
                 // Timer currently 'on' - parse time

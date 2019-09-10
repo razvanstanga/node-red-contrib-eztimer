@@ -116,6 +116,9 @@ You can set the following:
 
 # Change Log
 
+## 1.1.2
+* Fixed bug introduced in 1.1.0 where some inputs arguments ceased to function correctly. [credit @marc-gist](https://github.com/mrgadget/node-red-contrib-eztimer/issues/13).
+
 ## 1.1.1
 * Fixed `timestamp` value type (previously emitted a blank value) so it outputs milliseconds since epoch - the same as the built-in _input_ node. [credit @marc-gist](https://github.com/mrgadget/node-red-contrib-eztimer/issues/12).
  
