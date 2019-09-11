@@ -76,7 +76,7 @@ You can wire inject nodes to the input of this node and send the following in `m
 | `trigger`   | Causes eztimer to emit the configured trigger event. |
 | `on`        | Triggers manual on mode and causes eztimer to emit the configured `on` event. Manual mode is reset when the next `on` or `off` time is reached |
 | `off`       | Triggers manual off mode and causes eztimer to emit the configured `off` event. Manual mode is reset when the next `on` or `off` time is reached |
-| `info`      | Eztimer emits an object containing the `on` and `off` times in UTC format. It also contains the state which is either `on` or `off`. |
+| `info`      | Eztimer emits an object containing the `on` and `off` (or `trigger`) times in UTC format. It also contains the state which is either `on` or `off` (for on/off type). |
 | `cancel`    | Cancels the current run (if any) of the timer (_without_ emitting an `off` event). |
 
 # Programmatic Control
@@ -115,6 +115,8 @@ You can set the following:
 | `msg.payload.sun`             | Boolean: true enables the schedule on a Sunday, false disables it.    |
 
 # Change Log
+## 1.1.3
+* Modified `info` output be more informative and logical.  Fixed issue where `info` wouldn't work for `trigger` timer type. [credit @marc-gist](https://github.com/mrgadget/node-red-contrib-eztimer/issues/14).
 
 ## 1.1.2
 * Fixed bug introduced in 1.1.0 where some inputs arguments ceased to function correctly. [credit @marc-gist](https://github.com/mrgadget/node-red-contrib-eztimer/issues/13).
