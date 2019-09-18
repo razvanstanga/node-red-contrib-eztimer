@@ -32,8 +32,12 @@ THE SOFTWARE.
             tag: {value: 'eztimer'},
             suspended: {value: false},
             sendEventsOnSuspend: {value: false},
-            lat: {value: ''},
-            lon: {value: ''},
+            lat: {value: '', validate: function(v){
+                return ezTimerLatLonValidator(this,v) ;
+            }},
+            lon: {value: '', validate: function(v){
+                return ezTimerLatLonValidator(this,v) ;
+            }},
             timerType: {value: '1'},
             startupMessage: {value: true},
             // ON config params
@@ -194,8 +198,25 @@ THE SOFTWARE.
                     case "3": $('.eztimer-offtype-duration').show(); break;
                 }
             });
+
+            // Show/hide Geo fields
+            $('.eztimer-type-input').on('change', function(data) {
+                if ($('#node-input-ontype').val() == 1 || $('#node-input-offtype').val() == 1) {
+                    $('.eztimer-geo').show();
+                } else {
+                    $('.eztimer-geo').hide();
+                }
+            });
         }
     });
+
+    var ezTimerLatLonValidator = function(node, v){
+        if (node.ontype == '1' || (node.timerType == '1' && node.offtype == '1')) {
+            return (node.lat.length > 0 && !isNaN(node.lat) && node.lon.length > 0 && !isNaN(node.lon));
+        } else {
+            return true;
+        }
+    }
 </script>
 
 <script type="text/x-red" data-template-name="eztimer">
@@ -241,11 +262,11 @@ THE SOFTWARE.
     </div>
     <hr>
     <h4>general info</h4>
-    <div class="form-row">
+    <div class="form-row eztimer-geo">
 		<label for="node-input-lat"><i class="fa fa-globe"></i> Latitude</label>
 		<input type="text" id="node-input-lat" placeholder="51.025">
 	</div>
-	<div class="form-row">
+	<div class="form-row eztimer-geo">
 		<label for="node-input-lon"><i class="fa fa-globe"></i> Longitude</label>
 		<input type="text" id="node-input-lon" placeholder="-1.4">
     </div>
@@ -268,7 +289,7 @@ THE SOFTWARE.
         <h4 class="eztimer-event-trigger">[trigger] event</h4>
         <div class="form-row">
             <label for="node-input-ontype"><i class="fa fa-clock-o"></i> Type</label>
-            <select id="node-input-ontype">
+            <select id="node-input-ontype" class="eztimer-type-input">
                 <option value="1">Sun Event</option>
                 <option value="2">Time of Day</option>
                 <option value="9">Manual</option>
@@ -331,7 +352,7 @@ THE SOFTWARE.
         <h4>[off] event</h4>
         <div class="form-row">
             <label for="node-input-offtype"><i class="fa fa-clock-o"></i> Type</label>
-            <select id="node-input-offtype">
+            <select id="node-input-offtype" class="eztimer-type-input">
                 <option value="1">Sun Event</option>
                 <option value="2">Time of Day</option>
                 <option value="3">Duration</option>
