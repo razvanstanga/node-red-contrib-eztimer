@@ -200,8 +200,8 @@ THE SOFTWARE.
             });
 
             // Show/hide Geo fields
-            $('.eztimer-type-input').on('change', function(data) {
-                if ($('#node-input-ontype').val() == 1 || $('#node-input-offtype').val() == 1) {
+            $('.eztimer-geo-check').on('change', function(data) {
+                if ($('#node-input-ontype').val() == 1 || ($('#node-input-timerType').val() == 1 && $('#node-input-offtype').val() == 1)) {
                     $('.eztimer-geo').show();
                 } else {
                     $('.eztimer-geo').hide();
@@ -231,7 +231,6 @@ THE SOFTWARE.
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Tag</label>
         <input type="text" id="node-input-tag" placeholder="eztimer">
-        <input type="hidden" id="node-input-tag">
     </div>
     <hr>
     <div class="form-row">
@@ -272,7 +271,7 @@ THE SOFTWARE.
     </div>
     <div class="form-row">
         <label for="node-input-timerType">Timer Type</label>
-        <select id="node-input-timerType">
+        <select id="node-input-timerType" class="eztimer-geo-check">
             <option value="1">on/off</option>
             <option value="2">trigger only</option>
         </select>  
@@ -289,7 +288,7 @@ THE SOFTWARE.
         <h4 class="eztimer-event-trigger">[trigger] event</h4>
         <div class="form-row">
             <label for="node-input-ontype"><i class="fa fa-clock-o"></i> Type</label>
-            <select id="node-input-ontype" class="eztimer-type-input">
+            <select id="node-input-ontype" class="eztimer-geo-check">
                 <option value="1">Sun Event</option>
                 <option value="2">Time of Day</option>
                 <option value="9">Manual</option>
@@ -352,7 +351,7 @@ THE SOFTWARE.
         <h4>[off] event</h4>
         <div class="form-row">
             <label for="node-input-offtype"><i class="fa fa-clock-o"></i> Type</label>
-            <select id="node-input-offtype" class="eztimer-type-input">
+            <select id="node-input-offtype" class="eztimer-geo-check">
                 <option value="1">Sun Event</option>
                 <option value="2">Time of Day</option>
                 <option value="3">Duration</option>
