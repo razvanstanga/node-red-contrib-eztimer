@@ -115,6 +115,9 @@ You can set the following:
 | `msg.payload.sun`             | Boolean: true enables the schedule on a Sunday, false disables it.    |
 
 # Change Log
+## 1.1.5
+* Fixed some bugs introduced in the `info` message (displaying `on` and `off` values) [credit @Export33](https://github.com/mrgadget/node-red-contrib-eztimer/issues/18).
+
 ## 1.1.4
 * Added some rudimentary validation to lat/long and made the fields only visible when required (as suggested in [issue #15](https://github.com/mrgadget/node-red-contrib-eztimer/issues/13) by jhelmink).
 

@@ -119,41 +119,41 @@ module.exports = function(RED) {
                             if (isSuspended()) return 'suspended';
                             if (state) { return 'on' } else { return 'off' }
                         }()
-                    }
+                    };
                     if (config.timerType == '1') {
                         // on/off timer
                         ret.on = {
                             property: 'msg.' + events.on.property,
-                            value: events.on.value | "<none>",
+                            value: events.on.value || "<none>",
                             nextEvent: function() {
                                 if (isSuspended()) return 'suspended';
                                 if (events.on.type == '9') return 'manual';
                                 if (!events.on.moment) return 'error';
                                 return events.on.moment.toDate().toString()
                             }()
-                        }
+                        };
                         ret.off = {
-                            property: 'msg.' + events.on.property,
-                            value: events.on.value | "<none>",
+                            property: 'msg.' + events.off.property,
+                            value: events.off.value || "<none>",
                             nextEvent: function() {
                                 if (config.timerType == '2') return undefined; // Trigger
                                 if (isSuspended()) return 'suspended';
                                 if (!events.off.moment) return 'manual';
                                 return events.off.moment.toDate().toString()
                             }()
-                        }
+                        };
                     } else {
                         // trigger
                         ret.trigger = {
                             property: 'msg.' + events.on.property,
-                            value: events.on.value | "<none>",
+                            value: events.on.value || "<none>",
                             nextEvent: function() {
                                 if (isSuspended()) return 'suspended';
                                 if (events.on.type == '9') return 'manual';
                                 if (!events.on.moment) return 'error';
                                 return events.on.moment.toDate().toString()
                             }()
-                        }
+                        };
                     }
                     node.send({
                         topic: 'info',
