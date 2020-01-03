@@ -294,6 +294,8 @@ module.exports = function(RED) {
             //node.warn('sending \'' + event.name + '\'');
             var msg = {};
             msg.tag = config.tag || 'eztimer';
+            if (event.topic) msg.topic = event.topic;
+            //msg.topic = event.topic || (msg.tag + '.' + event.name.toLowerCase());
             var currPart = msg;
             var spl = event.property.split('.');
             for (var i in spl) {
@@ -523,6 +525,7 @@ module.exports = function(RED) {
             callback(events.off, 'value', 'offvalue', String);
             callback(events.off, 'offset', 'offoffset', Number);
             callback(events.off, 'randomoffset', 'offrandomoffset', toBoolean);
+            callback(config, 'tag', 'tag', String);
             callback(config, 'mon', 'mon', toBoolean);
             callback(config, 'tue', 'tue', toBoolean);
             callback(config, 'wed', 'wed', toBoolean);

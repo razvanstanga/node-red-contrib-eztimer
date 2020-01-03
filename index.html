@@ -495,6 +495,10 @@ $ npm install node-red-contrib-eztimer
             <td>Boolean: true will suspend scheduling, false will resume scheduling</td>
         </tr>
         <tr>
+            <td><code>msg.payload.tag</code></td>
+            <td>String value emitted as the tag for all events</td>
+        </tr>
+        <tr>
             <td><code>msg.payload.ontime</code></td>
             <td>String value representing time of day (HH:mm:ss)</td>
         </tr>
@@ -507,8 +511,12 @@ $ npm install node-red-contrib-eztimer
             <td>String value emitted as the topic for the on event</td>
         </tr>
         <tr>
-            <td><code>msg.payload.onpayload</code></td>
-            <td>String value emitted as the payload for the on event</td>
+            <td><code>msg.payload.onvalue</code></td>
+            <td>Output value for on event (must be same as configured type)</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.triggervalue</code></td>
+            <td>>Alias of 'onvalue'</td>
         </tr>
         <tr>
             <td><code>msg.payload.onoffset</code></td>
@@ -531,8 +539,8 @@ $ npm install node-red-contrib-eztimer
             <td>String value emitted as the topic for the off event</td>
         </tr>
         <tr>
-            <td><code>msg.payload.offpayload</code></td>
-            <td>String value emitted as the payload for the off event</td>
+            <td><code>msg.payload.offvalue</code></td>
+            <td>Output value for off event (must be same as configured type)</td>
         </tr>
         <tr>
             <td><code>msg.payload.offoffset</code></td>

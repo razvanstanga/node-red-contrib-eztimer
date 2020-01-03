@@ -93,17 +93,18 @@ You can set the following:
 | Property                      | Type                                                                  |
 | ----------------------------- | --------------------------------------------------------------------- |
 | `msg.payload.suspended`       | Boolean: true will suspend scheduling, false will resume scheduling   |
+| `msg.payload.tag`             | String value emitted as the tag for all events                        |
 | `msg.payload.ontime`          | String value representing time of day (HH:mm[:ss])                    |
 | `msg.payload.triggertime`     | Alias of `ontime`                                                     |
 | `msg.payload.ontopic`         | String value emitted as the topic for the on event                    |
-| `msg.payload.onvalue`         | Update output value for on event (must be same as configured type)    |
+| `msg.payload.onvalue`         | Output value for on event (must be same as configured type)           |
 | `msg.payload.triggervalue`    | Alias of `onvalue`                                                    |
 | `msg.payload.onoffset`        | Number value as specified above for Offset configuration              |
 | `msg.payload.onrandomoffset`  | Boolean value as specified above in Randomisation of Times            |
 | `msg.payload.offtime`         | String value representing time of day (HH:mm[:ss])                    |
-| `msg.payload.duration`        | String value representing a timespan (see [Times](##Times))      |
+| `msg.payload.duration`        | String value representing a timespan (see [Times](##Times))           |
 | `msg.payload.offtopic`        | String value emitted as the topic for the off event                   |
-| `msg.payload.offvalue`        | Update output value for off event (must be same as configured type)   |
+| `msg.payload.offvalue`        | Output value for off event (must be same as configured type)          |
 | `msg.payload.offoffset`       | Number value as specified above for Offset configuration              |
 | `msg.payload.offrandomoffset` | Boolean value as specified above in Randomisation of Times            |
 | `msg.payload.mon`             | Boolean: true enables the schedule on a Monday, false disables it.    |
@@ -115,6 +116,12 @@ You can set the following:
 | `msg.payload.sun`             | Boolean: true enables the schedule on a Sunday, false disables it.    |
 
 # Change Log
+## 1.1.6
+Fixes driven by issue #21 [credit @jazzgil](https://github.com/mrgadget/node-red-contrib-eztimer/issues/21).
+* Fixed the node-red info pane to correctly match the the programmatic options in this file (see [Programmatic Control](#Programmatic-Control)) 
+* Updated output function to correctly emit programatically set topic (`ontopic` or `offtopic`) - not previously sent.
+* Added ability to set `tag` value programmatically.
+ 
 ## 1.1.5
 * Fixed some bugs introduced in the `info` message (displaying `on` and `off` values) [credit @Export33](https://github.com/mrgadget/node-red-contrib-eztimer/issues/18).
 
