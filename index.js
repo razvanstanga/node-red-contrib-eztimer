@@ -95,8 +95,9 @@ module.exports = function(RED) {
                 } else if (msg.payload === 'off') {
                     // Sends the off event, then re-schedules it
                     handled = true;
+                    clearTimeout(events.off.timeout);
                     send(events.off, true);
-                    if (!isSuspended()) schedule(events.off);
+                    if (!isSuspended() && events.off.type != '3') schedule(events.off);
                     status(events.off, true);
                 } else if (msg.payload === 'trigger') {
                     // Sends the trigger/on event without impact the scheduled event
