@@ -44,6 +44,7 @@ THE SOFTWARE.
             ontype: {value: '1'},
             ontimesun: {value: 'dawn'},
             ontimetod: {value: '17:00'},
+            onpropertytype: {value: 'msg'},
             onproperty: {value: 'payload'},
             onvaluetype: {value: 'num'},
             onvalue: {value: 1},
@@ -55,6 +56,7 @@ THE SOFTWARE.
             offtimesun: {value: 'dusk'},
             offtimetod: {value: 'dusk'},
             offduration: {value: '00:01:00'},
+            offpropertytype: {value: 'msg'},
             offproperty: {value: 'payload'},
             offvaluetype: {value: 'num'},
             offvalue: {value: 0},
@@ -163,7 +165,10 @@ THE SOFTWARE.
             });
 
             //On
-            $("#node-input-onproperty").typedInput({default:this.propertyType||'msg',types:['msg','flow','global','jsonata']});
+            $("#node-input-onproperty").typedInput({
+                default: 'msg',
+                typeField: $("#node-input-onpropertytype"),
+                types:['msg','flow','global']});
             $("#node-input-onvaluetype").val(this.onvaluetype);
 
             $("#node-input-onvalue").typedInput({
@@ -181,7 +186,10 @@ THE SOFTWARE.
             });
 
             //Off
-            $("#node-input-offproperty").typedInput({default:this.propertyType||'msg',types:['msg','flow','global','jsonata']});
+            $("#node-input-offproperty").typedInput({
+                default: 'msg',
+                typeField: $("#node-input-offpropertytype"),
+                types:['msg','flow','global']});
             $("#node-input-offvaluetype").val(this.offvaluetype);
 
             $("#node-input-offvalue").typedInput({
@@ -333,6 +341,7 @@ THE SOFTWARE.
         <div class="form-row">
             <label for="node-input-onproperty">Property</label>
             <input type="text" id="node-input-onproperty" style="width: 70%"/>
+            <input type="hidden" id="node-input-onpropertytype">
         </div>
         <div class="form-row">
             <label for="node-input-onvalue">Value</label>
@@ -404,6 +413,7 @@ THE SOFTWARE.
         <div class="form-row">
             <label for="node-input-offproperty">Property</label>
             <input type="text" id="node-input-offproperty" style="width: 70%"/>
+            <input type="hidden" id="node-input-offpropertytype">
         </div>
         <div class="form-row">
             <label for="node-input-offvalue">Value</label>

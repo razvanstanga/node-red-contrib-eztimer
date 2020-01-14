@@ -107,7 +107,8 @@ module.exports = function(RED) {
                     handled = true;
                     if (!isSuspended()) {
                         schedule(events.on);
-                        schedule(events.off);
+                        //schedule(events.off);
+                        clearTimeout(events.off.timeout);
                     }
                     status(events.off);
                 } else if (msg.payload === 'info') {
@@ -123,7 +124,7 @@ module.exports = function(RED) {
                     if (config.timerType == '1') {
                         // on/off timer
                         ret.on = {
-                            property: 'msg.' + events.on.property,
+                            property: (events.on.propertytype || 'msg') + '.' + events.on.property,
                             value: events.on.value || "<none>",
                             nextEvent: function() {
                                 if (isSuspended()) return 'suspended';
@@ -133,7 +134,7 @@ module.exports = function(RED) {
                             }()
                         };
                         ret.off = {
-                            property: 'msg.' + events.off.property,
+                            property: (events.off.propertytype || 'msg') + '.' + events.off.property,
                             value: events.off.value || "<none>",
                             nextEvent: function() {
                                 if (config.timerType == '2') return undefined; // Trigger
@@ -145,7 +146,7 @@ module.exports = function(RED) {
                     } else {
                         // trigger
                         ret.trigger = {
-                            property: 'msg.' + events.on.property,
+                            property: (events.on.propertytype || 'msg') + '.' + events.on.property,
                             value: events.on.value || "<none>",
                             nextEvent: function() {
                                 if (isSuspended()) return 'suspended';
@@ -292,30 +293,43 @@ module.exports = function(RED) {
 
         function send(event, manual) {
             //node.warn('sending \'' + event.name + '\'');
-            var msg = {};
-            msg.tag = config.tag || 'eztimer';
-            if (event.topic) msg.topic = event.topic;
-            //msg.topic = event.topic || (msg.tag + '.' + event.name.toLowerCase());
-            var currPart = msg;
-            var spl = event.property.split('.');
-            for (var i in spl) {
-              if (i < (spl.length - 1)) {
-                if (!currPart[spl[i]]) currPart[spl[i]] = {};
-                currPart = currPart[spl[i]];    
-              } else {
-                if (event.valuetype == 'json') {
-                    currPart[spl[i]] = JSON.parse(event.value);
-                } else if (event.valuetype == 'bool') {
-                    currPart[spl[i]] = (event.value == "true");
-                } else if (event.valuetype == 'date') {
-                    currPart[spl[i]] = (new Date()).getTime();
-                } else {
-                    currPart[spl[i]] = event.value;
-                }
-              }
-            }
             event.last.moment = node.now();
-            if (!event.suppressrepeats || state != event.state) node.send(msg);
+
+            if (!event.suppressrepeats || state != event.state) {
+                switch (event.propertytype || 'msg') {
+                    case "flow":
+                        node.context().flow.set(event.property, event.value);
+                        break;
+                    case "global":
+                        node.context().global.set(event.property, event.value);
+                        break;
+                    case "msg":
+                        var msg = {};
+                        msg.tag = config.tag || 'eztimer';
+                        if (event.topic) msg.topic = event.topic;
+                        var currPart = msg;
+                        var spl = event.property.split('.');
+                        for (var i in spl) {
+                            if (i < (spl.length - 1)) {
+                            if (!currPart[spl[i]]) currPart[spl[i]] = {};
+                            currPart = currPart[spl[i]];    
+                            } else {
+                                if (event.valuetype == 'json') {
+                                    currPart[spl[i]] = JSON.parse(event.value);
+                                } else if (event.valuetype == 'bool') {
+                                    currPart[spl[i]] = (event.value == "true");
+                                } else if (event.valuetype == 'date') {
+                                    currPart[spl[i]] = (new Date()).getTime();
+                                } else {
+                                    currPart[spl[i]] = event.value;
+                                }
+                            }
+                        }
+                        node.send(msg);
+                    break;
+                }
+            }
+
             state = event.state;
         }
 

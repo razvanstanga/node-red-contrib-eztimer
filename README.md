@@ -116,6 +116,10 @@ You can set the following:
 | `msg.payload.sun`             | Boolean: true enables the schedule on a Sunday, false disables it.    |
 
 # Change Log
+## 1.1.7
+* Fixed `cancel` to actually work - the node no longer emits the `off` event after a `cancel` call.  [credit @svwhisper](https://github.com/mrgadget/node-red-contrib-eztimer/issues/23).
+* Added code to support `flow` and `global` contexts as assignment properties.  When selected, these do not emit flow message.  [credit @LorenzKahl](https://github.com/mrgadget/node-red-contrib-eztimer/issues/22).
+
 ## 1.1.6
 Fixes driven by issue #21 [credit @jazzgil](https://github.com/mrgadget/node-red-contrib-eztimer/issues/21).
 * Fixed the node-red info pane to correctly match the the programmatic options in this file (see [Programmatic Control](#Programmatic-Control)) 
