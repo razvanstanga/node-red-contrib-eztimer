@@ -297,12 +297,33 @@ module.exports = function(RED) {
             event.last.moment = node.now();
 
             if (!event.suppressrepeats || state != event.state) {
+                // Parse value to selected format
+                var tgtValue = event.value;
+                switch (event.valuetype) {
+                    case 'flow':
+                        tgtValue = node.context().flow.get(tgtValue);
+                        break;
+                    case 'global':
+                        tgtValue = node.context().global.get(tgtValue);
+                        break;
+                    case 'json':
+                        tgtValue = JSON.parse(tgtValue);
+                        break;
+                    case 'bool':
+                        tgtValue = (tgtValue == "true");
+                        break;
+                    case 'date':
+                        tgtValue = (new Date()).getTime();
+                        break;
+                }
+
+                // Output value
                 switch (event.propertytype || 'msg') {
                     case "flow":
-                        node.context().flow.set(event.property, event.value);
+                        node.context().flow.set(event.property, tgtValue);
                         break;
                     case "global":
-                        node.context().global.set(event.property, event.value);
+                        node.context().global.set(event.property, tgtValue);
                         break;
                     case "msg":
                         var msg = {};
@@ -313,17 +334,9 @@ module.exports = function(RED) {
                         for (var i in spl) {
                             if (i < (spl.length - 1)) {
                             if (!currPart[spl[i]]) currPart[spl[i]] = {};
-                            currPart = currPart[spl[i]];    
+                                currPart = currPart[spl[i]];    
                             } else {
-                                if (event.valuetype == 'json') {
-                                    currPart[spl[i]] = JSON.parse(event.value);
-                                } else if (event.valuetype == 'bool') {
-                                    currPart[spl[i]] = (event.value == "true");
-                                } else if (event.valuetype == 'date') {
-                                    currPart[spl[i]] = (new Date()).getTime();
-                                } else {
-                                    currPart[spl[i]] = event.value;
-                                }
+                                currPart[spl[i]] = tgtValue;
                             }
                         }
                         node.send(msg);
