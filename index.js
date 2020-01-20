@@ -126,7 +126,7 @@ module.exports = function(RED) {
                         // on/off timer
                         ret.on = {
                             property: (events.on.propertytype || 'msg') + '.' + events.on.property,
-                            value: events.on.value || "<none>",
+                            value: getValue(events.on) || "<none>",
                             nextEvent: function() {
                                 if (isSuspended()) return 'suspended';
                                 if (events.on.type == '9') return 'manual';
@@ -136,7 +136,7 @@ module.exports = function(RED) {
                         };
                         ret.off = {
                             property: (events.off.propertytype || 'msg') + '.' + events.off.property,
-                            value: events.off.value || "<none>",
+                            value: getValue(events.off) || "<none>",
                             nextEvent: function() {
                                 if (config.timerType == '2') return undefined; // Trigger
                                 if (isSuspended()) return 'suspended';
@@ -148,7 +148,7 @@ module.exports = function(RED) {
                         // trigger
                         ret.trigger = {
                             property: (events.on.propertytype || 'msg') + '.' + events.on.property,
-                            value: events.on.value || "<none>",
+                            value: getValue(events.on) || "<none>",
                             nextEvent: function() {
                                 if (isSuspended()) return 'suspended';
                                 if (events.on.type == '9') return 'manual';
@@ -292,38 +292,41 @@ module.exports = function(RED) {
             return event;
         }
 
+        function getValue(event) {
+            // Parse value to selected format
+            var tgtValue = event.value;
+            switch (event.valuetype) {
+                case 'flow':
+                    tgtValue = node.context().flow.get(tgtValue);
+                    break;
+                case 'global':
+                    tgtValue = node.context().global.get(tgtValue);
+                    break;
+                case 'json':
+                    tgtValue = JSON.parse(tgtValue);
+                    break;
+                case 'bool':
+                    tgtValue = (tgtValue == "true");
+                    break;
+                case 'date':
+                    tgtValue = (new Date()).getTime();
+                    break;
+            }
+            return tgtValue;
+        }
+
         function send(event, manual) {
             //node.warn('sending \'' + event.name + '\'');
             event.last.moment = node.now();
 
             if (!event.suppressrepeats || state != event.state) {
-                // Parse value to selected format
-                var tgtValue = event.value;
-                switch (event.valuetype) {
-                    case 'flow':
-                        tgtValue = node.context().flow.get(tgtValue);
-                        break;
-                    case 'global':
-                        tgtValue = node.context().global.get(tgtValue);
-                        break;
-                    case 'json':
-                        tgtValue = JSON.parse(tgtValue);
-                        break;
-                    case 'bool':
-                        tgtValue = (tgtValue == "true");
-                        break;
-                    case 'date':
-                        tgtValue = (new Date()).getTime();
-                        break;
-                }
-
                 // Output value
                 switch (event.propertytype || 'msg') {
                     case "flow":
-                        node.context().flow.set(event.property, tgtValue);
+                        node.context().flow.set(event.property, getValue(event));
                         break;
                     case "global":
-                        node.context().global.set(event.property, tgtValue);
+                        node.context().global.set(event.property, getValue(event));
                         break;
                     case "msg":
                         var msg = {};
@@ -336,7 +339,7 @@ module.exports = function(RED) {
                             if (!currPart[spl[i]]) currPart[spl[i]] = {};
                                 currPart = currPart[spl[i]];    
                             } else {
-                                currPart[spl[i]] = tgtValue;
+                                currPart[spl[i]] = getValue(event);
                             }
                         }
                         node.send(msg);
