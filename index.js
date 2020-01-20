@@ -279,7 +279,7 @@ module.exports = function(RED) {
             event.callback = function() {
                 // Send the event
                 send(event);
-                if (events.on.type != '9' && !isSuspended()) {
+                if (!isSuspended()) {
                     // Schedule the next event, if it's not a 'manual' timer
                     schedule(event, null, null);
                 } else {
@@ -337,7 +337,7 @@ module.exports = function(RED) {
 
         function schedule(event, init, manual) {
             var now = node.now();
-            
+
             switch (event.type) {
                 case '1': //Sun
                     var nextDate = new Date();
@@ -399,6 +399,8 @@ module.exports = function(RED) {
                         event.moment.add(-1, 'day');
                     }
                     break;
+                case '9': //Manual
+                    return true;
             }
 
             if (!event.moment) {
@@ -439,20 +441,27 @@ module.exports = function(RED) {
 
         function status(event, manual) {
             manual = manual || (events.on.type == 9)
+            var statusText = 'unknown';
+
+            if (event.name == 'on' && events.off && events.off.type == '9') {
+                manual = true;
+            } else if (event.type == '9' && event.name == 'off') {
+                manual = false;
+                statusText = event.name + ` @ ${event.inverse.moment.format(fmt)}`;
+            } else if (event.inverse) {
+                if (event.inverse.moment && event.inverse.moment.isAfter(node.now())) {
+                    statusText = event.name + (manual ? ' manual' : ' auto') + ` until ${event.inverse.moment.format(fmt)}`;
+                } else {
+                    statusText = event.name + (manual ? ' manual' : ' auto') + (isSuspended() ? ' - scheduling suspended' : ``);
+                }
+            } else {
+                statusText = `trigger @ ${event.moment.format(fmt)}`;
+            }
+
             var data = {
                 fill: manual ? 'blue' : 'green',
                 shape: event.shape,
-                text: {}
-            }
-            if (event.inverse) {
-                if (event.inverse.moment && event.inverse.moment.isAfter(node.now())) {
-                    //data.text = event.name + (manual ? ' manual' : ' auto') + (isSuspended() ? ' - scheduling suspended' : ` until ${event.inverse.moment.format(fmt)}`);
-                    data.text = event.name + (manual ? ' manual' : ' auto') + ` until ${event.inverse.moment.format(fmt)}`;
-                } else {
-                    data.text = event.name + (manual ? ' manual' : ' auto') + (isSuspended() ? ' - scheduling suspended' : ``);
-                }
-            } else {
-                data.text = `trigger @ ${event.moment.format(fmt)}`;
+                text: statusText
             }
 
             node.status(data);
@@ -467,7 +476,7 @@ module.exports = function(RED) {
 
             clearTimeout(events.on.timeout);
             events.on.moment = null;
-            
+
             node.status({
                 fill: 'grey',
                 shape: 'dot',
@@ -480,13 +489,15 @@ module.exports = function(RED) {
         function resume() {
             if (events.on.type == '9') return; // Don't do anything when resuming a manual timer
             if (schedule(events.on, true) && (!events.off || (events.off && schedule(events.off, true)))) {
-                const firstEvent = events.off && events.off.moment.isBefore(events.on.moment) ? events.off : events.on;
+                const firstEvent = events.off && events.off.type != '9' && events.off.moment.isBefore(events.on.moment) ? events.off : events.on;
                 var message;
-                if (events.off && events.off.moment) {
+                if (events.off && ( events.off.moment || events.off.type == '9')) {
+                    var statusText = `${firstEvent.name} @ ${firstEvent.moment.format(fmt)}`
+                    if (events.off.moment) statusText += `, ${firstEvent.inverse.name} @ ${firstEvent.inverse.moment.format(fmt)}`
                     message = {
                         fill: 'yellow',
                         shape: 'dot',
-                        text: `${firstEvent.name} @ ${firstEvent.moment.format(fmt)}, ${firstEvent.inverse.name} @ ${firstEvent.inverse.moment.format(fmt)}`
+                        text: statusText
                     }
                 } else {
                     message = {
@@ -514,7 +525,7 @@ module.exports = function(RED) {
                             //Next event is OFF, send ON
                             send(events.on);
                         }
-                    } else if (config.startupMessage && config.startupMessage == true && events.on && !events.off) {
+                    } else if (config.startupMessage && config.startupMessage == true && events.on && (!events.off || events.off.type == '9')) {
                         //Trigger
                         send(events.on);
                     }
