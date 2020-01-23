@@ -91,14 +91,15 @@ module.exports = function(RED) {
                     handled = true;
                     send(events.on, true);
                     if (events.off.type == '3') schedule(events.off, null, true); // If 'off' is of type duration, schedule 'off' event.
-                    status(events.on, true);
+                    updateStatus();
                 } else if (msg.payload === 'off') {
                     // Sends the off event, then re-schedules it
                     handled = true;
                     clearTimeout(events.off.timeout);
+                    events.off.moment = null;
                     send(events.off, true);
                     if (!isSuspended() && events.off.type != '3') schedule(events.off);
-                    status(events.off, true);
+                    updateStatus();
                 } else if (msg.payload === 'trigger') {
                     // Sends the trigger/on event without impact the scheduled event
                     handled = true;
@@ -108,10 +109,11 @@ module.exports = function(RED) {
                     handled = true;
                     if (!isSuspended()) {
                         schedule(events.on);
-                        //schedule(events.off);
                         clearTimeout(events.off.timeout);
+                        events.off.moment = null;
+                        if (!isSuspended() && events.off.type != '3') schedule(events.off);
                     }
-                    status(events.off);
+                    updateStatus();
                 } else if (msg.payload === 'info') {
                     handled = true;
                     var ret = {
@@ -223,20 +225,19 @@ module.exports = function(RED) {
                     node.log("Live duration change (" + duration + " => " + secs + "s) causes an off-time in the past, sending 'off' event.");
                     send(events.off);
                     schedule(events.off);
-                    status(events.off);
                 } else {
                     // New time is after now - just update the scheduled off event (and status)
                     node.log("Live duration change (" + duration + " => " + secs + "s), rescheduling 'off' time to " + offTime.toString());
                     schedule(events.off, null, true);
-                    status(events.on);
                 }
             } else {
                 // Timer currently 'off', just re-schedule of off event (if an on event is scheduled)
                 if (!isSuspended()) {
                     schedule(events.off);
-                    status(events.off);
                 }
             }
+            updateStatus();
+
             // Return false to indicate no bootstrap required
             return false;
         }
@@ -287,7 +288,7 @@ module.exports = function(RED) {
                     event.moment = undefined;
                 }
                 // Update the status/icon
-                status(event);
+                updateStatus();
             };
             return event;
         }
@@ -376,6 +377,10 @@ module.exports = function(RED) {
                     }
                     break;
                 case '2': //Time of Day
+                    if (event.timetod == '') {
+                        event.moment = null;
+                        return true;
+                    }
                     var m = node.now().millisecond(0);
                     var re = new RegExp(/\d+/g);
                     var p1, p2, p3;
@@ -402,12 +407,15 @@ module.exports = function(RED) {
                 case '3': //Duration
                     var secs = getSeconds(event.duration);
                     
-                    if (manual) {
+                    if (manual && event.inverse.last.moment) {
                         //event is manual - schedule based on last 'on' event
                         event.moment = moment(event.inverse.last.moment).add(secs, 'seconds');
-                    } else {
+                    } else if (event.inverse.moment) {
                         // event is auto - schedule based on current 'on' event
                         event.moment = moment(event.inverse.moment).add(secs, 'seconds');
+                    } else {
+                        event.moment = null;
+                        return true;
                     }
 
                     // See if we can roll back a day - the on-time has passed, but the off-time might not have.
@@ -416,6 +424,7 @@ module.exports = function(RED) {
                     }
                     break;
                 case '9': //Manual
+                    event.moment = null;
                     return true;
             }
 
@@ -455,32 +464,47 @@ module.exports = function(RED) {
             return true;
         }
 
-        function status(event, manual) {
-            manual = manual || (events.on.type == 9)
-            var statusText = 'unknown';
+        function updateStatus() {
+            // Determine the next event
+            var nextEvent = null;
+            if (events.on.moment) nextEvent = events.on;
+            if (events.off && events.off.type != '9' && events.off.moment && (!nextEvent || events.on.moment && events.off.moment.isBefore(events.on.moment))) nextEvent = events.off;
 
-            if (event.name == 'on' && events.off && events.off.type == '9') {
-                manual = true;
-            } else if (event.type == '9' && event.name == 'off') {
-                manual = false;
-                statusText = event.name + ` @ ${event.inverse.moment.format(fmt)}`;
-            } else if (event.inverse) {
-                if (event.inverse.moment && event.inverse.moment.isAfter(node.now())) {
-                    statusText = event.name + (manual ? ' manual' : ' auto') + ` until ${event.inverse.moment.format(fmt)}`;
+            // Determine the last event (for state)
+            var lastEvent = null;
+            if (events.on.last && events.on.last.moment) lastEvent = events.on;
+            if (events.off && events.off.last && events.off.last.moment && events.on.last && events.on.last.moment && events.off.last.moment.isAfter(events.on.last.moment)) lastEvent = events.off;
+            if (!lastEvent && nextEvent.inverse) lastEvent = nextEvent.inverse;
+            
+
+            var message = {
+                fill: 'green',
+                shape: 'ring',
+                text: ''
+            };
+
+            if (lastEvent) {
+                message.shape = lastEvent.name == 'ON' ? 'dot' : 'ring';
+                message.text = lastEvent.name + ', ';
+            }
+
+            if (!nextEvent) {
+                message.fill = 'grey';
+                message.shape = 'dot';
+                if (isSuspended()) {
+                    message.text += 'scheduling suspended';
                 } else {
-                    statusText = event.name + (manual ? ' manual' : ' auto') + (isSuspended() ? ' - scheduling suspended' : ``);
+                    message.text += 'no scheduled event';
                 }
+                message.text += weekdays().indexOf(true) === -1 ? '(no weekdays selected) ' : '';
+            } else if (nextEvent.inverse) {
+                message.text += ` until ${nextEvent.moment.format(fmt)}`;
             } else {
-                statusText = `trigger @ ${event.moment.format(fmt)}`;
+                message.fill = 'green';
+                message.text = `trigger @ ${nextEvent.moment.format(fmt)}`;
             }
 
-            var data = {
-                fill: manual ? 'blue' : 'green',
-                shape: event.shape,
-                text: statusText
-            }
-
-            node.status(data);
+            node.status(message);
         }
 
         function suspend() {
@@ -493,36 +517,13 @@ module.exports = function(RED) {
             clearTimeout(events.on.timeout);
             events.on.moment = null;
 
-            node.status({
-                fill: 'grey',
-                shape: 'dot',
-                text: `Scheduling suspended ${
-                    weekdays().indexOf(true) === -1 ? '(no weekdays selected) ' : ''
-                }`
-            });
+            updateStatus();
         }
 
         function resume() {
             if (events.on.type == '9') return; // Don't do anything when resuming a manual timer
             if (schedule(events.on, true) && (!events.off || (events.off && schedule(events.off, true)))) {
-                const firstEvent = events.off && events.off.type != '9' && events.off.moment.isBefore(events.on.moment) ? events.off : events.on;
-                var message;
-                if (events.off && ( events.off.moment || events.off.type == '9')) {
-                    var statusText = `${firstEvent.name} @ ${firstEvent.moment.format(fmt)}`
-                    if (events.off.moment) statusText += `, ${firstEvent.inverse.name} @ ${firstEvent.inverse.moment.format(fmt)}`
-                    message = {
-                        fill: 'yellow',
-                        shape: 'dot',
-                        text: statusText
-                    }
-                } else {
-                    message = {
-                        fill: 'green',
-                        shape: 'ring',
-                        text: `trigger @ ${firstEvent.moment.format(fmt)}`
-                    }
-                }
-                node.status(message);
+                updateStatus();
             }
         }
 
@@ -531,6 +532,7 @@ module.exports = function(RED) {
                 suspend();
             } else {
                 resume();
+
                 // Wait 2.5 for startup, then fire PREVIOUS event to ensure we're in the right state.
                 setTimeout(function() {
                     if (config.startupMessage && config.startupMessage == true && events.on && events.on.moment && events.off && events.off.moment) {
