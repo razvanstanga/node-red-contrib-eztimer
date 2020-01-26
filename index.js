@@ -474,7 +474,7 @@ module.exports = function(RED) {
             var lastEvent = null;
             if (events.on.last && events.on.last.moment) lastEvent = events.on;
             if (events.off && events.off.last && events.off.last.moment && events.on.last && events.on.last.moment && events.off.last.moment.isAfter(events.on.last.moment)) lastEvent = events.off;
-            if (!lastEvent && nextEvent.inverse) lastEvent = nextEvent.inverse;
+            if (!lastEvent && nextEvent && nextEvent.inverse) lastEvent = nextEvent.inverse;
             
 
             var message = {

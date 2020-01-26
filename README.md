@@ -116,11 +116,13 @@ You can set the following:
 | `msg.payload.sun`             | Boolean: true enables the schedule on a Sunday, false disables it.    |
 
 # Change Log
-## 1.1.8
+## 1.2.0
 * Fixed emitting of `flow` and `global` context values (node wouldn't pick them up as values previously)
 * Fixed assignment of `flow` and `global` context values to store correct type. [credit @LorenzKahl](https://github.com/mrgadget/node-red-contrib-eztimer/issues/24).
 * Renamed `Input Trigger` off-type to `Manual` to align with the on-type of the same name.
-* Fixed status reports for `Manual` off time.  [credit @moryoav](https://github.com/mrgadget/node-red-contrib-eztimer/issues/25).
+* Fixed status reports for `Manual` off time. [credit @moryoav](https://github.com/mrgadget/node-red-contrib-eztimer/issues/25).
+* Permit blank on time - allows for full programmatic usage without errors being displayed. [credit @moryoav](https://github.com/mrgadget/node-red-contrib-eztimer/issues/25).
+* Simplified node status, removed auto/manual concept (inherited from parent, didn't really make any sense with the way the node works now).
 
 ## 1.1.7
 * Fixed `cancel` to actually work - the node no longer emits the `off` event after a `cancel` call.  [credit @svwhisper](https://github.com/mrgadget/node-red-contrib-eztimer/issues/23).
