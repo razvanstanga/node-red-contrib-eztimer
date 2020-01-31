@@ -26,7 +26,6 @@ const util = require('util');
  */
 'use strict';
 module.exports = function(RED) {
-    const debug = true;
     const moment = require('moment');
     const SunCalc = require('suncalc');
     const _ = require('lodash');
@@ -90,9 +89,9 @@ module.exports = function(RED) {
                     // Sends the on event without impacting the scheduled event
                     handled = true;
                     send(events.on, true);
-                    if (events.off.type == '3') schedule(events.off, null, true); // If 'off' is of type duration, schedule 'off' event.
+                    if (events.off && events.off.type == '3') schedule(events.off, null, true); // If 'off' is of type duration, schedule 'off' event.
                     updateStatus();
-                } else if (msg.payload === 'off') {
+                } else if (msg.payload === 'off' && config.timerType == '1') {
                     // Sends the off event, then re-schedules it
                     handled = true;
                     clearTimeout(events.off.timeout);
@@ -104,6 +103,7 @@ module.exports = function(RED) {
                     // Sends the trigger/on event without impact the scheduled event
                     handled = true;
                     send(events.on);
+                    updateStatus();
                 } else if (msg.payload === 'cancel' && config.timerType == '1') {
                     // Cancels the current timer without sending the off event
                     handled = true;
@@ -211,31 +211,52 @@ module.exports = function(RED) {
             }
         });
 
+        function log(level, message) {
+            if (config.debug) level = Math.max(3, level); //Outputs everything in node warn or error.
+            switch (level) {
+                case 1: //verbose, ignore
+                    break; 
+                case 2: 
+                    node.log(message); // log to node console only
+                    break;
+                case 3:
+                    node.warn(message); // log to node debug window
+                    break;
+                default:
+                    node.error(message); //anything above 3.
+            }
+        }
+
         function dynamicDuration(property, duration) {
             // Return false if not a duration request
-            if (property != "duration") return true;
-
-            if (state) {
-                // Timer currently 'on' - parse time
-                var secs = getSeconds(duration);
-                var offTime = moment(events.on.last.moment).add(secs, 'seconds');
-                
-                if (offTime.isBefore(node.now())) {
-                    // New time is before now - need to turn off and schedule
-                    node.log("Live duration change (" + duration + " => " + secs + "s) causes an off-time in the past, sending 'off' event.");
-                    send(events.off);
-                    schedule(events.off);
+            if (property == "offtime" && state) {
+                schedule(events.off, null, true);
+            } else if (property == "duration") {
+                if (state) {
+                    // Timer currently 'on' - parse time
+                    var secs = getSeconds(duration);
+                    var offTime = moment(events.on.last.moment).add(secs, 'seconds');
+                    
+                    if (offTime.isBefore(node.now())) {
+                        // New time is before now - need to turn off and schedule
+                        log(2, "Live duration change (" + duration + " => " + secs + "s) causes an off-time in the past, sending 'off' event.");
+                        send(events.off);
+                        schedule(events.off);
+                    } else {
+                        // New time is after now - just update the scheduled off event (and status)
+                        log(2, "Live duration change (" + duration + " => " + secs + "s), rescheduling 'off' time to " + offTime.toString());
+                        schedule(events.off, null, true);
+                    }
                 } else {
-                    // New time is after now - just update the scheduled off event (and status)
-                    node.log("Live duration change (" + duration + " => " + secs + "s), rescheduling 'off' time to " + offTime.toString());
-                    schedule(events.off, null, true);
+                    // Timer currently 'off', just re-schedule of off event (if an on event is scheduled)
+                    if (!isSuspended()) {
+                        schedule(events.off);
+                    }
                 }
             } else {
-                // Timer currently 'off', just re-schedule of off event (if an on event is scheduled)
-                if (!isSuspended()) {
-                    schedule(events.off);
-                }
+                return true;
             }
+
             updateStatus();
 
             // Return false to indicate no bootstrap required
@@ -317,7 +338,7 @@ module.exports = function(RED) {
         }
 
         function send(event, manual) {
-            //node.warn('sending \'' + event.name + '\'');
+            log(1, 'emitting \'' + event.name + '\' event');
             event.last.moment = node.now();
 
             if (!event.suppressrepeats || state != event.state) {
@@ -357,6 +378,7 @@ module.exports = function(RED) {
 
             switch (event.type) {
                 case '1': //Sun
+                    event.typeName = 'sun';
                     var nextDate = new Date();
                     // Get tomorrow's sun data 
                     if (!init) nextDate = nextDate.setDate(nextDate.getDate() + 1);
@@ -366,7 +388,7 @@ module.exports = function(RED) {
                     while (!moment(sunCalcTimes[sunTimes[t]]).isValid()) t = Math.max(t - 2, 0);
                     // If we've had to move closer to noon, emit a warning
                     if (event.timesun != sunTimes[t]) {
-                        node.warn({ "message": 'Sun event (' + event.timesun + ') invalid for chosen lat/long (due to polar proximity). Sun event \'' + sunTimes[t] + '\' has been chosen as the closest valid candidate.', "events": sunCalcTimes});
+                        log(4, { "message": 'Sun event (' + event.timesun + ') invalid for chosen lat/long (due to polar proximity). Sun event \'' + sunTimes[t] + '\' has been chosen as the closest valid candidate.', "events": sunCalcTimes});
                     }
                     // Use determined event time
                     var date = sunCalcTimes[sunTimes[t]];
@@ -375,12 +397,14 @@ module.exports = function(RED) {
                     } else {
                         event.error = 'Unable to determine time for \'' + event.timesun + '\'';
                     }
+
                     break;
                 case '2': //Time of Day
                     if (event.timetod == '') {
                         event.moment = null;
                         return true;
                     }
+                    event.typeName = 'time of day';
                     var m = node.now().millisecond(0);
                     var re = new RegExp(/\d+/g);
                     var p1, p2, p3;
@@ -405,6 +429,7 @@ module.exports = function(RED) {
 
                     break;
                 case '3': //Duration
+                    event.typeName = 'duration';
                     var secs = getSeconds(event.duration);
                     
                     if (manual && event.inverse.last.moment) {
@@ -422,8 +447,10 @@ module.exports = function(RED) {
                     if (init && moment(event.moment).add(-1, 'days').isAfter(now)) {
                         event.moment.add(-1, 'day');
                     }
+
                     break;
                 case '9': //Manual
+                    event.typeName = 'manual';
                     event.moment = null;
                     return true;
             }
@@ -455,6 +482,9 @@ module.exports = function(RED) {
                 event.moment.add(1, 'day');
             }
 
+            // Log event
+            log(1, "Scheduled '" + event.name + "' (" + event.typeName + ") for " + event.moment.toString());
+
             // Clear any pending event
             if (event.timeout) clearTimeout(event.timeout);
 
@@ -465,31 +495,37 @@ module.exports = function(RED) {
         }
 
         function updateStatus() {
+            var message = null;
+
             // Determine the next event
             var nextEvent = null;
-            if (events.on.moment) nextEvent = events.on;
-            if (events.off && events.off.type != '9' && events.off.moment && (!nextEvent || events.on.moment && events.off.moment.isBefore(events.on.moment))) nextEvent = events.off;
-
-            // Determine the last event (for state)
-            var lastEvent = null;
-            if (events.on.last && events.on.last.moment) lastEvent = events.on;
-            if (events.off && events.off.last && events.off.last.moment && events.on.last && events.on.last.moment && events.off.last.moment.isAfter(events.on.last.moment)) lastEvent = events.off;
-            if (!lastEvent && nextEvent && nextEvent.inverse) lastEvent = nextEvent.inverse;
-            
-
-            var message = {
-                fill: 'green',
-                shape: 'ring',
-                text: ''
-            };
-
-            if (lastEvent) {
-                message.shape = lastEvent.name == 'ON' ? 'dot' : 'ring';
-                message.text = lastEvent.name + ', ';
+            switch (config.timerType) {
+                case "1": // on/off
+                    if (state) {
+                        if (events.off && events.off.moment) nextEvent = events.off;
+                    } else {
+                        if (events.on.moment) nextEvent = events.on;
+                    }
+                    message = {
+                        fill: 'green',
+                        shape: state ? 'dot' : 'ring',
+                        text: (state  ? events.on.name : events.off.name) + ', '
+                    };
+                    if (nextEvent) message.text += ` until ${nextEvent.moment.format(fmt)}`;
+                    break;
+                case "2": // trigger
+                    if (events.on.moment) nextEvent = events.on;
+                    message = {
+                        fill: 'green',
+                        shape: 'ring',
+                        text: '',
+                    };
+                    if (nextEvent) message.text = `trigger @ ${nextEvent.moment.format(fmt)}`;
+                    break;
             }
 
             if (!nextEvent) {
-                message.fill = 'grey';
+                if (!state) message.fill = 'grey';
                 message.shape = 'dot';
                 if (isSuspended()) {
                     message.text += 'scheduling suspended';
@@ -497,13 +533,7 @@ module.exports = function(RED) {
                     message.text += 'no scheduled event';
                 }
                 message.text += weekdays().indexOf(true) === -1 ? '(no weekdays selected) ' : '';
-            } else if (nextEvent.inverse) {
-                message.text += ` until ${nextEvent.moment.format(fmt)}`;
-            } else {
-                message.fill = 'green';
-                message.text = `trigger @ ${nextEvent.moment.format(fmt)}`;
             }
-
             node.status(message);
         }
 
@@ -521,10 +551,9 @@ module.exports = function(RED) {
         }
 
         function resume() {
-            if (events.on.type == '9') return; // Don't do anything when resuming a manual timer
-            if (schedule(events.on, true) && (!events.off || (events.off && schedule(events.off, true)))) {
-                updateStatus();
-            }
+            var on = events.on.type != '9' && schedule(events.on, true);
+            var off = (!events.off || (events.off && events.off.type != '9' && schedule(events.off, true)));
+            updateStatus();
         }
 
         function bootstrap() {

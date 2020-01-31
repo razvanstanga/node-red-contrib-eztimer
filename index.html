@@ -28,6 +28,7 @@ THE SOFTWARE.
         color: '#7283ff',
         defaults: {
             name: {value: ''},
+            debug: {value: false},
             autoname: {value: null},
             tag: {value: 'eztimer'},
             suspended: {value: false},
@@ -426,6 +427,13 @@ THE SOFTWARE.
                 Suppress repeat <code>off</code> events
             </label>
         </div>
+    </div>
+    <hr>
+    <div class="form-row">
+        <label style="margin-left: 100px; width: 70%">
+            <input type="checkbox" id="node-input-debug" placeholder="" style="width: 20px; margin: 0">
+            Emit all logs to debug pane
+        </label>
     </div>
 </script>
 
