@@ -509,7 +509,7 @@ module.exports = function(RED) {
                     message = {
                         fill: 'green',
                         shape: state ? 'dot' : 'ring',
-                        text: (state  ? events.on.name : events.off.name) + ', '
+                        text: state ? events.on.name : events.off.name
                     };
                     if (nextEvent) message.text += ` until ${nextEvent.moment.format(fmt)}`;
                     break;
@@ -518,21 +518,21 @@ module.exports = function(RED) {
                     message = {
                         fill: 'green',
                         shape: 'ring',
-                        text: '',
+                        text: ''
                     };
                     if (nextEvent) message.text = `trigger @ ${nextEvent.moment.format(fmt)}`;
                     break;
             }
 
             if (!nextEvent) {
-                if (!state) message.fill = 'grey';
-                message.shape = 'dot';
                 if (isSuspended()) {
+                    if (!state) message.fill = 'grey';
+                    message.shape = 'dot';
                     message.text += 'scheduling suspended';
                 } else {
-                    message.text += 'no scheduled event';
+                    message.text += ', no scheduled event';
                 }
-                message.text += weekdays().indexOf(true) === -1 ? '(no weekdays selected) ' : '';
+                message.text += weekdays().indexOf(true) === -1 ? ' (no weekdays selected) ' : '';
             }
             node.status(message);
         }
