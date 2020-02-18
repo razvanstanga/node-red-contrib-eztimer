@@ -553,7 +553,6 @@ module.exports = function(RED) {
         function resume() {
             var on = events.on.type != '9' && schedule(events.on, true);
             var off = (!events.off || (events.off && events.off.type != '9' && schedule(events.off, true)));
-            updateStatus();
         }
 
         function bootstrap() {
@@ -576,6 +575,7 @@ module.exports = function(RED) {
                         //Trigger
                         send(events.on);
                     }
+                    updateStatus();
                 }, 2500);
             }
         }
