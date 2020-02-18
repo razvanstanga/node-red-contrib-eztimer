@@ -561,22 +561,32 @@ module.exports = function(RED) {
             } else {
                 resume();
 
-                // Wait 2.5 for startup, then fire PREVIOUS event to ensure we're in the right state.
+                // Wait 1000ms for startup, then fire PREVIOUS event to ensure we're in the right state.
                 setTimeout(function() {
-                    if (config.startupMessage && config.startupMessage == true && events.on && events.on.moment && events.off && events.off.moment) {
+                    if (events.on && events.on.moment && events.off && events.off.moment) {
                         if (events.off.moment.isAfter(events.on.moment)) {
                             //Next event is ON, send OFF
-                            send(events.off);
+                            if (config.startupMessage && config.startupMessage == true) {
+                                send(events.off);
+                            } else {
+                                state = false;
+                            }
                         } else {
                             //Next event is OFF, send ON
+                            if (config.startupMessage && config.startupMessage == true) {
+                                send(events.on);
+                            } else {
+                                state = true;
+                            }
+                        }
+                    } else if (events.on && (!events.off || events.off.type == '9')) {
+                        //Trigger
+                        if (config.startupMessage && config.startupMessage == true) {
                             send(events.on);
                         }
-                    } else if (config.startupMessage && config.startupMessage == true && events.on && (!events.off || events.off.type == '9')) {
-                        //Trigger
-                        send(events.on);
                     }
                     updateStatus();
-                }, 2500);
+                }, 1000);
             }
         }
 
