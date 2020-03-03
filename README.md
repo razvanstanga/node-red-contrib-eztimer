@@ -116,7 +116,10 @@ You can set the following:
 | `msg.payload.sun`             | Boolean: true enables the schedule on a Sunday, false disables it.    |
 
 # Change Log
-## 1.2.0
+## 1.2.2
+* Fixed `scheduling suspended` node status text.
+
+## 1.2.1
 * Fixed emitting of `flow` and `global` context values (node wouldn't pick them up as values previously)
 * Fixed assignment of `flow` and `global` context values to store correct type. [credit @LorenzKahl](https://github.com/mrgadget/node-red-contrib-eztimer/issues/24).
 * Renamed `Input Trigger` off-type to `Manual` to align with the on-type of the same name.

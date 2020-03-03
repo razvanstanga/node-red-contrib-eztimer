@@ -528,7 +528,7 @@ module.exports = function(RED) {
                 if (isSuspended()) {
                     if (!state) message.fill = 'grey';
                     message.shape = 'dot';
-                    message.text += 'scheduling suspended';
+                    message.text = 'scheduling suspended';
                 } else {
                     message.text += ', no scheduled event';
                 }
