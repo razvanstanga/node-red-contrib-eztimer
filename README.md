@@ -116,6 +116,9 @@ You can set the following:
 | `msg.payload.sun`             | Boolean: true enables the schedule on a Sunday, false disables it.    |
 
 # Change Log
+## 1.2.3
+* Fixed `number` output - added `parseFloat()` to ensure output is a number (rather than a string representation of a number). [credit @bemmbix](https://github.com/mrgadget/node-red-contrib-eztimer/issues/28). 
+
 ## 1.2.2
 * Fixed `scheduling suspended` node status text.
 

@@ -333,6 +333,9 @@ module.exports = function(RED) {
                 case 'date':
                     tgtValue = (new Date()).getTime();
                     break;
+                case 'num':
+                    tgtValue = parseFloat(tgtValue);
+                    break;
             }
             return tgtValue;
         }
