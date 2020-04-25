@@ -116,6 +116,10 @@ You can set the following:
 | `msg.payload.sun`             | Boolean: true enables the schedule on a Sunday, false disables it.    |
 
 # Change Log
+## 1.2.4
+* Change `info` to be sent with every output (under the `msg.info`). [credit @Fires04](https://github.com/mrgadget/node-red-contrib-eztimer/issues/30). 
+* Updated on/off/trigger `nextEvent` property `info` to be Date object (rather than a string) - enabling easier programmatic usage (for example `.getDate()` for unix timestamp). This can be turned back in to a string if required using the `.toString()` method.  This property _may_ still be a string however, for example, if it is `suspended` or `manual`.
+
 ## 1.2.3
 * Fixed `number` output - added `parseFloat()` to ensure output is a number (rather than a string representation of a number). [credit @bemmbix](https://github.com/mrgadget/node-red-contrib-eztimer/issues/28). 
 

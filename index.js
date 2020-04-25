@@ -116,53 +116,13 @@ module.exports = function(RED) {
                     updateStatus();
                 } else if (msg.payload === 'info') {
                     handled = true;
-                    var ret = {
-                        name: node.name || 'eztimer',
-                        state: function() {
-                            if (config.timerType == '2') return undefined; // Trigger
-                            if (isSuspended()) return 'suspended';
-                            if (state) { return 'on' } else { return 'off' }
-                        }()
-                    };
-                    if (config.timerType == '1') {
-                        // on/off timer
-                        ret.on = {
-                            property: (events.on.propertytype || 'msg') + '.' + events.on.property,
-                            value: getValue(events.on) || "<none>",
-                            nextEvent: function() {
-                                if (isSuspended()) return 'suspended';
-                                if (events.on.type == '9') return 'manual';
-                                if (!events.on.moment) return 'error';
-                                return events.on.moment.toDate().toString()
-                            }()
-                        };
-                        ret.off = {
-                            property: (events.off.propertytype || 'msg') + '.' + events.off.property,
-                            value: getValue(events.off) || "<none>",
-                            nextEvent: function() {
-                                if (config.timerType == '2') return undefined; // Trigger
-                                if (isSuspended()) return 'suspended';
-                                if (!events.off.moment) return 'manual';
-                                return events.off.moment.toDate().toString()
-                            }()
-                        };
-                    } else {
-                        // trigger
-                        ret.trigger = {
-                            property: (events.on.propertytype || 'msg') + '.' + events.on.property,
-                            value: getValue(events.on) || "<none>",
-                            nextEvent: function() {
-                                if (isSuspended()) return 'suspended';
-                                if (events.on.type == '9') return 'manual';
-                                if (!events.on.moment) return 'error';
-                                return events.on.moment.toDate().toString()
-                            }()
-                        };
-                    }
+                    var info = getInfo();
+                    // Info is now sent with every output - continue to send as payload for backward compatibiliy.
                     node.send({
                         topic: 'info',
+                        info: info,
                         tag: config.tag || 'eztimer',
-                        payload: ret
+                        payload: info
                     });
                 } else {
                     if (msg.payload.indexOf('suspended') !== -1) {
@@ -210,6 +170,53 @@ module.exports = function(RED) {
                 bootstrap();
             }
         });
+
+        function getInfo() {
+            var ret = {
+                name: node.name || 'eztimer',
+                state: function() {
+                    if (config.timerType == '2') return undefined; // Trigger
+                    if (isSuspended()) return 'suspended';
+                    if (state) { return 'on' } else { return 'off' }
+                }()
+            };
+            if (config.timerType == '1') {
+                // on/off timer type
+                ret.on = {
+                    property: (events.on.propertytype || 'msg') + '.' + events.on.property,
+                    value: getValue(events.on) || "<none>",
+                    nextEvent: function() {
+                        if (isSuspended()) return 'suspended';
+                        if (events.on.type == '9') return 'manual';
+                        if (!events.on.moment) return 'error';
+                        return events.on.moment.toDate()
+                    }()
+                };
+                ret.off = {
+                    property: (events.off.propertytype || 'msg') + '.' + events.off.property,
+                    value: getValue(events.off) || "<none>",
+                    nextEvent: function() {
+                        if (config.timerType == '2') return undefined; // Trigger
+                        if (isSuspended()) return 'suspended';
+                        if (!events.off.moment) return 'manual';
+                        return events.off.moment.toDate()
+                    }()
+                };
+            } else {
+                // trigger timer type
+                ret.trigger = {
+                    property: (events.on.propertytype || 'msg') + '.' + events.on.property,
+                    value: getValue(events.on) || "<none>",
+                    nextEvent: function() {
+                        if (isSuspended()) return 'suspended';
+                        if (events.on.type == '9') return 'manual';
+                        if (!events.on.moment) return 'error';
+                        return events.on.moment.toDate()
+                    }()
+                };
+            }
+            return ret;
+        }
 
         function log(level, message) {
             if (config.debug) level = Math.max(3, level); //Outputs everything in node warn or error.
@@ -355,6 +362,7 @@ module.exports = function(RED) {
                         break;
                     case "msg":
                         var msg = {};
+                        msg.info = getInfo();
                         msg.tag = config.tag || 'eztimer';
                         if (event.topic) msg.topic = event.topic;
                         var currPart = msg;
