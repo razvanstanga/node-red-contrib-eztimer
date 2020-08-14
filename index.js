@@ -84,7 +84,10 @@ module.exports = function(RED) {
         node.on('input', function(msg) {
             let handled = false,
             requiresBootstrap = false;
-            if (_.isString(msg.payload)) {
+            if (msg.payload == null) {
+                node.error("Null or undefined (msg.payload) input.")
+                // Unsuppored input
+            } else if (_.isString(msg.payload)) {
                 if (msg.payload === 'on') {
                     // Sends the on event without impacting the scheduled event
                     handled = true;
@@ -143,6 +146,7 @@ module.exports = function(RED) {
                             requiresBootstrap = requiresBootstrap || (previous !== obj[prop] && dynamicDuration(prop, obj[prop]));
                         }
                     });
+                    node.error("Invalid string (msg.payload) input.")
                 }
             } else {
                 if (msg.payload.hasOwnProperty('suspended')) {
@@ -159,6 +163,7 @@ module.exports = function(RED) {
                         requiresBootstrap = requiresBootstrap || (previous !== obj[prop] && dynamicDuration(prop, obj[prop]));
                     }
                 });
+                node.error("Invalid object (msg.payload) input.")
             }
             if (!handled) {
                 node.status({
@@ -189,7 +194,7 @@ module.exports = function(RED) {
                         if (isSuspended()) return 'suspended';
                         if (events.on.type == '9') return 'manual';
                         if (!events.on.moment) return 'error';
-                        return events.on.moment.toDate()
+                        return events.on.moment.local().toDate()
                     }()
                 };
                 ret.off = {
