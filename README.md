@@ -116,6 +116,12 @@ You can set the following:
 | `msg.payload.sun`             | Boolean: true enables the schedule on a Sunday, false disables it.    |
 
 # Change Log
+## 1.2.5
+* Added `resend` feature.  Enabling this causese the last scheduled event to be re-emitted at the pre-defined interval [credit @JasonSwindle](https://github.com/mrgadget/node-red-contrib-eztimer/issues/37). 
+* Included `action` in programmatic control - this enablings the sending of on/off events from a JSON input [credit @petter-b](https://github.com/mrgadget/node-red-contrib-eztimer/issues/38). 
+* Hooked into HomeAssistant (where available) for latitude and longitude [credit @mingan666](https://github.com/mrgadget/node-red-contrib-eztimer/issues/39). 
+ 
+
 ## 1.2.4
 * Change `info` to be sent with every output (under the `msg.info`). [credit @Fires04](https://github.com/mrgadget/node-red-contrib-eztimer/issues/30). 
 * Updated on/off/trigger `nextEvent` property `info` to be Date object (rather than a string) - enabling easier programmatic usage (for example `.getDate()` for unix timestamp). This can be turned back in to a string if required using the `.toString()` method.  This property _may_ still be a string however, for example, if it is `suspended` or `manual`.

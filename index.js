@@ -52,6 +52,25 @@ module.exports = function(RED) {
         const node = this
         var events = {};
         var state = false;
+        var resendInterval = 0;
+        var resendObj;
+
+        RED.httpAdmin.get("/eztimer/getHaZones", RED.auth.needsPermission('serial.read'), function(req,res) {
+            var ha = node.context().global.get('homeassistant');
+            var zones = [];
+            for(element in ha.homeAssistant.states) {
+                var zone = ha.homeAssistant.states[element];
+                if (element.substring(0,4) == 'zone') {
+                    var z = {"entity_id": zone.entity_id, "name": zone.attributes.friendly_name, "latitude": zone.attributes.latitude, "longitude": zone.attributes.longitude}
+                    if(z.entity_id.substring(0,9) == "zone.home")
+                        zones.unshift(z);
+                    else
+                        zones.push(z);
+                }
+                
+            };
+            res.json(zones);
+        });
 
         switch (config.timerType) {
             case '1':
@@ -67,6 +86,21 @@ module.exports = function(RED) {
         if (events.on && events.off) {
             events.on.inverse = events.off;
             events.off.inverse = events.on;
+        }
+
+        resendInterval = getSeconds(config.resend);
+        if (resendInterval > 0) {
+            log(1, 'Re-send interval = ' + resendInterval + ' seconds.');
+            resend()
+        } else {
+            log(1, 'Re-send disabled.');
+        }
+
+        function resend() {
+            resendObj = setTimeout(function() {
+                if (events.last) send(events.last, true);
+                resend()
+            }, (resendInterval) * 1000);
         }
 
         function weekdays() {
@@ -88,72 +122,16 @@ module.exports = function(RED) {
                 node.error("Null or undefined (msg.payload) input.")
                 // Unsuppored input
             } else if (_.isString(msg.payload)) {
-                if (msg.payload === 'on') {
-                    // Sends the on event without impacting the scheduled event
-                    handled = true;
-                    send(events.on, true);
-                    if (events.off && events.off.type == '3') schedule(events.off, null, true); // If 'off' is of type duration, schedule 'off' event.
-                    updateStatus();
-                } else if (msg.payload === 'off' && config.timerType == '1') {
-                    // Sends the off event, then re-schedules it
-                    handled = true;
-                    clearTimeout(events.off.timeout);
-                    events.off.moment = null;
-                    send(events.off, true);
-                    if (!isSuspended() && events.off.type != '3') schedule(events.off);
-                    updateStatus();
-                } else if (msg.payload === 'trigger') {
-                    // Sends the trigger/on event without impact the scheduled event
-                    handled = true;
-                    send(events.on);
-                    updateStatus();
-                } else if (msg.payload === 'cancel' && config.timerType == '1') {
-                    // Cancels the current timer without sending the off event
-                    handled = true;
-                    if (!isSuspended()) {
-                        schedule(events.on);
-                        clearTimeout(events.off.timeout);
-                        events.off.moment = null;
-                        if (!isSuspended() && events.off.type != '3') schedule(events.off);
-                    }
-                    updateStatus();
-                } else if (msg.payload === 'info') {
-                    handled = true;
-                    var info = getInfo();
-                    // Info is now sent with every output - continue to send as payload for backward compatibiliy.
-                    node.send({
-                        topic: 'info',
-                        info: info,
-                        tag: config.tag || 'eztimer',
-                        payload: info
-                    });
-                } else {
-                    if (msg.payload.indexOf('suspended') !== -1) {
-                        handled = true;
-                        const match = /.*suspended\s+(\S+)/.exec(msg.payload);
-                        const previous = config.suspended;
-                        config.suspended = toBoolean(match[1]);
-                        requiresBootstrap = requiresBootstrap || (previous !== config.suspended && config.sendEventsOnSuspend);
-                    }
-                    enumerateProgrammables(function(obj, prop, payloadName, typeConverter) {
-                        const match = new RegExp(`.*${payloadName}\\s+(\\S+)`).exec(
-                            msg.payload
-                        );
-                        if (match) {
-                            handled = true;
-                            const previous = obj[prop];
-                            obj[prop] = typeConverter(match[1]);
-                            requiresBootstrap = requiresBootstrap || (previous !== obj[prop] && dynamicDuration(prop, obj[prop]));
-                        }
-                    });
-                    node.error("Invalid string (msg.payload) input.")
-                }
+                handled = action('payload string', msg.payload)
             } else {
                 if (msg.payload.hasOwnProperty('suspended')) {
                     handled = true;
                     const previous = config.suspended;
                     config.suspended = !!msg.payload.suspended;
                     requiresBootstrap = requiresBootstrap || previous !== config.suspended;
+                }
+                if (msg.payload.hasOwnProperty('action')) {
+                    handled = action('action', msg.payload.action);
                 }
                 enumerateProgrammables(function(obj, prop, payloadName, typeConverter) {
                     if (msg.payload.hasOwnProperty(payloadName)) {
@@ -163,7 +141,7 @@ module.exports = function(RED) {
                         requiresBootstrap = requiresBootstrap || (previous !== obj[prop] && dynamicDuration(prop, obj[prop]));
                     }
                 });
-                node.error("Invalid object (msg.payload) input.")
+                if (!handled) node.error("Invalid object (msg.payload) input.")
             }
             if (!handled) {
                 node.status({
@@ -175,6 +153,77 @@ module.exports = function(RED) {
                 bootstrap();
             }
         });
+
+        function action(source, data) {
+            var handled = false;
+            if (data === 'on') {
+                // Sends the on event without impacting the scheduled event
+                handled = true;
+                send(events.on, true);
+                if (events.off && events.off.type == '3') schedule(events.off, null, true); // If 'off' is of type duration, schedule 'off' event.
+                updateStatus();
+            } else if (data === 'off' && config.timerType == '1') {
+                // Sends the off event, then re-schedules it
+                handled = true;
+                clearTimeout(events.off.timeout);
+                events.off.moment = null;
+                send(events.off, true);
+                if (!isSuspended() && events.off.type != '3') schedule(events.off);
+                updateStatus();
+            } else if (data === 'trigger') {
+                // Sends the trigger/on event without impact the scheduled event
+                handled = true;
+                send(events.on);
+                updateStatus();
+            } else if (data === 'cancel' && config.timerType == '1') {
+                // Cancels the current timer without sending the off event
+                handled = true;
+                if (!isSuspended()) {
+                    schedule(events.on);
+                    clearTimeout(events.off.timeout);
+                    events.off.moment = null;
+                    if (!isSuspended() && events.off.type != '3') schedule(events.off);
+                }
+                updateStatus();
+            } else if (data === 'info') {
+                handled = true;
+                var info = getInfo();
+                // Info is now sent with every output - continue to send as payload for backward compatibiliy.
+                node.send({
+                    topic: 'info',
+                    info: info,
+                    tag: config.tag || 'eztimer',
+                    payload: info
+                });
+            } else {
+                // if (data.indexOf('suspended') !== -1) {
+                //     handled = true;
+                //     const match = /.*suspended\s+(\S+)/.exec(data);
+                //     const previous = config.suspended;
+                //     config.suspended = toBoolean(match[1]);
+                //     requiresBootstrap = requiresBootstrap || (previous !== config.suspended && config.sendEventsOnSuspend);
+                // }
+                // enumerateProgrammables(function(obj, prop, payloadName, typeConverter) {
+                //     const match = new RegExp(`.*${payloadName}\\s+(\\S+)`).exec(data);
+                //     if (match) {
+                //         handled = true;
+                //         const previous = obj[prop];
+                //         obj[prop] = typeConverter(match[1]);
+                //         requiresBootstrap = requiresBootstrap || (previous !== obj[prop] && dynamicDuration(prop, obj[prop]));
+                //     }
+                // });
+                switch (source) {
+                    case 'payload string':
+                        node.error("Invalid action input (via msg.payload string)");
+                        break;
+                    case 'action':
+                            node.error("Invalid action input (via msg.payload object action property)");
+                            break;
+                }
+                
+            }
+            return handled;
+        }
 
         function getInfo() {
             var ret = {
@@ -355,6 +404,7 @@ module.exports = function(RED) {
         function send(event, manual) {
             log(1, 'emitting \'' + event.name + '\' event');
             event.last.moment = node.now();
+            if (!manual) events.last = event;
 
             if (!event.suppressrepeats || state != event.state) {
                 // Output value

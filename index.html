@@ -33,6 +33,8 @@ THE SOFTWARE.
             tag: {value: 'eztimer'},
             suspended: {value: false},
             sendEventsOnSuspend: {value: false},
+            latLongSource: {value: 'manual'},
+            latLongHaZone: {value: 'zone.home'},
             lat: {value: '', validate: function(v){
                 return ezTimerLatLonValidator(this,v) ;
             }},
@@ -64,6 +66,7 @@ THE SOFTWARE.
             offoffset: {value: 0},
             offrandomoffset: {value: 0},
             offsuppressrepeats: {value: false},
+            resend: {value: '0s'},
             // Days of the week
             mon: {value: true},
             tue: {value: true},
@@ -119,19 +122,25 @@ THE SOFTWARE.
         },
         
         oneditprepare: function (scope) {
+            var conf = this;
+            var haData = [];
             var atLoad = {
                 "type": $('#node-input-timerType').val(),
                 "startupMessage": $('#node-input-startupMessage').prop("checked")
             };
 
-            if (!$("#node-input-lat").val().trim() && !$("#node-input-lon").val().trim()) {
-                if ('geolocation' in navigator) {
-                    navigator.geolocation.getCurrentPosition(function (position) {
-                        $("#node-input-lat").val(Number(position.coords.latitude.toFixed(5)));
-                        $("#node-input-lon").val(Number(position.coords.longitude.toFixed(5)));
-                    });
-                }
-            }
+            // Fix defaults for old nodes
+            if (conf.latLongSource === undefined) $("#node-input-latLongSource").val(conf._def.defaults.latLongSource.value);
+            if (conf.resend === undefined) $("#node-input-resend").val('0s');
+
+            // if (!$("#node-input-lat").val().trim() && !$("#node-input-lon").val().trim()) {
+            //     if ('geolocation' in navigator) {
+            //         navigator.geolocation.getCurrentPosition(function (position) {
+            //             $("#node-input-lat").val(Number(position.coords.latitude.toFixed(5)));
+            //             $("#node-input-lon").val(Number(position.coords.longitude.toFixed(5)));
+            //         });
+            //     }
+            // }
 
             //Timer Type
             $('#node-input-timerType').on('change', function(data) {
@@ -162,6 +171,55 @@ THE SOFTWARE.
                             $('#node-input-onsuppressrepeats').prop("checked", atLoad.onsuppressrepeats);
                         }
                         break;
+                }
+            });
+
+            $('#node-input-latLongSource').on('change', function(data) {
+                // Give the UI time to process
+                setTimeout(function() {
+                    switch ($('#node-input-latLongSource').val()) {
+                        case "manual": 
+                            $('.eztimer-geo-ha').hide(); 
+                            $('.eztimer-geo-manual').removeAttr('disabled');
+                            break;
+                        case "haZone": 
+                            $('.eztimer-geo-ha').show(); 
+                            $('.eztimer-geo-manual').attr('disabled','disabled');
+                            $("#node-input-latLongHaZone").change();
+                            break;
+                    }
+                }, 50);
+            });
+            $("#node-input-latLongSource").change();
+
+            $('#node-input-latLongHaZone').on('change', function(data) {
+                var zone = haData.find((x) => x.entity_id == $('#node-input-latLongHaZone').val());
+                if (zone) {
+                    $('#node-input-lat').val(zone.latitude);
+                    $('#node-input-lon').val(zone.longitude);
+                }
+            });
+
+            //Get HA Zones
+            $.getJSON('/eztimer/getHaZones',function(data) {
+                if (data.length > 0) {
+                    haData = data;
+                    var $select = $('#node-input-latLongHaZone');
+                    $.each(haData, function(key, value) {
+                        $select.append('<option value="' + value.entity_id + '">' + value.name + '</option>');
+                    });
+
+                    // Recall selected zone - if it exists
+                    var zone = haData.find((x) => x.entity_id == conf.latLongHaZone);
+                    if (zone) $('#node-input-latLongHaZone').val(conf.latLongHaZone);
+
+                    // Populate lat/long from zone
+                    if (conf.lat == '' && conf.lon == '' || conf.latLongSource == 'haZone' ) {
+                        $('#node-input-latLongSource').val('haZone');
+                        $("#node-input-latLongSource").change();
+                    }
+                } else {
+                    // Hide the HA stuff
                 }
             });
 
@@ -265,19 +323,28 @@ THE SOFTWARE.
     <div class="form-row">
         <label style="margin-left: 100px; width: 70%">
             <input type="checkbox" id="node-input-sendEventsOnSuspend" placeholder="" style="width: 20px; margin: 0">
-            Send 'off' event on suspend
+            Send <code>off</code> event on suspend
         </label>
     </div>
     <hr>
     <h4>general info</h4>
-    <div class="form-row eztimer-geo">
-		<label for="node-input-lat"><i class="fa fa-globe"></i> Latitude</label>
-		<input type="text" id="node-input-lat" placeholder="51.025">
-	</div>
-	<div class="form-row eztimer-geo">
-		<label for="node-input-lon"><i class="fa fa-globe"></i> Longitude</label>
-		<input type="text" id="node-input-lon" placeholder="-1.4">
+    <div class="form-row">
+        <label for="node-input-latLongSource"><i class="fa fa-globe"></i> Geo Source</label>
+        <select id="node-input-latLongSource">
+            <option value="manual">Manual</option>
+            <option value="haZone">HomeAssisant Zone</option>
+        </select>
     </div>
+    <div class="form-row eztimer-geo eztimer-geo-ha">
+        <label for="node-input-latLongHaZone"><i class="fa fa-clock-o"></i> HA Zone</label>
+        <select id="node-input-latLongHaZone">
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-lat"><i class="fa fa-globe"></i> Lat/Long</label>
+        <input type="text" id="node-input-lat" placeholder="51.025" class="eztimer-geo-manual" style="width: 24%; margin: 0">
+        <input type="text" id="node-input-lon" placeholder="-1.4" class="eztimer-geo-manual" style="width: 24%; margin: 0">
+	</div>
     <div class="form-row">
         <label for="node-input-timerType">Timer Type</label>
         <select id="node-input-timerType" class="eztimer-geo-check">
@@ -290,6 +357,15 @@ THE SOFTWARE.
             <input type="checkbox" id="node-input-startupMessage" style="width: 20px; margin: 0">
             <span id="node-input-startupMessageText">Send previous event on startup</span>
         </label>
+    </div>
+    <div class="eztimer-event eztimer-event-switch">
+        <div class="form-row">
+            <label for="node-input-resend">Resend Interval</label>
+            <input type="text" id="node-input-resend" placeholder="0s">
+        </div>
+        <div class="form-tips" style="margin-bottom: 12px;">
+            <b>Note:</b> Setting this above zero will re-emit the last scheduled output at this interval.
+        </div>
     </div>
     <div class="eztimer-event eztimer-event-switch eztimer-event-trigger">
         <hr>
