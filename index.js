@@ -52,7 +52,7 @@ module.exports = function(RED) {
         const node = this
         var events = {};
         var state = false;
-        var resendInterval = 0;
+        var resendInterval;
         var resendObj;
 
         RED.httpAdmin.get("/eztimer/getHaZones", RED.auth.needsPermission('serial.read'), function(req,res) {
@@ -88,6 +88,7 @@ module.exports = function(RED) {
             events.off.inverse = events.on;
         }
 
+        // Init resend
         resendInterval = getSeconds(config.resend);
         if (resendInterval > 0) {
             log(1, 'Re-send interval = ' + resendInterval + ' seconds.');
@@ -97,6 +98,7 @@ module.exports = function(RED) {
         }
 
         function resend() {
+            resendInterval = getSeconds(config.resend);
             resendObj = setTimeout(function() {
                 if (events.last) send(events.last, true);
                 resend()
@@ -611,6 +613,7 @@ module.exports = function(RED) {
             }
 
             clearTimeout(events.on.timeout);
+            clearTimeout(resendObj);
             events.on.moment = null;
 
             updateStatus();
