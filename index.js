@@ -89,16 +89,17 @@ module.exports = function(RED) {
         }
 
         // Init resend
-        resendInterval = getSeconds(config.resend);
-        if (resendInterval > 0) {
-            log(1, 'Re-send interval = ' + resendInterval + ' seconds.');
-            resend()
-        } else {
-            log(1, 'Re-send disabled.');
+        if (config.resend) {
+            resendInterval = getSeconds(config.resendInterval);
+            if (resendInterval > 0) {
+                log(1, 'Re-send interval = ' + resendInterval + ' seconds.');
+                resend()
+            } else {
+                log(1, 'Re-send disabled.');
+            }
         }
 
         function resend() {
-            resendInterval = getSeconds(config.resend);
             resendObj = setTimeout(function() {
                 if (events.last) send(events.last, true);
                 resend()

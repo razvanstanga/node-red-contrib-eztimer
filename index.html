@@ -66,7 +66,8 @@ THE SOFTWARE.
             offoffset: {value: 0},
             offrandomoffset: {value: 0},
             offsuppressrepeats: {value: false},
-            resend: {value: '0s'},
+            resend: {value: false},
+            resendInterval: {value: '0s'},
             // Days of the week
             mon: {value: true},
             tue: {value: true},
@@ -129,18 +130,15 @@ THE SOFTWARE.
                 "startupMessage": $('#node-input-startupMessage').prop("checked")
             };
 
-            // Fix defaults for old nodes
+            // Fix defaults for existing nodes
             if (conf.latLongSource === undefined) $("#node-input-latLongSource").val(conf._def.defaults.latLongSource.value);
-            if (conf.resend === undefined) $("#node-input-resend").val('0s');
+            if (conf.resend === undefined || conf.resend == '0s') $("#node-input-resend").prop("checked", false);
+            if (conf.resendInterval === undefined) $("#node-input-resendInterval").val('1m');
 
-            // if (!$("#node-input-lat").val().trim() && !$("#node-input-lon").val().trim()) {
-            //     if ('geolocation' in navigator) {
-            //         navigator.geolocation.getCurrentPosition(function (position) {
-            //             $("#node-input-lat").val(Number(position.coords.latitude.toFixed(5)));
-            //             $("#node-input-lon").val(Number(position.coords.longitude.toFixed(5)));
-            //         });
-            //     }
-            // }
+            //Resend
+            $('#node-input-resend').on('change', function(data) {
+                $('#node-input-resend').prop("checked") ? $('.eztimer-resend').show() : $('.eztimer-resend').hide();
+            });
 
             //Timer Type
             $('#node-input-timerType').on('change', function(data) {
@@ -360,11 +358,19 @@ THE SOFTWARE.
     </div>
     <div class="eztimer-event eztimer-event-switch">
         <div class="form-row">
-            <label for="node-input-resend">Resend Interval</label>
-            <input type="text" id="node-input-resend" placeholder="0s">
+            <label style="margin-left: 100px; width: 70%">
+                <input type="checkbox" id="node-input-resend" style="width: 20px; margin: 0">
+                <span id="node-input-resend">Re-send previous event at specified interval</span>
+            </label>
         </div>
-        <div class="form-tips" style="margin-bottom: 12px;">
-            <b>Note:</b> Setting this above zero will re-emit the last scheduled output at this interval.
+        <div class="eztimer-resend">
+            <div class="form-row">
+                <label for="node-input-resend">Resend Interval</label>
+                <input type="text" id="node-input-resendInterval" placeholder="0s">
+            </div>
+            <div class="form-tips" style="margin-bottom: 12px;">
+                <b>Note:</b> supports most timespan formats - eg. hh:mm, hh:mm:ss, 45s, 45h, 4m etc.
+            </div>
         </div>
     </div>
     <div class="eztimer-event eztimer-event-switch eztimer-event-trigger">
