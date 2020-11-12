@@ -413,7 +413,6 @@ module.exports = function(RED) {
             return tgtValue;
         }
 
-
         function sync() {
             if (events.last) send(events.last);
         }

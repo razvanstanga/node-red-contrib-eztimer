@@ -95,6 +95,7 @@ You can wire inject nodes to the input of this node and send the following in `m
 | `off`       | Triggers manual off mode and causes eztimer to emit the configured `off` event. Manual mode is reset when the next `on` or `off` time is reached |
 | `info`      | Eztimer emits an object containing the `on` and `off` (or `trigger`) times in UTC format. It also contains the state which is either `on` or `off` (for on/off type). |
 | `cancel`    | Cancels the current run (if any) of the timer (_without_ emitting an `off` event). |
+| `sync`      | Re-sends the last emitted event |
 
 # Programmatic Control
 
@@ -109,7 +110,7 @@ You can set the following:
 
 | Property                      | Type                                                                                |
 | ----------------------------- | ----------------------------------------------------------------------------------- |
-| `msg.payload.action`          | Accepts the standard input payloads of `trigger`, `on`, `off`, `info` & `cancel`.   |
+| `msg.payload.action`          | Accepts the standard input payloads of `trigger`, `on`, `off`, etc.                 |
 | `msg.payload.suspended`       | Boolean: true will suspend scheduling, false will resume scheduling                 |
 | `msg.payload.manual`          | Alias of `suspended`                                                                |
 | `msg.payload.tag`             | String value emitted as the tag for all events                                      |
