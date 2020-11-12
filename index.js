@@ -122,8 +122,8 @@ module.exports = function(RED) {
             let handled = false,
             requiresBootstrap = false;
             if (msg.payload == null) {
-                node.error("Null or undefined (msg.payload) input.")
                 // Unsuppored input
+                node.error("Null or undefined (msg.payload) input.")
             } else if (_.isString(msg.payload)) {
                 handled = action('payload string', msg.payload)
             } else {
@@ -131,6 +131,12 @@ module.exports = function(RED) {
                     handled = true;
                     const previous = config.suspended;
                     config.suspended = !!msg.payload.suspended;
+                    requiresBootstrap = requiresBootstrap || previous !== config.suspended;
+                }
+                if (msg.payload.hasOwnProperty('manual')) {
+                    handled = true;
+                    const previous = config.suspended;
+                    config.suspended = !!msg.payload.manual;
                     requiresBootstrap = requiresBootstrap || previous !== config.suspended;
                 }
                 if (msg.payload.hasOwnProperty('action')) {
@@ -198,6 +204,9 @@ module.exports = function(RED) {
                     tag: config.tag || 'eztimer',
                     payload: info
                 });
+            } else if (data === 'sync') {
+                handled = true;
+                sync();
             } else {
                 // if (data.indexOf('suspended') !== -1) {
                 //     handled = true;
@@ -404,10 +413,15 @@ module.exports = function(RED) {
             return tgtValue;
         }
 
+
+        function sync() {
+            if (events.last) send(events.last);
+        }
+
         function send(event, manual) {
             log(1, 'emitting \'' + event.name + '\' event');
             event.last.moment = node.now();
-            if (!manual) events.last = event;
+            events.last = event;
 
             if (!event.suppressrepeats || state != event.state) {
                 // Output value
@@ -665,6 +679,7 @@ module.exports = function(RED) {
         }
 
         function enumerateProgrammables(callback) {
+            callback(events.on, 'type', 'ontype', String);
             callback(events.on, 'timetod', 'triggertime', String);
             callback(events.on, 'timetod', 'ontime', String);
             callback(events.on, 'topic', 'ontopic', String);
@@ -672,6 +687,7 @@ module.exports = function(RED) {
             callback(events.on, 'value', 'onvalue', String);
             callback(events.on, 'offset', 'onoffset', Number);
             callback(events.on, 'randomoffset', 'onrandomoffset', toBoolean);
+            callback(events.off, 'type', 'offtype', String);
             callback(events.off, 'timetod', 'offtime', String);
             callback(events.off, 'duration', 'duration', String);
             callback(events.off, 'topic', 'offtopic', String);
