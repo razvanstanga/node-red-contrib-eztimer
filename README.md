@@ -143,6 +143,7 @@ You can set the following:
 * Hooked into HomeAssistant (where available) for latitude and longitude [credit @mingan666](https://github.com/mrgadget/node-red-contrib-eztimer/issues/39). 
 * Added `offtype` and `ontype` programmables.  Used for dynamically changing the event type - these changes are _not_ saved (ie, they won't survive a node-red restart). [credit @matt6575](https://github.com/mrgadget/node-red-contrib-eztimer/issues/40).
 * Added `manual` as an alias for `suspended` as it makes more sense to some users. [credit @matt6575](https://github.com/mrgadget/node-red-contrib-eztimer/issues/40).
+* Fixed anomolous error upon input message [credit @marc-gist](https://github.com/mrgadget/node-red-contrib-eztimer/issues/41).
 
 ## 1.2.4
 * Change `info` to be sent with every output (under the `msg.info`). [credit @Fires04](https://github.com/mrgadget/node-red-contrib-eztimer/issues/30). 
