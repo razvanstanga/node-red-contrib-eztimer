@@ -1,12 +1,12 @@
 # eztimer
 
-Timer/scheduler for node-red which allows you to enter on/off times as 24hr clock (e.g. 01:10) or suncalc events (e.g.
+Timer/scheduler for Node-RED which allows you to enter on/off times as 24hr clock (e.g. 01:10) or suncalc events (e.g.
 goldenHour). It also allows you to offset times and randomise the time within the offset.
 
 Forked from (retaining much of the code, including this document) [schedex](https://github.com/biddster/node-red-contrib-schedex) which was in turn inspired by Pete Scargill's [BigTimer](http://tech.scargill.net/big-timer/), so
 hat-tip to both those coders.
 
-Emphasis has been put on creating a simple interface and utilising built-in node-red formatting helpers (such as creating
+Emphasis has been put on creating a simple interface and utilising built-in Node-RED formatting helpers (such as creating
 a JSON payload).
 
 # Installation
@@ -142,7 +142,7 @@ You can set the following:
 * Added `resend` feature.  Enabling this causese the last scheduled event to be re-emitted at the pre-defined interval [credit @JasonSwindle](https://github.com/mrgadget/node-red-contrib-eztimer/issues/37). 
 * Included `action` in programmatic control - this enablings the sending of on/off events from a JSON input [credit @petter-b](https://github.com/mrgadget/node-red-contrib-eztimer/issues/38). 
 * Hooked into HomeAssistant (where available) for latitude and longitude [credit @mingan666](https://github.com/mrgadget/node-red-contrib-eztimer/issues/39). 
-* Added `offtype` and `ontype` programmables.  Used for dynamically changing the event type - these changes are _not_ saved (ie, they won't survive a node-red restart). [credit @matt6575](https://github.com/mrgadget/node-red-contrib-eztimer/issues/40).
+* Added `offtype` and `ontype` programmables.  Used for dynamically changing the event type - these changes are _not_ saved (ie, they won't survive a Node-RED restart). [credit @matt6575](https://github.com/mrgadget/node-red-contrib-eztimer/issues/40).
 * Added `manual` as an alias for `suspended` as it makes more sense to some users. [credit @matt6575](https://github.com/mrgadget/node-red-contrib-eztimer/issues/40).
 * Fixed anomolous error upon input message [credit @marc-gist](https://github.com/mrgadget/node-red-contrib-eztimer/issues/41).
 
@@ -171,7 +171,7 @@ You can set the following:
 
 ## 1.1.6
 Fixes driven by issue #21 [credit @jazzgil](https://github.com/mrgadget/node-red-contrib-eztimer/issues/21).
-* Fixed the node-red info pane to correctly match the the programmatic options in this file (see [Programmatic Control](#Programmatic-Control)) 
+* Fixed the Node-RED info pane to correctly match the the programmatic options in this file (see [Programmatic Control](#Programmatic-Control)) 
 * Updated output function to correctly emit programatically set topic (`ontopic` or `offtopic`) - not previously sent.
 * Added ability to set `tag` value programmatically.
  

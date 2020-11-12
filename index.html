@@ -527,9 +527,9 @@ THE SOFTWARE.
 <script type="text/x-red" data-help-name="eztimer">
 <!-- START -->
 <h1 id="eztimer">eztimer</h1>
-<p>Timer/scheduler for node-red which allows you to enter on/off times as 24hr clock (e.g. 01:10) or suncalc events (e.g.<br>goldenHour). It also allows you to offset times and randomise the time within the offset.</p>
+<p>Timer/scheduler for Node-RED which allows you to enter on/off times as 24hr clock (e.g. 01:10) or suncalc events (e.g.<br>goldenHour). It also allows you to offset times and randomise the time within the offset.</p>
 <p>Forked from (retaining much of the code, including this document) <a href="https://github.com/biddster/node-red-contrib-schedex">schedex</a> which was in turn inspired by Pete Scargill&#39;s <a href="http://tech.scargill.net/big-timer/">BigTimer</a>, so<br>hat-tip to both those coders.</p>
-<p>Emphasis has been put on creating a simple interface and utilising built-in node-red formatting helpers (such as creating<br>a JSON payload).</p>
+<p>Emphasis has been put on creating a simple interface and utilising built-in Node-RED formatting helpers (such as creating<br>a JSON payload).</p>
 <h1 id="installation">Installation</h1>
 <p>This node requires node 4.x. It&#39;s tested against 4.6.1.</p>
 <pre><code>$ cd ~/.node-red
@@ -580,6 +580,10 @@ $ npm install node-red-contrib-eztimer
             <td><code>cancel</code></td>
             <td>Cancels the current run (if any) of the timer (_without_ emitting an off event).</td>
         </tr>
+        <tr>
+            <td><code>sync</code></td>
+            <td>Re-sends the last emitted event.</td>
+        </tr>
     </tbody>
 </table>
 <h2 id="programmaticcontrol">Programmatic Control</h2>
@@ -596,12 +600,24 @@ $ npm install node-red-contrib-eztimer
     </thead>
     <tbody>
         <tr>
+            <td><code>msg.payload.action</code></td>
+            <td>Accepts the standard input payloads of 'trigger', 'on', 'off', etc.</td>
+        </tr>
+        <tr>
             <td><code>msg.payload.suspended</code></td>
             <td>Boolean: true will suspend scheduling, false will resume scheduling</td>
         </tr>
         <tr>
+            <td><code>msg.payload.manual</code></td>
+            <td>Alias of 'suspended'</td>
+        </tr>
+        <tr>
             <td><code>msg.payload.tag</code></td>
             <td>String value emitted as the tag for all events</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.ontype</code></td>
+            <td>Integer value: 'Sun Event [1]' & 'Time of Day [2]'</td>
         </tr>
         <tr>
             <td><code>msg.payload.ontime</code></td>
@@ -630,6 +646,10 @@ $ npm install node-red-contrib-eztimer
         <tr>
             <td><code>msg.payload.onrandomoffset</code></td>
             <td>Boolean value as specified above in Randomisation of Times</td>
+        </tr>
+        <tr>
+            <td><code>msg.payload.offtype</code></td>
+            <td>Integer value: 'Sun Event [1]', 'Time of Day [2]' & 'Duration [3]' </td>
         </tr>
         <tr>
             <td><code>msg.payload.offtime</code></td>
@@ -682,73 +702,6 @@ $ npm install node-red-contrib-eztimer
         <tr>
             <td><code>msg.payload.sun</code></td>
             <td>Boolean: true enables the schedule on a Sunday, false disables it.</td>
-        </tr>
-    </tbody>
-</table>
-<p>Alternatively, you can send msg.payload as a string with the following values:</p>
-<table>
-    <thead>
-        <tr>
-            <th>Example msg.payload</th>
-            <th>Description</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><code>suspended true</code></td>
-            <td>true will suspend scheduling, false will resume scheduling</td>
-        </tr>
-        <tr>
-            <td><code>ontime 12:00</code></td>
-            <td>Time as specified in the table above for time configuration</td>
-        </tr>
-        <tr>
-            <td><code>ontopic my_topic</code></td>
-            <td>Sets the topic for the on event (no spaces)</td>
-        </tr>
-        <tr>
-            <td><code>onpayload my_payload</code></td>
-            <td>Sets the payload for the on event (no spaces)</td>
-        </tr>
-        <tr>
-            <td><code>onoffset 30</code></td>
-            <td>Sets the offset for the on event</td>
-        </tr>
-        <tr>
-            <td><code>onrandomoffset true</code></td>
-            <td>Sets the random offset for the on event</td>
-        </tr>
-        <tr>
-            <td><code>offtime dusk</code></td>
-            <td>Time as specified in the table above for time configuration</td>
-        </tr>
-        <tr>
-            <td><code>offtopic my_topic</code></td>
-            <td>Sets the topic for the off event (no spaces)</td>
-        </tr>
-        <tr>
-            <td><code>offpayload my_payload</code></td>
-            <td>Sets the payload for the off event (no spaces)</td>
-        </tr>
-        <tr>
-            <td><code>offoffset -30</code></td>
-            <td>Sets the offset for the off event</td>
-        </tr>
-        <tr>
-            <td><code>offrandomoffset false</code></td>
-            <td>Sets the random offset for the off event</td>
-        </tr>
-        <tr>
-            <td><code>mon false</code></td>
-            <td>Disables the schedule on a Monday</td>
-        </tr>
-        <tr>
-            <td><code>tue true</code></td>
-            <td>Enables the schedule on a Tuesday</td>
-        </tr>
-        <tr>
-            <td><code>ontime 16:30 onoffset 60 onrandomoffset true</code></td>
-            <td>Sets the time, offset and random offset for the on event</td>
         </tr>
     </tbody>
 </table>
