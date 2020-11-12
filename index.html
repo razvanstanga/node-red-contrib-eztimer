@@ -175,17 +175,7 @@ THE SOFTWARE.
             $('#node-input-latLongSource').on('change', function(data) {
                 // Give the UI time to process
                 setTimeout(function() {
-                    switch ($('#node-input-latLongSource').val()) {
-                        case "manual": 
-                            $('.eztimer-geo-ha').hide(); 
-                            $('.eztimer-geo-manual').removeAttr('disabled');
-                            break;
-                        case "haZone": 
-                            $('.eztimer-geo-ha').show(); 
-                            $('.eztimer-geo-manual').attr('disabled','disabled');
-                            $("#node-input-latLongHaZone").change();
-                            break;
-                    }
+                    geoVisibility();
                 }, 50);
             });
             $("#node-input-latLongSource").change();
@@ -266,14 +256,29 @@ THE SOFTWARE.
 
             // Show/hide Geo fields
             $('.eztimer-geo-check').on('change', function(data) {
-                if ($('#node-input-ontype').val() == 1 || ($('#node-input-timerType').val() == 1 && $('#node-input-offtype').val() == 1)) {
-                    $('.eztimer-geo').show();
-                } else {
-                    $('.eztimer-geo').hide();
-                }
+                geoVisibility();
             });
         }
     });
+
+    var geoVisibility = function() {
+        if ($('#node-input-ontype').val() == 1 || ($('#node-input-timerType').val() == 1 && $('#node-input-offtype').val() == 1)) {
+            $('.eztimer-geo').show();
+            switch ($('#node-input-latLongSource').val()) {
+                case "manual": 
+                    $('.eztimer-geo-ha').hide(); 
+                    $('.eztimer-geo-manual').removeAttr('disabled');
+                    break;
+                case "haZone": 
+                    $('.eztimer-geo-ha').show(); 
+                    $('.eztimer-geo-manual').attr('disabled','disabled');
+                    $("#node-input-latLongHaZone").change();
+                    break;
+            }
+        } else {
+            $('.eztimer-geo').hide();
+        }
+    }
 
     var ezTimerLatLonValidator = function(node, v){
         if (node.ontype == '1' || (node.timerType == '1' && node.offtype == '1')) {
@@ -326,7 +331,7 @@ THE SOFTWARE.
     </div>
     <hr>
     <h4>general info</h4>
-    <div class="form-row">
+    <div class="form-row eztimer-geo eztimer-geo-source">
         <label for="node-input-latLongSource"><i class="fa fa-globe"></i> Geo Source</label>
         <select id="node-input-latLongSource">
             <option value="manual">Manual</option>
@@ -338,7 +343,7 @@ THE SOFTWARE.
         <select id="node-input-latLongHaZone">
         </select>
     </div>
-    <div class="form-row">
+    <div class="form-row eztimer-geo eztimer-geo-latlong">
         <label for="node-input-lat"><i class="fa fa-globe"></i> Lat/Long</label>
         <input type="text" id="node-input-lat" placeholder="51.025" class="eztimer-geo-manual" style="width: 24%; margin: 0">
         <input type="text" id="node-input-lon" placeholder="-1.4" class="eztimer-geo-manual" style="width: 24%; margin: 0">
