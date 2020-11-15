@@ -21,9 +21,7 @@ npm install node-red-contrib-eztimer
 ```
 
 ## Development Builds
-This isn't for most people - but I've thrown this in so I don't need to keep explaining it in GitHub issues.  This assumes;
-* you have a default install of Node-Red.
-* you have copied the new `index.js` from [here](https://raw.githubusercontent.com/mrgadget/node-red-contrib-eztimer/develop/index.js).
+This isn't for most people - but I've thrown this in so I don't need to keep explaining it in GitHub issues.  This assumes you have a default install of Node-RED.
 ```sh
 cd ~
 wget https://raw.githubusercontent.com/mrgadget/node-red-contrib-eztimer/develop/index.js
@@ -34,7 +32,7 @@ mv index.html index.html.bak
 cp ~/index.js .
 cp ~/index.html .
 ```
-You will need to restart Node-Red for the change to take effect.  You can put back your old version at any time simply by copying the backup back over top.
+You will need to restart Node-RED for the change to take effect.  You can put back your old version at any time simply by copying the backup back over top.
 
 # Configuration
 ## Schedule
