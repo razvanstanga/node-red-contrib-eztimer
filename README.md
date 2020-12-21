@@ -10,7 +10,7 @@ Emphasis has been put on creating a simple interface and utilising built-in Node
 a JSON payload).
 
 # Installation
-## via Node-Red GUI
+## via Node-RED GUI
 Use the built-in Node-Red [Palette Manager](https://nodered.org/docs/user-guide/editor/palette/manager) to find and install.
 
 ## via NPM
@@ -21,15 +21,18 @@ npm install node-red-contrib-eztimer
 ```
 
 ## Development Builds
-This isn't for most people - but I've thrown this in so I don't need to keep explaining it in GitHub issues.  This assumes;
-* you have a default install of Node-Red.
-* you have copied the new `index.js` from [here](https://raw.githubusercontent.com/mrgadget/node-red-contrib-eztimer/develop/index.js).
+This isn't for most people - but I've thrown this in so I don't need to keep explaining it in GitHub issues.  This assumes you have a default install of Node-RED.
 ```sh
+cd ~
+wget https://raw.githubusercontent.com/mrgadget/node-red-contrib-eztimer/develop/index.js
+wget https://raw.githubusercontent.com/mrgadget/node-red-contrib-eztimer/develop/index.html
 cd ~/.node-red/node_modules/node-red-contrib-eztimer
 mv index.js index.js.bak
+mv index.html index.html.bak
 cp ~/index.js .
+cp ~/index.html .
 ```
-You will need to restart Node-Red for the change to take effect.  You can put back your old version at any time simply by copying the backup back over top.
+You will need to restart Node-RED for the change to take effect.  You can put back your old version at any time simply by copying the backup back over top.
 
 # Configuration
 ## Schedule
@@ -50,14 +53,14 @@ rewire your Node-RED flow.
 Select the type of trigger from the dropdown and this will provide either;
 * a dropdown for Sun Events, or, 
 * a textbox to enter either;
-    * a 24hr time (HH:mm[:ss]), or, 
-    * a duration (hh:mm:ss) (for the `off` event).
+    * a 24hr time, or, 
+    * a duration (for the `off` event).
 
 The below table denotes the permitted formats for Times/durations:
 | input        | interpretation
 |--------------|-----------------------------
 | `"12:14"`    | 12 hours and 14 minutes
-| `"12:14:24"` | 12 hours, 14 minutes and 24 seconds
+| `"12:14:24"` | Time of day, or 12 hours, 14 minutes and 24 seconds
 | `"23h 5m"`   | 23 hours and 5 minutes
 | `"5m"`       | 5 minutes
 | `"90s"`      | 1 minute and 30 seconds (90 seconds)
@@ -86,7 +89,7 @@ this.  It's available for both `on` and `off` events, but disabled in `trigger` 
 
 ## Inputs
 
-You can wire inject nodes to the input of this node and send the following in `msg.payload`.
+You can wire inject nodes to the input of this node and send the following string values in `msg.payload`.
 
 | msg.payload | Description                                                                                                                                      |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -101,7 +104,7 @@ You can wire inject nodes to the input of this node and send the following in `m
 
 This node supports programmatic time control as well as configuration via the NodeRED UI.
 
-**It is very important to note that properties set programmatically in this manner are transient. They will not persist over a NodeRED restart or redeploy!**
+**It is very important to note that properties set programmatically in this manner are transient. They will not persist over a Node-RED restart or redeploy!**
 
 Note that both the property-based and string-based specifications are overrides that violate the usual behavior. 
 See here for further discussion https://github.com/node-red/node-red/issues/399.
@@ -122,7 +125,7 @@ You can set the following:
 | `msg.payload.triggervalue`    | Alias of `onvalue`                                                                  |
 | `msg.payload.onoffset`        | Number value as specified above for Offset configuration                            |
 | `msg.payload.onrandomoffset`  | Boolean value as specified above in Randomisation of Times                          |
-| `msg.payload.offtype`         | Integer value: `Sun Event [1]`, `Time of Day [2]` & `Duration (3)`                  |
+| `msg.payload.offtype`         | Integer value: `Sun Event [1]`, `Time of Day [2]` & `Duration [3]`                  |
 | `msg.payload.offtime`         | String value representing time of day (HH:mm[:ss])                                  |
 | `msg.payload.duration`        | String value representing a timespan (see [Times](##Times))                         |
 | `msg.payload.offtopic`        | String value emitted as the topic for the off event                                 |
