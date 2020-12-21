@@ -139,12 +139,12 @@ You can set the following:
 
 # Change Log
 ## 1.2.5
-* Added `resend` feature.  Enabling this causese the last scheduled event to be re-emitted at the pre-defined interval [credit @JasonSwindle](https://github.com/mrgadget/node-red-contrib-eztimer/issues/37). 
-* Included `action` in programmatic control - this enablings the sending of on/off events from a JSON input [credit @petter-b](https://github.com/mrgadget/node-red-contrib-eztimer/issues/38). 
-* Hooked into HomeAssistant (where available) for latitude and longitude [credit @mingan666](https://github.com/mrgadget/node-red-contrib-eztimer/issues/39). 
-* Added `offtype` and `ontype` programmables.  Used for dynamically changing the event type - these changes are _not_ saved (ie, they won't survive a Node-RED restart). [credit @matt6575](https://github.com/mrgadget/node-red-contrib-eztimer/issues/40).
-* Added `manual` as an alias for `suspended` as it makes more sense to some users. [credit @matt6575](https://github.com/mrgadget/node-red-contrib-eztimer/issues/40).
-* Fixed anomolous error upon input message [credit @marc-gist](https://github.com/mrgadget/node-red-contrib-eztimer/issues/41).
+* Added `resend` feature.  Enabling this causese the last scheduled event to be re-emitted at the pre-defined interval. [credit @JasonSwindle](https://github.com/mrgadget/node-red-contrib-eztimer/issues/37)
+* Included `action` in programmatic control - this enablings the sending of on/off events from a JSON input. [credit @petter-b](https://github.com/mrgadget/node-red-contrib-eztimer/issues/38)
+* Hooked into HomeAssistant (where available) for latitude and longitude. [credit @mingan666](https://github.com/mrgadget/node-red-contrib-eztimer/issues/39)
+* Added `offtype` and `ontype` programmables.  Used for dynamically changing the event type - these changes are _not_ saved (ie, they won't survive a Node-RED restart), and input is _not_ validated, so use with caution. Required integer values are in the [Programmatic Control](##Programmatic-Control) table. [credit @matt6575](https://github.com/mrgadget/node-red-contrib-eztimer/issues/40)
+* Added `manual` as an alias for `suspended` as it makes more sense with how some users use the node. [credit @matt6575](https://github.com/mrgadget/node-red-contrib-eztimer/issues/40)
+* Fixed anomolous error upon input message. [credit @marc-gist](https://github.com/mrgadget/node-red-contrib-eztimer/issues/41)
 
 ## 1.2.4
 * Change `info` to be sent with every output (under the `msg.info`). [credit @Fires04](https://github.com/mrgadget/node-red-contrib-eztimer/issues/30). 
