@@ -190,6 +190,7 @@ module.exports = function(RED) {
                 if (!isSuspended()) {
                     schedule(events.on);
                     clearTimeout(events.off.timeout);
+                    state = false;
                     events.off.moment = null;
                     if (!isSuspended() && events.off.type != '3') schedule(events.off);
                 }

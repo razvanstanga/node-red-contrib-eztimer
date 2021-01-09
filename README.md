@@ -141,6 +141,9 @@ You can set the following:
 | `msg.payload.sun`             | Boolean: true enables the schedule on a Sunday, false disables it.                  |
 
 # Change Log
+## 1.2.6
+* Fixed `cancel` action so that it correctly cancels the current timer run, and re-schedules the next `on` event. [credit @wokkeltje13](https://github.com/mrgadget/node-red-contrib-eztimer/issues/42)
+
 ## 1.2.5
 * Added `resend` feature.  Enabling this causese the last scheduled event to be re-emitted at the pre-defined interval. [credit @JasonSwindle](https://github.com/mrgadget/node-red-contrib-eztimer/issues/37)
 * Included `action` in programmatic control - this enablings the sending of on/off events from a JSON input. [credit @petter-b](https://github.com/mrgadget/node-red-contrib-eztimer/issues/38)
