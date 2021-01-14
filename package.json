@@ -1,5 +1,5 @@
 {
-    "name": "node-red-contrib-eztimer",
+    "name": "node-red-contrib-eztimer-ha",
     "version": "1.2.6",
     "description": "A simple-yet-flexible timer/scheduler for node-red",
     "main": "index.js",
