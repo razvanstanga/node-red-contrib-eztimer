@@ -50,24 +50,24 @@ module.exports = function(RED) {
     RED.nodes.registerType('eztimer', function(config) {
         RED.nodes.createNode(this, config);
         const node = this
-        var events = {};
-        var state = false;
-        var resendInterval;
-        var resendObj;
+        let events = {};
+        let state = false;
+        let resendInterval;
+        let resendObj;
+        let inputMsg = {};
 
         RED.httpAdmin.get("/eztimer/getHaZones", RED.auth.needsPermission('serial.read'), function(req,res) {
-            var ha = node.context().global.get('homeassistant');
-            var zones = [];
+            let ha = node.context().global.get('homeassistant');
+            let zones = [];
             for(element in ha.homeAssistant.states) {
-                var zone = ha.homeAssistant.states[element];
+                let zone = ha.homeAssistant.states[element];
                 if (element.substring(0,4) == 'zone') {
-                    var z = {"entity_id": zone.entity_id, "name": zone.attributes.friendly_name, "latitude": zone.attributes.latitude, "longitude": zone.attributes.longitude}
+                    let z = {"entity_id": zone.entity_id, "name": zone.attributes.friendly_name, "latitude": zone.attributes.latitude, "longitude": zone.attributes.longitude}
                     if(z.entity_id.substring(0,9) == "zone.home")
                         zones.unshift(z);
                     else
                         zones.push(z);
                 }
-                
             };
             res.json(zones);
         });
@@ -119,6 +119,8 @@ module.exports = function(RED) {
         }
 
         node.on('input', function(msg) {
+            if (msg.payload) log(msg);
+            inputMsg = msg;
             let handled = false,
             requiresBootstrap = false;
             if (msg.payload == null) {
@@ -164,7 +166,7 @@ module.exports = function(RED) {
         });
 
         function action(source, data) {
-            var handled = false;
+            let handled = false;
             if (data === 'on') {
                 // Sends the on event without impacting the scheduled event
                 handled = true;
@@ -197,7 +199,7 @@ module.exports = function(RED) {
                 updateStatus();
             } else if (data === 'info') {
                 handled = true;
-                var info = getInfo();
+                let info = getInfo();
                 // Info is now sent with every output - continue to send as payload for backward compatibiliy.
                 node.send({
                     topic: 'info',
@@ -233,13 +235,12 @@ module.exports = function(RED) {
                             node.error("Invalid action input (via msg.payload object action property)");
                             break;
                 }
-                
             }
             return handled;
         }
 
         function getInfo() {
-            var ret = {
+            let ret = {
                 name: node.name || 'eztimer',
                 state: function() {
                     if (config.timerType == '2') return undefined; // Trigger
@@ -289,8 +290,8 @@ module.exports = function(RED) {
             if (config.debug) level = Math.max(3, level); //Outputs everything in node warn or error.
             switch (level) {
                 case 1: //verbose, ignore
-                    break; 
-                case 2: 
+                    break;
+                case 2:
                     node.log(message); // log to node console only
                     break;
                 case 3:
@@ -308,9 +309,9 @@ module.exports = function(RED) {
             } else if (property == "duration") {
                 if (state) {
                     // Timer currently 'on' - parse time
-                    var secs = getSeconds(duration);
-                    var offTime = moment(events.on.last.moment).add(secs, 'seconds');
-                    
+                    let secs = getSeconds(duration);
+                    let offTime = moment(events.on.last.moment).add(secs, 'seconds');
+
                     if (offTime.isBefore(node.now())) {
                         // New time is before now - need to turn off and schedule
                         log(2, "Live duration change (" + duration + " => " + secs + "s) causes an off-time in the past, sending 'off' event.");
@@ -338,10 +339,10 @@ module.exports = function(RED) {
         }
 
         function getSeconds(val) {
-            var secs = 0;
+            let secs = 0;
 
             // accept 00:00, 00:00:00, 45s, 45h,4m etc.
-            var matches = new RegExp(/(?:(\d+)[h:\s,]+)?(?:(\d+)[m:\s,]+)?(?:(\d+)[s\s]*)?$/).exec(val);
+            let matches = new RegExp(/(?:(\d+)[h:\s,]+)?(?:(\d+)[m:\s,]+)?(?:(\d+)[s\s]*)?$/).exec(val);
             if (matches.length > 1) {
                 if (matches[1] != null) {
                     secs += parseInt(matches[1]) * 3600; // hours
@@ -355,7 +356,7 @@ module.exports = function(RED) {
             } else {
                 return 0;
             }
-            
+
             return secs;
         }
 
@@ -390,7 +391,7 @@ module.exports = function(RED) {
 
         function getValue(event) {
             // Parse value to selected format
-            var tgtValue = event.value;
+            let tgtValue = event.value;
             switch (event.valuetype) {
                 case 'flow':
                     tgtValue = node.context().flow.get(tgtValue);
@@ -433,20 +434,21 @@ module.exports = function(RED) {
                         node.context().global.set(event.property, getValue(event));
                         break;
                     case "msg":
-                        var msg = {};
+                        let msg = {};
                         msg.info = getInfo();
                         msg.tag = config.tag || 'eztimer';
                         if (event.topic) msg.topic = event.topic;
-                        var currPart = msg;
-                        var spl = event.property.split('.');
-                        for (var i in spl) {
+                        let currPart = msg;
+                        let spl = event.property.split('.');
+                        for (let i in spl) {
                             if (i < (spl.length - 1)) {
                             if (!currPart[spl[i]]) currPart[spl[i]] = {};
-                                currPart = currPart[spl[i]];    
+                                currPart = currPart[spl[i]];
                             } else {
                                 currPart[spl[i]] = getValue(event);
                             }
                         }
+                        msg._payload = inputMsg.payload;
                         node.send(msg);
                     break;
                 }
@@ -457,24 +459,24 @@ module.exports = function(RED) {
 
 
         function schedule(event, init, manual) {
-            var now = node.now();
+            let now = node.now();
 
             switch (event.type) {
                 case '1': //Sun
                     event.typeName = 'sun';
-                    var nextDate = new Date();
-                    // Get tomorrow's sun data 
+                    let nextDate = new Date();
+                    // Get tomorrow's sun data
                     if (!init) nextDate = nextDate.setDate(nextDate.getDate() + 1);
                     const sunCalcTimes = SunCalc.getTimes(nextDate, config.lat, config.lon);
                     // Get first event - move closer to noon if required.
-                    var t = sunTimes.indexOf(event.timesun);
+                    let t = sunTimes.indexOf(event.timesun);
                     while (!moment(sunCalcTimes[sunTimes[t]]).isValid()) t = Math.max(t - 2, 0);
                     // If we've had to move closer to noon, emit a warning
                     if (event.timesun != sunTimes[t]) {
                         log(4, { "message": 'Sun event (' + event.timesun + ') invalid for chosen lat/long (due to polar proximity). Sun event \'' + sunTimes[t] + '\' has been chosen as the closest valid candidate.', "events": sunCalcTimes});
                     }
                     // Use determined event time
-                    var date = sunCalcTimes[sunTimes[t]];
+                    let date = sunCalcTimes[sunTimes[t]];
                     if (date && moment(date).isValid()) {
                         event.moment = moment(date);
                     } else {
@@ -488,13 +490,13 @@ module.exports = function(RED) {
                         return true;
                     }
                     event.typeName = 'time of day';
-                    var m = node.now().millisecond(0);
-                    var re = new RegExp(/\d+/g);
-                    var p1, p2, p3;
+                    let m = node.now().millisecond(0);
+                    let re = new RegExp(/\d+/g);
+                    let p1, p2, p3;
                     p1 = re.exec(event.timetod);
                     if (p1) p2 = re.exec(event.timetod);
                     if (p2) p3 = re.exec(event.timetod);
-                
+
                     if (p3) {
                         m.hour(+p1[0]).minute(+p2[0]).second(+p3[0]);
                     } else if (p2) {
@@ -513,8 +515,8 @@ module.exports = function(RED) {
                     break;
                 case '3': //Duration
                     event.typeName = 'duration';
-                    var secs = getSeconds(event.duration);
-                    
+                    let secs = getSeconds(event.duration);
+
                     if (manual && event.inverse.last.moment) {
                         //event is manual - schedule based on last 'on' event
                         event.moment = moment(event.inverse.last.moment).add(secs, 'seconds');
@@ -578,10 +580,10 @@ module.exports = function(RED) {
         }
 
         function updateStatus() {
-            var message = null;
+            let message = null;
 
             // Determine the next event
-            var nextEvent = null;
+            let nextEvent = null;
             switch (config.timerType) {
                 case "1": // on/off
                     if (state) {
@@ -635,8 +637,8 @@ module.exports = function(RED) {
         }
 
         function resume() {
-            var on = events.on.type != '9' && schedule(events.on, true);
-            var off = (!events.off || (events.off && events.off.type != '9' && schedule(events.off, true)));
+            let on = events.on.type != '9' && schedule(events.on, true);
+            let off = (!events.off || (events.off && events.off.type != '9' && schedule(events.off, true)));
         }
 
         function bootstrap() {
@@ -719,3 +721,4 @@ module.exports = function(RED) {
         bootstrap();
     });
 };
+
