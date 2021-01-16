@@ -116,11 +116,11 @@ You can set the following:
 | `msg.payload.action`          | Accepts the standard input payloads of `trigger`, `on`, `off`, etc.                 |
 | `msg.payload.suspended`       | Boolean: true will suspend scheduling, false will resume scheduling                 |
 | `msg.payload.manual`          | Alias of `suspended`                                                                |
-| `msg.payload.tag`             | String value emitted as the tag for all events                                      |
+| `msg.payload.tag`             | String value emitted as the `tag` property for all events                           |
+| `msg.payload.topic`           | String value emitted as the `topic` property for all events                         |
 | `msg.payload.ontype`          | Integer value: `Sun Event [1]` & `Time of Day [2]`                                  |
 | `msg.payload.ontime`          | String value representing time of day (HH:mm[:ss])                                  |
 | `msg.payload.triggertime`     | Alias of `ontime`                                                                   |
-| `msg.payload.ontopic`         | String value emitted as the topic for the on event                                  |
 | `msg.payload.onvalue`         | Output value for on event (must be same as configured type)                         |
 | `msg.payload.triggervalue`    | Alias of `onvalue`                                                                  |
 | `msg.payload.onoffset`        | Number value as specified above for Offset configuration                            |
@@ -128,7 +128,6 @@ You can set the following:
 | `msg.payload.offtype`         | Integer value: `Sun Event [1]`, `Time of Day [2]` & `Duration [3]`                  |
 | `msg.payload.offtime`         | String value representing time of day (HH:mm[:ss])                                  |
 | `msg.payload.duration`        | String value representing a timespan (see [Times](##Times))                         |
-| `msg.payload.offtopic`        | String value emitted as the topic for the off event                                 |
 | `msg.payload.offvalue`        | Output value for off event (must be same as configured type)                        |
 | `msg.payload.offoffset`       | Number value as specified above for Offset configuration                            |
 | `msg.payload.offrandomoffset` | Boolean value as specified above in Randomisation of Times                          |
@@ -141,6 +140,11 @@ You can set the following:
 | `msg.payload.sun`             | Boolean: true enables the schedule on a Sunday, false disables it.                  |
 
 # Change Log
+## 1.2.7
+* Fixed HA zones when Node-RED is running as an HA addon using 'ingress'.
+* Fixed spurious log message saying event was sent when it wasn't (when repeat event suppression was enabled).
+* Completed implementation of `topic` and exposed to UI. [credit @ChristianMayer](https://github.com/mrgadget/node-red-contrib-eztimer/issues/43)
+
 ## 1.2.6
 * Fixed `cancel` action so that it correctly cancels the current timer run, and re-schedules the next `on` event. [credit @wokkeltje13](https://github.com/mrgadget/node-red-contrib-eztimer/issues/42)
 
