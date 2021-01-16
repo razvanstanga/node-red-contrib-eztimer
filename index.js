@@ -420,11 +420,11 @@ module.exports = function(RED) {
         }
 
         function send(event, manual) {
-            log(1, 'emitting \'' + event.name + '\' event');
-            event.last.moment = node.now();
-            events.last = event;
-
             if (!event.suppressrepeats || state != event.state) {
+                log(1, 'emitting \'' + event.name + '\' event');
+                event.last.moment = node.now();
+                events.last = event;
+    
                 // Output value
                 switch (event.propertytype || 'msg') {
                     case "flow":
@@ -437,7 +437,7 @@ module.exports = function(RED) {
                         let msg = {};
                         msg.info = getInfo();
                         msg.tag = config.tag || 'eztimer';
-                        if (event.topic) msg.topic = event.topic;
+                        msg.topic = config.topic || '';
                         let currPart = msg;
                         let spl = event.property.split('.');
                         for (let i in spl) {
@@ -684,7 +684,6 @@ module.exports = function(RED) {
             callback(events.on, 'type', 'ontype', String);
             callback(events.on, 'timetod', 'triggertime', String);
             callback(events.on, 'timetod', 'ontime', String);
-            callback(events.on, 'topic', 'ontopic', String);
             callback(events.on, 'value', 'triggervalue', String);
             callback(events.on, 'value', 'onvalue', String);
             callback(events.on, 'offset', 'onoffset', Number);
@@ -692,11 +691,11 @@ module.exports = function(RED) {
             callback(events.off, 'type', 'offtype', String);
             callback(events.off, 'timetod', 'offtime', String);
             callback(events.off, 'duration', 'duration', String);
-            callback(events.off, 'topic', 'offtopic', String);
             callback(events.off, 'value', 'offvalue', String);
             callback(events.off, 'offset', 'offoffset', Number);
             callback(events.off, 'randomoffset', 'offrandomoffset', toBoolean);
             callback(config, 'tag', 'tag', String);
+            callback(config, 'topic', 'topic', String);
             callback(config, 'mon', 'mon', toBoolean);
             callback(config, 'tue', 'tue', toBoolean);
             callback(config, 'wed', 'wed', toBoolean);

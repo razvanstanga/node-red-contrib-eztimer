@@ -31,6 +31,7 @@ THE SOFTWARE.
             debug: {value: false},
             autoname: {value: null},
             tag: {value: 'eztimer'},
+            topic: {value: ''},
             suspended: {value: false},
             sendEventsOnSuspend: {value: false},
             latLongSource: {value: 'manual'},
@@ -189,7 +190,7 @@ THE SOFTWARE.
             });
 
             //Get HA Zones
-            $.getJSON('/eztimer/getHaZones',function(data) {
+            $.getJSON('eztimer/getHaZones',function(data) {
                 if (data.length > 0) {
                     haData = data;
                     var $select = $('#node-input-latLongHaZone');
@@ -294,13 +295,17 @@ THE SOFTWARE.
         <span ng-bind="firstName"></span>
     </div>
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
         <input type="hidden" id="node-input-autoname">
     </div>
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Tag</label>
+        <label for="node-input-name"><i class="fa fa-envelope"></i> Tag</label>
         <input type="text" id="node-input-tag" placeholder="eztimer">
+    </div>
+    <div class="form-row">
+        <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+        <input type="text" id="node-input-topic" placeholder="">
     </div>
     <hr>
     <div class="form-row">
