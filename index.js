@@ -46,6 +46,7 @@ module.exports = function(RED) {
         "night",
         "nadir"
     ];
+    const MAX_CLOCK_DIFF = 5000;
 
     RED.nodes.registerType('eztimer', function(config) {
         RED.nodes.createNode(this, config);
@@ -71,6 +72,17 @@ module.exports = function(RED) {
             };
             res.json(zones);
         });
+
+        let clockMonitor = setInterval(function timeChecker() {
+            let oldTime = timeChecker.oldTime || new Date();
+            let newTime = new Date();
+            let timeDiff = newTime - oldTime;
+            timeChecker.oldTime = newTime;
+            if (Math.abs(timeDiff) >= MAX_CLOCK_DIFF) {
+                node.log("System Time Change Detected!");
+                suspend(); resume();
+            }
+        }, 1000);
 
         switch (config.timerType) {
             case '1':
