@@ -77,11 +77,13 @@ module.exports = function(RED) {
             let oldTime = timeChecker.oldTime || new Date();
             let newTime = new Date();
             let timeDiff = newTime - oldTime;
-            timeChecker.oldTime = newTime;
             if (Math.abs(timeDiff) >= MAX_CLOCK_DIFF) {
-                node.log("System Time Change Detected!");
+                node.log("System time change detected!");
+                node.log("--- old time was :" + moment(oldTime).format('YYYY-MM-DD H:mm:ss'));
+                node.log("--- new time is  :" + moment(newTime).format('YYYY-MM-DD H:mm:ss'));
                 suspend(); resume();
             }
+            timeChecker.oldTime = newTime;
         }, 1000);
 
         switch (config.timerType) {
